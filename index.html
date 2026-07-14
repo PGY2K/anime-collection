@@ -10,10 +10,12 @@
   <main class="shell">
     <nav class="navbar">
       <div class="brand"><span>⛩</span> ANIME COLLECTION</div>
+
       <div class="nav-links">
         <a class="active" href="index.html">Dashboard</a>
         <a href="collection.html">Collection</a>
         <a href="#">Ratings</a>
+        <a href="#" id="signOutLink">Sign Out</a>
       </div>
     </nav>
 
@@ -25,28 +27,68 @@
     </section>
 
     <section class="stats">
-      <article class="card"><div class="stat-label">📺 Total Anime</div><div class="stat-number" id="totalAnime">—</div></article>
-      <article class="card"><div class="stat-label">✅ Completed</div><div class="stat-number" id="completedAnime">—</div></article>
-      <article class="card"><div class="stat-label">▶ In Progress</div><div class="stat-number" id="inProgressAnime">—</div></article>
-      <article class="card"><div class="stat-label">❌ Dropped</div><div class="stat-number" id="droppedAnime">—</div></article>
+      <article class="card">
+        <div class="stat-label">📺 Total Anime</div>
+        <div class="stat-number" id="totalAnime">—</div>
+      </article>
+
+      <article class="card">
+        <div class="stat-label">✅ Completed</div>
+        <div class="stat-number" id="completedAnime">—</div>
+      </article>
+
+      <article class="card">
+        <div class="stat-label">▶ In Progress</div>
+        <div class="stat-number" id="inProgressAnime">—</div>
+      </article>
+
+      <article class="card">
+        <div class="stat-label">❌ Dropped</div>
+        <div class="stat-number" id="droppedAnime">—</div>
+      </article>
     </section>
 
     <section class="content-grid">
       <article class="panel">
-        <div class="panel-title"><h2>🏅 Top Rated</h2><a href="#">View Ratings</a></div>
-        <div class="rank-list" id="topRated"><div class="loading">Loading ratings…</div></div>
+        <div class="panel-title">
+          <h2>🏅 Top Rated</h2>
+          <a href="collection.html">View Collection</a>
+        </div>
+
+        <div class="rank-list" id="topRated">
+          <div class="loading">Loading ratings…</div>
+        </div>
       </article>
 
       <article class="panel">
-        <div class="panel-title"><h2>📥 Queue</h2><a href="collection.html">View Collection</a></div>
-        <div class="queue-list" id="queueList"><div class="loading">Loading queue…</div></div>
+        <div class="panel-title">
+          <h2>📥 Queue</h2>
+          <a href="collection.html">View Collection</a>
+        </div>
+
+        <div class="queue-list" id="queueList">
+          <div class="loading">Loading queue…</div>
+        </div>
       </article>
     </section>
 
-    <footer>Anime Collection • Powered by your Google Sheet</footer>
+    <footer>Anime Collection • Powered by Supabase</footer>
   </main>
 
-  <script src="js/app.js"></script>
-  <script>initDashboard();</script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script>
+    requireSignedInUser().then((user) => {
+      if (user) {
+        initDashboard();
+      }
+    });
+
+    document.getElementById("signOutLink").addEventListener("click", (event) => {
+      event.preventDefault();
+      signOutUser();
+    });
+  </script>
 </body>
 </html>
