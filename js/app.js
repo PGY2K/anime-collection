@@ -263,11 +263,13 @@ function renderCollection() {
     ? filtered
         .map(
           (item) => `
-            <article
-              class="anime-card"
+            <a
+              class="anime-card anime-card-link"
+              href="anime.html?id=${encodeURIComponent(item.id)}"
               data-record-id="${item.id}"
               data-anilist-id="${item.anilistId}"
               data-title="${escapeHtml(item.title)}"
+              aria-label="View details for ${escapeHtml(item.title)}"
             >
               <div class="poster">
                 <div class="poster-placeholder">🎌</div>
@@ -288,7 +290,7 @@ function renderCollection() {
                   </span>
                 </div>
               </div>
-            </article>
+            </a>
           `
         )
         .join("")
