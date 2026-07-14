@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Collection | Anime Collection</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <main class="shell">
+    <nav class="navbar">
+      <div class="brand"><span>⛩</span> ANIME COLLECTION</div>
+      <div class="nav-links">
+        <a href="index.html">Dashboard</a>
+        <a class="active" href="collection.html">Collection</a>
+        <a href="#">Ratings</a>
+      </div>
+    </nav>
+
+    <section class="page-header">
+      <h1 class="page-title">Your <span>Collection</span></h1>
+      <p class="page-subtitle">Search, filter, and browse every anime in your tracker.</p>
+    </section>
+
+    <section class="toolbar">
+      <div class="search-row">
+        <input class="search-box" id="searchInput" type="search" placeholder="Search anime..." autocomplete="off" />
+        <select class="sort-select" id="sortSelect">
+          <option value="title-asc">Title A–Z</option>
+          <option value="title-desc">Title Z–A</option>
+          <option value="rating-desc">Highest Rated</option>
+          <option value="rating-asc">Lowest Rated</option>
+        </select>
+      </div>
+
+      <div class="filters">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="completed">Completed</button>
+        <button class="filter-btn" data-filter="in progress">In Progress</button>
+        <button class="filter-btn" data-filter="dropped">Dropped</button>
+        <button class="filter-btn" data-filter="queued">Queued</button>
+      </div>
+    </section>
+
+    <div class="collection-meta">
+      <span id="resultCount">Loading collection…</span>
+      <span>Poster artwork will be added next.</span>
+    </div>
+
+    <section class="anime-grid" id="animeGrid">
+      <div class="loading">Loading anime…</div>
+    </section>
+
+    <footer>Anime Collection • Powered by your Google Sheet</footer>
+  </main>
+
+  <script src="js/app.js"></script>
+  <script>initCollection();</script>
+</body>
+</html>

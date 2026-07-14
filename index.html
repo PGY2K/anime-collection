@@ -4,96 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Anime Collection</title>
-  <style>
-    :root {
-      --bg: #070713;
-      --panel: rgba(18, 18, 38, 0.78);
-      --panel-2: rgba(28, 20, 54, 0.78);
-      --border: rgba(163, 92, 255, 0.35);
-      --purple: #9b5cff;
-      --text: #ffffff;
-      --muted: #aaa8bc;
-    }
-    * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      color: var(--text);
-      font-family: Inter, Arial, sans-serif;
-      background:
-        radial-gradient(circle at 20% 15%, rgba(125, 52, 214, 0.35), transparent 30%),
-        radial-gradient(circle at 80% 25%, rgba(45, 75, 220, 0.24), transparent 30%),
-        linear-gradient(180deg, #0d0818 0%, var(--bg) 55%, #05050d 100%);
-    }
-    a { color: inherit; text-decoration: none; }
-    .shell { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding-bottom: 48px; }
-    .navbar {
-      position: sticky; top: 0; z-index: 50; margin-top: 14px; padding: 12px 16px;
-      display: flex; align-items: center; justify-content: space-between; gap: 20px;
-      border: 1px solid var(--border); border-radius: 18px;
-      background: rgba(8, 8, 22, 0.82); backdrop-filter: blur(18px);
-    }
-    .brand { font-weight: 900; letter-spacing: 0.05em; }
-    .brand span { color: var(--purple); }
-    .nav-links { display: flex; gap: 8px; flex-wrap: wrap; }
-    .nav-links a { padding: 10px 14px; border-radius: 10px; color: var(--muted); font-weight: 700; }
-    .nav-links a:hover, .nav-links a.active { color: white; background: rgba(155, 92, 255, 0.18); }
-    .hero {
-      margin-top: 18px; min-height: 350px; padding: 54px; display: flex; align-items: flex-end;
-      border: 1px solid var(--border); border-radius: 24px; overflow: hidden;
-      background:
-        linear-gradient(90deg, rgba(8, 8, 18, 0.96) 0%, rgba(8, 8, 18, 0.72) 45%, rgba(8, 8, 18, 0.15) 100%),
-        radial-gradient(circle at 75% 35%, rgba(125, 52, 214, 0.75), transparent 28%),
-        linear-gradient(135deg, #211044 0%, #10174a 50%, #080817 100%);
-      box-shadow: 0 22px 70px rgba(0, 0, 0, 0.35);
-    }
-    .hero h1 { margin: 0; max-width: 700px; font-size: clamp(42px, 8vw, 84px); line-height: 0.92; text-transform: uppercase; letter-spacing: -0.05em; }
-    .hero h1 span { color: var(--purple); }
-    .hero p { margin: 18px 0 0; color: #d4d1df; font-size: 18px; }
-    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px; }
-    .card, .panel {
-      border: 1px solid var(--border);
-      background: linear-gradient(145deg, var(--panel-2), var(--panel));
-      backdrop-filter: blur(15px); box-shadow: 0 16px 45px rgba(0, 0, 0, 0.28);
-    }
-    .card { padding: 22px; border-radius: 18px; }
-    .stat-label { margin-bottom: 10px; color: var(--muted); font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.07em; }
-    .stat-number { font-size: 36px; font-weight: 900; }
-    .content-grid { display: grid; grid-template-columns: 1.25fr 0.75fr; gap: 18px; margin-top: 18px; }
-    .panel { padding: 22px; border-radius: 20px; }
-    .panel-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
-    .panel-title h2 { margin: 0; font-size: 18px; }
-    .panel-title a { color: #c9a7ff; font-size: 13px; font-weight: 800; }
-    .rank-list, .queue-list { display: grid; gap: 10px; }
-    .rank-item, .queue-item {
-      display: grid; align-items: center; gap: 12px; padding: 13px 14px;
-      border-radius: 13px; background: rgba(255,255,255,.035);
-      border: 1px solid rgba(255,255,255,.06);
-    }
-    .rank-item { grid-template-columns: 40px 1fr auto; }
-    .queue-item { grid-template-columns: 1fr auto; }
-    .badge { display:grid; place-items:center; width:34px; height:34px; border-radius:10px; background:rgba(155,92,255,.18); font-weight:900; }
-    .title { font-weight:800; }
-    .rating { color:#ffd261; font-weight:900; }
-    .status { padding:6px 9px; border-radius:999px; background:rgba(155,92,255,.14); color:#d8c1ff; font-size:12px; font-weight:800; }
-    .message { color: var(--muted); padding: 12px 0; }
-    .error { color: #ff8e98; }
-    footer { margin-top:24px; padding:20px; text-align:center; color:var(--muted); font-size:13px; }
-    @media (max-width:850px) {
-      .navbar { align-items:flex-start; flex-direction:column; }
-      .stats { grid-template-columns:repeat(2,1fr); }
-      .content-grid { grid-template-columns:1fr; }
-      .hero { min-height:300px; padding:34px 26px; }
-    }
-    @media (max-width:520px) {
-      .shell { width:min(100% - 18px,1180px); }
-      .stats { grid-template-columns:1fr; }
-      .nav-links { width:100%; }
-      .nav-links a { flex:1 1 40%; text-align:center; }
-      .rank-item { grid-template-columns:34px 1fr auto; }
-    }
-  </style>
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
   <main class="shell">
@@ -101,9 +12,7 @@
       <div class="brand"><span>⛩</span> ANIME COLLECTION</div>
       <div class="nav-links">
         <a class="active" href="index.html">Dashboard</a>
-        <a href="all-anime.html">All Anime</a>
-        <a href="#">In Progress</a>
-        <a href="#">Completed</a>
+        <a href="collection.html">Collection</a>
         <a href="#">Ratings</a>
       </div>
     </nav>
@@ -125,140 +34,19 @@
     <section class="content-grid">
       <article class="panel">
         <div class="panel-title"><h2>🏅 Top Rated</h2><a href="#">View Ratings</a></div>
-        <div class="rank-list" id="topRated"><div class="message">Loading ratings…</div></div>
+        <div class="rank-list" id="topRated"><div class="loading">Loading ratings…</div></div>
       </article>
 
       <article class="panel">
-        <div class="panel-title"><h2>📥 Queue</h2><a href="#">View All</a></div>
-        <div class="queue-list" id="queueList"><div class="message">Loading queue…</div></div>
+        <div class="panel-title"><h2>📥 Queue</h2><a href="collection.html">View Collection</a></div>
+        <div class="queue-list" id="queueList"><div class="loading">Loading queue…</div></div>
       </article>
     </section>
 
     <footer>Anime Collection • Powered by your Google Sheet</footer>
   </main>
 
-  <script>
-    const SPREADSHEET_ID = "1Rn3s0qd-JnTyOMO0C4nPM14kNr5QYbOxHYD7vtp-YMg";
-    const ALL_ANIME_SHEET = "All Anime";
-    const RATINGS_SHEET = "Ratings";
-
-    function sheetUrl(sheetName) {
-      return `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
-    }
-
-    async function fetchSheet(sheetName) {
-      const response = await fetch(sheetUrl(sheetName), { cache: "no-store" });
-      if (!response.ok) throw new Error(`Could not load ${sheetName}`);
-      const text = await response.text();
-      const start = text.indexOf("{");
-      const end = text.lastIndexOf("}") + 1;
-      if (start < 0 || end <= 0) throw new Error(`Unexpected response from ${sheetName}`);
-      const json = JSON.parse(text.slice(start, end));
-      return json.table.rows.map(row =>
-        (row.c || []).map(cell => cell ? (cell.f ?? cell.v ?? "") : "")
-      );
-    }
-
-    function normalize(value) {
-      return String(value ?? "").trim().toLowerCase();
-    }
-
-    function numericRating(value) {
-      const match = String(value ?? "").replace(",", ".").match(/\d+(?:\.\d+)?/);
-      return match ? Number(match[0]) : NaN;
-    }
-
-    function renderQueue(items) {
-      const container = document.getElementById("queueList");
-      container.innerHTML = "";
-      if (!items.length) {
-        container.innerHTML = '<div class="message">No queued anime yet.</div>';
-        return;
-      }
-      items.slice(0, 5).forEach(title => {
-        const item = document.createElement("div");
-        item.className = "queue-item";
-        item.innerHTML = `<div class="title">${escapeHtml(title)}</div><div class="status">Queued</div>`;
-        container.appendChild(item);
-      });
-    }
-
-    function renderTopRated(items) {
-      const medals = ["🥇", "🥈", "🥉", "4", "5"];
-      const container = document.getElementById("topRated");
-      container.innerHTML = "";
-      if (!items.length) {
-        container.innerHTML = '<div class="message">No ratings yet.</div>';
-        return;
-      }
-      items.slice(0, 5).forEach((item, index) => {
-        const row = document.createElement("div");
-        row.className = "rank-item";
-        row.innerHTML = `
-          <div class="badge">${medals[index]}</div>
-          <div class="title">${escapeHtml(item.title)}</div>
-          <div class="rating">⭐ ${item.rating.toFixed(1)}</div>
-        `;
-        container.appendChild(row);
-      });
-    }
-
-    function escapeHtml(value) {
-      return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-    }
-
-    async function loadDashboard() {
-      try {
-        const [animeRows, ratingRows] = await Promise.all([
-          fetchSheet(ALL_ANIME_SHEET),
-          fetchSheet(RATINGS_SHEET)
-        ]);
-
-        const anime = animeRows
-          .map(row => ({
-            title: String(row[0] ?? "").trim(),
-            status: String(row[1] ?? "").trim(),
-            label: String(row[2] ?? "").trim()
-          }))
-          .filter(item => item.title && normalize(item.title) !== "anime" && normalize(item.title) !== "anime title");
-
-        document.getElementById("totalAnime").textContent = anime.length;
-        document.getElementById("completedAnime").textContent =
-          anime.filter(item => normalize(item.status) === "completed").length;
-        document.getElementById("inProgressAnime").textContent =
-          anime.filter(item => normalize(item.status) === "in progress").length;
-        document.getElementById("droppedAnime").textContent =
-          anime.filter(item => normalize(item.label) === "dropped").length;
-
-        renderQueue(
-          anime.filter(item => normalize(item.label) === "queued").map(item => item.title)
-        );
-
-        const ratings = ratingRows
-          .map(row => ({
-            title: String(row[0] ?? "").trim(),
-            rating: numericRating(row[4])
-          }))
-          .filter(item => item.title && Number.isFinite(item.rating))
-          .sort((a, b) => b.rating - a.rating || a.title.localeCompare(b.title));
-
-        renderTopRated(ratings);
-      } catch (error) {
-        console.error(error);
-        document.querySelectorAll(".stat-number").forEach(el => el.textContent = "!");
-        document.getElementById("topRated").innerHTML =
-          '<div class="message error">Could not load the Ratings sheet. Confirm the spreadsheet is shared as Viewer.</div>';
-        document.getElementById("queueList").innerHTML =
-          '<div class="message error">Could not load the All Anime sheet. Confirm the spreadsheet is shared as Viewer.</div>';
-      }
-    }
-
-    loadDashboard();
-  </script>
+  <script src="js/app.js"></script>
+  <script>initDashboard();</script>
 </body>
 </html>
