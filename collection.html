@@ -5,23 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Collection | Anime Collection</title>
   <link rel="stylesheet" href="css/style.css" />
-    <link rel="stylesheet" href="css/add-anime.css" />
+  <link rel="stylesheet" href="css/add-anime.css" />
 </head>
 <body>
   <main class="shell">
     <nav class="navbar">
       <div class="brand"><span>⛩</span> ANIME COLLECTION</div>
+
       <div class="nav-links">
         <a href="index.html">Dashboard</a>
         <a class="active" href="collection.html">Collection</a>
         <a href="#">Ratings</a>
+        <a href="#" id="signOutLink">Sign Out</a>
       </div>
     </nav>
 
     <section class="page-header collection-heading">
       <div>
         <h1 class="page-title">Your <span>Collection</span></h1>
-        <p class="page-subtitle">Search, filter, and browse every anime in your tracker.</p>
+        <p class="page-subtitle">Search, filter, and browse your anime.</p>
       </div>
 
       <button class="primary-btn" id="openAddAnimeBtn" type="button">
@@ -65,7 +67,7 @@
       <div class="loading">Loading anime…</div>
     </section>
 
-    <footer>Anime Collection • Powered by your Google Sheet</footer>
+    <footer>Anime Collection</footer>
   </main>
 
   <div class="modal-backdrop hidden" id="addAnimeModal" aria-hidden="true">
@@ -101,9 +103,20 @@
     </section>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-client.js"></script>
   <script src="js/app.js"></script>
   <script>
-    initCollection();
+    requireSignedInUser().then((user) => {
+      if (user) {
+        initCollection();
+      }
+    });
+
+    document.getElementById("signOutLink").addEventListener("click", (event) => {
+      event.preventDefault();
+      signOutUser();
+    });
   </script>
 </body>
 </html>

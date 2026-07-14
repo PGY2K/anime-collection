@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In | Anime Collection</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/auth.css" />
+</head>
+<body>
+  <main class="auth-page">
+    <section class="auth-card">
+      <div class="brand auth-brand"><span>⛩</span> ANIME COLLECTION</div>
+      <h1>Welcome Back</h1>
+      <p>Sign in to manage your personal anime collection.</p>
+
+      <form id="loginForm">
+        <label for="email">Email</label>
+        <input class="search-box" id="email" type="email" autocomplete="email" required />
+
+        <label for="password">Password</label>
+        <input class="search-box" id="password" type="password" autocomplete="current-password" required />
+
+        <button class="primary-btn auth-submit" type="submit">Sign In</button>
+      </form>
+
+      <div class="auth-message" id="authMessage"></div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-client.js"></script>
+  <script>
+    const form = document.getElementById("loginForm");
+    const message = document.getElementById("authMessage");
+
+    supabaseClient.auth.getSession().then(({ data }) => {
+      if (data?.session) window.location.href = "collection.html";
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      message.textContent = "Signing in...";
+      message.className = "auth-message";
+
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        message.textContent = error.message;
+        message.className = "auth-message auth-error";
+        return;
+      }
+
+      window.location.href = "collection.html";
+    });
+  </script>
+</body>
+</html>

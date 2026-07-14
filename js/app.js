@@ -1,28 +1,5 @@
-const SPREADSHEET_ID = "1Rn3s0qd-JnTyOMO0C4nPM14kNr5QYbOxHYD7vtp-YMg";
-const ALL_ANIME_SHEET = "All Anime";
 const ANILIST_ENDPOINT = "https://graphql.anilist.co";
-const CACHE_KEY = "animeCollectionAniListCacheV2";
-
-function sheetUrl(sheetName) {
-  return `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
-}
-
-async function fetchSheet(sheetName) {
-  const response = await fetch(sheetUrl(sheetName), { cache: "no-store" });
-  if (!response.ok) throw new Error(`Could not load ${sheetName}`);
-
-  const text = await response.text();
-  const start = text.indexOf("{");
-  const end = text.lastIndexOf("}") + 1;
-
-  if (start < 0 || end <= 0) throw new Error(`Unexpected response from ${sheetName}`);
-
-  const json = JSON.parse(text.slice(start, end));
-
-  return json.table.rows.map((row) =>
-    (row.c || []).map((cell) => (cell ? (cell.f ?? cell.v ?? "") : ""))
-  );
-}
+const CACHE_KEY = "animeCollectionAniListCacheV3";
 
 function normalize(value) {
   return String(value ?? "").trim().toLowerCase();
@@ -39,6 +16,7 @@ function averageRating(story, animation, enjoyment) {
     .filter((value) => value !== null);
 
   if (scores.length < 3) return null;
+
   return scores.reduce((sum, value) => sum + value, 0) / scores.length;
 }
 
@@ -49,18 +27,6 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
-}
-
-function getDisplayStatus(item) {
-  const status = normalize(item.status);
-  const label = normalize(item.label);
-
-  if (status === "completed") return "Completed";
-  if (status === "in progress") return "In Progress";
-  if (label === "dropped") return "Dropped";
-  if (label === "queued") return "Queued";
-
-  return item.status || item.label || "Unsorted";
 }
 
 function statusClass(status) {
@@ -74,59 +40,6 @@ function statusClass(status) {
   return "status-queued";
 }
 
-async function loadAnimeData() {
-  const rows = await fetchSheet(ALL_ANIME_SHEET);
-
-  return rows
-    .map((row) => {
-      const anilistId = String(row[0] ?? "").trim();
-      const title = String(row[1] ?? "").trim();
-      const status = String(row[2] ?? "").trim();
-      const label = String(row[3] ?? "").trim();
-      const story = row[4] ?? "";
-      const animation = row[5] ?? "";
-      const enjoyment = row[6] ?? "";
-      const lastSeason = String(row[7] ?? "").trim();
-      const startedWatching = String(row[8] ?? "").trim();
-
-      const item = {
-        anilistId,
-        title,
-        status,
-        label,
-        story,
-        animation,
-        enjoyment,
-        lastSeason,
-        startedWatching
-      };
-
-      return {
-        ...item,
-        displayStatus: getDisplayStatus(item),
-        rating: averageRating(story, animation, enjoyment)
-      };
-    })
-    .filter((item) => {
-      const title = normalize(item.title);
-      return item.title && title !== "anime" && title !== "anime title";
-    });
-}
-
-function readCache() {
-  try {
-    return JSON.parse(localStorage.getItem(CACHE_KEY) || "{}");
-  } catch {
-    return {};
-  }
-}
-
-function writeCache(cache) {
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
-  } catch {}
-}
-
 async function requestAniList(query, variables) {
   const response = await fetch(ANILIST_ENDPOINT, {
     method: "POST",
@@ -137,7 +50,9 @@ async function requestAniList(query, variables) {
     body: JSON.stringify({ query, variables })
   });
 
-  if (!response.ok) throw new Error("AniList request failed");
+  if (!response.ok) {
+    throw new Error("AniList request failed");
+  }
 
   const json = await response.json();
   return json?.data ?? null;
@@ -148,8 +63,14 @@ async function fetchAniListById(id) {
     query ($id: Int) {
       Media(id: $id, type: ANIME) {
         id
-        title { romaji english }
-        coverImage { extraLarge large }
+        title {
+          romaji
+          english
+        }
+        coverImage {
+          extraLarge
+          large
+        }
         episodes
         format
         seasonYear
@@ -161,32 +82,21 @@ async function fetchAniListById(id) {
   return data?.Media ?? null;
 }
 
-async function searchAniList(title) {
-  const query = `
-    query ($search: String) {
-      Media(search: $search, type: ANIME, sort: SEARCH_MATCH) {
-        id
-        title { romaji english }
-        coverImage { extraLarge large }
-        episodes
-        format
-        seasonYear
-      }
-    }
-  `;
-
-  const data = await requestAniList(query, { search: title });
-  return data?.Media ?? null;
-}
-
 async function searchAniListPage(search) {
   const query = `
     query ($search: String) {
       Page(page: 1, perPage: 8) {
         media(search: $search, type: ANIME, sort: SEARCH_MATCH) {
           id
-          title { romaji english }
-          coverImage { extraLarge large medium }
+          title {
+            romaji
+            english
+          }
+          coverImage {
+            extraLarge
+            large
+            medium
+          }
           episodes
           format
           seasonYear
@@ -200,68 +110,73 @@ async function searchAniListPage(search) {
   return data?.Page?.media ?? [];
 }
 
-function cacheKeyFor(item) {
-  return item.anilistId ? `id:${item.anilistId}` : `title:${normalize(item.title)}`;
+function readCache() {
+  try {
+    return JSON.parse(localStorage.getItem(CACHE_KEY) || "{}");
+  } catch {
+    return {};
+  }
 }
 
-async function loadPosters() {
-  const cards = [...document.querySelectorAll(".anime-card[data-cache-key]")];
-  const cache = readCache();
-  const uncachedCards = [];
-
-  cards.forEach((card) => {
-    const cached = cache[card.dataset.cacheKey];
-
-    if (cached?.poster) {
-      applyPoster(card, cached.poster);
-    } else {
-      uncachedCards.push(card);
-    }
-  });
-
-  for (let index = 0; index < uncachedCards.length; index += 4) {
-    const batch = uncachedCards.slice(index, index + 4);
-
-    await Promise.all(
-      batch.map(async (card) => {
-        const title = card.dataset.title;
-        const anilistId = card.dataset.anilistId;
-
-        try {
-          const media = anilistId
-            ? await fetchAniListById(anilistId)
-            : await searchAniList(title);
-
-          if (!media) return;
-
-          const poster =
-            media.coverImage?.extraLarge ||
-            media.coverImage?.large ||
-            "";
-
-          cache[card.dataset.cacheKey] = {
-            id: media.id,
-            poster
-          };
-
-          if (poster) applyPoster(card, poster);
-        } catch (error) {
-          console.warn(`Could not load poster for ${title}`, error);
-        }
-      })
-    );
-
-    writeCache(cache);
-
-    if (index + 4 < uncachedCards.length) {
-      await new Promise((resolve) => setTimeout(resolve, 300));
-    }
+function writeCache(cache) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+  } catch {
+    // The collection still works without local storage.
   }
+}
+
+async function loadCollectionFromSupabase() {
+  const { data, error } = await supabaseClient
+    .from("anime")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw error;
+  }
+
+  return (data || []).map((item) => ({
+    id: item.id,
+    anilistId: item.anilist_id,
+    title: item.title,
+    displayStatus: item.status || "Queued",
+    story: item.story,
+    animation: item.animation,
+    enjoyment: item.enjoyment,
+    lastSeason: item.last_season,
+    startedWatching: item.started_watching,
+    rating: averageRating(item.story, item.animation, item.enjoyment)
+  }));
+}
+
+async function addAnimeToSupabase(anime) {
+  const title = anime.title?.english || anime.title?.romaji || "Untitled";
+
+  const { data, error } = await supabaseClient
+    .from("anime")
+    .insert({
+      anilist_id: anime.id,
+      title,
+      status: "Queued"
+    })
+    .select()
+    .single();
+
+  if (error) {
+    if (error.code === "23505") {
+      throw new Error("That anime is already in your collection.");
+    }
+
+    throw error;
+  }
+
+  return data;
 }
 
 function applyPoster(card, posterUrl) {
   const poster = card.querySelector(".poster");
-  if (!poster) return;
+  if (!poster || !posterUrl) return;
 
   poster.innerHTML = `
     <img
@@ -272,44 +187,48 @@ function applyPoster(card, posterUrl) {
   `;
 }
 
-function renderDashboard(anime) {
-  document.getElementById("totalAnime").textContent = anime.length;
-  document.getElementById("completedAnime").textContent =
-    anime.filter((item) => normalize(item.displayStatus) === "completed").length;
-  document.getElementById("inProgressAnime").textContent =
-    anime.filter((item) => normalize(item.displayStatus) === "in progress").length;
-  document.getElementById("droppedAnime").textContent =
-    anime.filter((item) => normalize(item.displayStatus) === "dropped").length;
+async function loadPosters() {
+  const cards = [...document.querySelectorAll(".anime-card[data-anilist-id]")];
+  const cache = readCache();
 
-  const topRated = anime
-    .filter((item) => Number.isFinite(item.rating))
-    .sort((a, b) => b.rating - a.rating || a.title.localeCompare(b.title))
-    .slice(0, 5);
+  for (let index = 0; index < cards.length; index += 4) {
+    const batch = cards.slice(index, index + 4);
 
-  const queue = anime
-    .filter((item) => normalize(item.displayStatus) === "queued")
-    .slice(0, 5);
+    await Promise.all(
+      batch.map(async (card) => {
+        const id = card.dataset.anilistId;
+        const cacheKey = `id:${id}`;
+        const cached = cache[cacheKey];
 
-  const medals = ["🥇", "🥈", "🥉", "4", "5"];
+        if (cached?.poster) {
+          applyPoster(card, cached.poster);
+          return;
+        }
 
-  document.getElementById("topRated").innerHTML = topRated.length
-    ? topRated.map((item, index) => `
-        <div class="rank-item">
-          <div class="badge">${medals[index]}</div>
-          <div class="title">${escapeHtml(item.title)}</div>
-          <div class="rating">⭐ ${item.rating.toFixed(1)}</div>
-        </div>
-      `).join("")
-    : '<div class="empty-state">No ratings yet.</div>';
+        try {
+          const media = await fetchAniListById(id);
+          const poster =
+            media?.coverImage?.extraLarge ||
+            media?.coverImage?.large ||
+            "";
 
-  document.getElementById("queueList").innerHTML = queue.length
-    ? queue.map((item) => `
-        <div class="queue-item">
-          <div class="title">${escapeHtml(item.title)}</div>
-          <div class="status status-queued">Queued</div>
-        </div>
-      `).join("")
-    : '<div class="empty-state">No queued anime yet.</div>';
+          cache[cacheKey] = { poster };
+
+          if (poster) {
+            applyPoster(card, poster);
+          }
+        } catch (error) {
+          console.warn(`Could not load poster for ${card.dataset.title}`, error);
+        }
+      })
+    );
+
+    writeCache(cache);
+
+    if (index + 4 < cards.length) {
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+  }
 }
 
 let collectionAnime = [];
@@ -333,54 +252,68 @@ function renderCollection() {
     if (sortValue === "title-desc") return b.title.localeCompare(a.title);
     if (sortValue === "rating-desc") return (b.rating ?? -1) - (a.rating ?? -1);
     if (sortValue === "rating-asc") return (a.rating ?? 999) - (b.rating ?? 999);
+
     return 0;
   });
 
-  document.getElementById("resultCount").textContent = `${filtered.length} anime shown`;
+  document.getElementById("resultCount").textContent =
+    `${filtered.length} anime shown`;
 
   document.getElementById("animeGrid").innerHTML = filtered.length
-    ? filtered.map((item) => `
-        <article
-          class="anime-card"
-          data-title="${escapeHtml(item.title)}"
-          data-anilist-id="${escapeHtml(item.anilistId)}"
-          data-cache-key="${escapeHtml(cacheKeyFor(item))}"
-        >
-          <div class="poster">
-            <div class="poster-placeholder">🎌</div>
-          </div>
+    ? filtered
+        .map(
+          (item) => `
+            <article
+              class="anime-card"
+              data-record-id="${item.id}"
+              data-anilist-id="${item.anilistId}"
+              data-title="${escapeHtml(item.title)}"
+            >
+              <div class="poster">
+                <div class="poster-placeholder">🎌</div>
+              </div>
 
-          <div class="card-body">
-            <h3 class="card-title">${escapeHtml(item.title)}</h3>
+              <div class="card-body">
+                <h3 class="card-title">${escapeHtml(item.title)}</h3>
 
-            <div class="card-details">
-              <span class="status ${statusClass(item.displayStatus)}">
-                ${escapeHtml(item.displayStatus)}
-              </span>
+                <div class="card-details">
+                  <span class="status ${statusClass(item.displayStatus)}">
+                    ${escapeHtml(item.displayStatus)}
+                  </span>
 
-              <span class="rating">
-                ${Number.isFinite(item.rating)
-                  ? `⭐ ${item.rating.toFixed(1)}`
-                  : "Not rated yet"}
-              </span>
-            </div>
-          </div>
-        </article>
-      `).join("")
-    : '<div class="empty-state">No anime match your search or filter.</div>';
+                  <span class="rating">
+                    ${Number.isFinite(item.rating)
+                      ? `⭐ ${item.rating.toFixed(1)}`
+                      : "Not rated yet"}
+                  </span>
+                </div>
+              </div>
+            </article>
+          `
+        )
+        .join("")
+    : '<div class="empty-state">Your collection is empty.</div>';
 
   loadPosters();
 }
 
+async function refreshCollection() {
+  collectionAnime = await loadCollectionFromSupabase();
+  renderCollection();
+}
+
 function openAddAnimeModal() {
   const modal = document.getElementById("addAnimeModal");
+
   modal.classList.remove("hidden");
   modal.setAttribute("aria-hidden", "false");
+
   document.getElementById("addAnimeSearchInput").focus();
 }
 
 function closeAddAnimeModal() {
   const modal = document.getElementById("addAnimeModal");
+
   modal.classList.add("hidden");
   modal.setAttribute("aria-hidden", "true");
 }
@@ -403,53 +336,87 @@ async function runAddAnimeSearch() {
     const results = await searchAniListPage(search);
 
     resultsContainer.innerHTML = results.length
-      ? results.map((anime) => {
-          const title = anime.title?.english || anime.title?.romaji || "Untitled";
-          const poster =
-            anime.coverImage?.large ||
-            anime.coverImage?.medium ||
-            "";
-          const format = anime.format || "Anime";
-          const episodes = anime.episodes
-            ? `${anime.episodes} episodes`
-            : "Episode count unavailable";
-          const year = anime.seasonYear || "Year unavailable";
+      ? results
+          .map((anime) => {
+            const title =
+              anime.title?.english ||
+              anime.title?.romaji ||
+              "Untitled";
 
-          return `
-            <article class="search-result-card">
-              <img src="${escapeHtml(poster)}" alt="${escapeHtml(title)} poster">
+            const poster =
+              anime.coverImage?.large ||
+              anime.coverImage?.medium ||
+              "";
 
-              <div>
-                <h3 class="search-result-title">${escapeHtml(title)}</h3>
-                <div class="search-result-meta">
-                  ${escapeHtml(format)} • ${escapeHtml(episodes)} • ${escapeHtml(year)}
-                  <br>
-                  AniList ID: ${anime.id}
+            const format = anime.format || "Anime";
+
+            const episodes = anime.episodes
+              ? `${anime.episodes} episodes`
+              : "Episode count unavailable";
+
+            const year = anime.seasonYear || "Year unavailable";
+
+            return `
+              <article class="search-result-card">
+                <img
+                  src="${escapeHtml(poster)}"
+                  alt="${escapeHtml(title)} poster"
+                />
+
+                <div>
+                  <h3 class="search-result-title">${escapeHtml(title)}</h3>
+
+                  <div class="search-result-meta">
+                    ${escapeHtml(format)} •
+                    ${escapeHtml(episodes)} •
+                    ${escapeHtml(year)}
+                  </div>
                 </div>
-              </div>
 
-              <button
-                class="select-anime-btn"
-                type="button"
-                data-id="${anime.id}"
-                data-title="${escapeHtml(title)}"
-              >
-                Select
-              </button>
-            </article>
-          `;
-        }).join("")
+                <button
+                  class="select-anime-btn"
+                  type="button"
+                  data-anime-id="${anime.id}"
+                >
+                  Add
+                </button>
+              </article>
+            `;
+          })
+          .join("")
       : '<div class="empty-state">No matching anime found.</div>';
 
     document.querySelectorAll(".select-anime-btn").forEach((button) => {
-      button.addEventListener("click", () => {
-        alert(
-          `${button.dataset.title} selected.\n\nSaving will be connected in the next step.`
+      button.addEventListener("click", async () => {
+        const anime = results.find(
+          (item) => String(item.id) === button.dataset.animeId
         );
+
+        if (!anime) return;
+
+        button.disabled = true;
+        button.textContent = "Adding...";
+
+        try {
+          await addAnimeToSupabase(anime);
+          await refreshCollection();
+
+          closeAddAnimeModal();
+
+          document.getElementById("addAnimeSearchInput").value = "";
+          document.getElementById("addAnimeResults").innerHTML =
+            '<div class="empty-state">Search for an anime to begin.</div>';
+        } catch (error) {
+          console.error(error);
+          button.disabled = false;
+          button.textContent = "Add";
+          alert(error.message || "Could not add anime.");
+        }
       });
     });
   } catch (error) {
     console.error(error);
+
     resultsContainer.innerHTML =
       '<div class="error">AniList search failed. Please try again.</div>';
   }
@@ -462,52 +429,39 @@ function initAddAnimeModal() {
   const searchButton = document.getElementById("searchAniListBtn");
   const searchInput = document.getElementById("addAnimeSearchInput");
 
-  if (!openButton || !closeButton || !modal || !searchButton || !searchInput) return;
-
   openButton.addEventListener("click", openAddAnimeModal);
   closeButton.addEventListener("click", closeAddAnimeModal);
   searchButton.addEventListener("click", runAddAnimeSearch);
 
   searchInput.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") runAddAnimeSearch();
+    if (event.key === "Enter") {
+      runAddAnimeSearch();
+    }
   });
 
   modal.addEventListener("click", (event) => {
-    if (event.target === modal) closeAddAnimeModal();
+    if (event.target === modal) {
+      closeAddAnimeModal();
+    }
   });
 
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") closeAddAnimeModal();
+    if (event.key === "Escape") {
+      closeAddAnimeModal();
+    }
   });
-}
-
-async function initDashboard() {
-  try {
-    const anime = await loadAnimeData();
-    renderDashboard(anime);
-  } catch (error) {
-    console.error(error);
-    document.querySelectorAll(".stat-number").forEach((element) => {
-      element.textContent = "!";
-    });
-
-    document.getElementById("topRated").innerHTML =
-      '<div class="error">Could not load your Google Sheet.</div>';
-
-    document.getElementById("queueList").innerHTML =
-      '<div class="error">Could not load your Google Sheet.</div>';
-  }
 }
 
 async function initCollection() {
   try {
-    collectionAnime = await loadAnimeData();
-    renderCollection();
+    await refreshCollection();
 
-    document.getElementById("searchInput")
+    document
+      .getElementById("searchInput")
       .addEventListener("input", renderCollection);
 
-    document.getElementById("sortSelect")
+    document
+      .getElementById("sortSelect")
       .addEventListener("change", renderCollection);
 
     document.querySelectorAll(".filter-btn").forEach((button) => {
@@ -518,6 +472,7 @@ async function initCollection() {
 
         button.classList.add("active");
         currentFilter = button.dataset.filter;
+
         renderCollection();
       });
     });
@@ -527,6 +482,6 @@ async function initCollection() {
     console.error(error);
 
     document.getElementById("animeGrid").innerHTML =
-      '<div class="error">Could not load your Google Sheet.</div>';
+      `<div class="error">${escapeHtml(error.message || "Could not load your collection.")}</div>`;
   }
 }
