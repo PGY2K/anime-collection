@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratings | Anime Collection</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/ratings.css" />
+</head>
+<body>
+  <main class="shell">
+    <nav class="navbar">
+      <div class="brand"><span>⛩</span> ANIME COLLECTION</div>
+      <div class="nav-links">
+        <a href="index.html">Dashboard</a>
+        <a href="collection.html">Collection</a>
+        <a class="active" href="ratings.html">Ratings</a>
+        <a href="#" id="signOutLink">Sign Out</a>
+      </div>
+    </nav>
+
+    <section class="page-header ratings-heading">
+      <div>
+        <h1 class="page-title">Your <span>Ratings</span></h1>
+        <p class="page-subtitle">Review what you rated and what still needs a rating.</p>
+      </div>
+    </section>
+
+    <section class="ratings-toolbar">
+      <div class="ratings-tabs" role="tablist">
+        <button class="ratings-tab active" data-tab="rated" type="button">Rated</button>
+        <button class="ratings-tab" data-tab="unrated" type="button">Unrated</button>
+      </div>
+
+      <div class="ratings-controls" id="ratedControls">
+        <input class="search-box" id="ratingsSearch" type="search" placeholder="Search rated anime..." autocomplete="off" />
+        <select class="sort-select" id="ratingsSort">
+          <option value="highest">Highest Rated</option>
+          <option value="lowest">Lowest Rated</option>
+          <option value="az">Title A–Z</option>
+          <option value="za">Title Z–A</option>
+        </select>
+        <label class="favorite-filter">
+          <input id="favoritesOnly" type="checkbox" />
+          Favorites only
+        </label>
+      </div>
+    </section>
+
+    <div class="ratings-meta" id="ratingsMeta">Loading ratings…</div>
+    <section class="ratings-list" id="ratingsList">
+      <div class="loading">Loading ratings…</div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/ratings.js"></script>
+  <script>
+    requireSignedInUser().then((user) => { if (user) initRatings(); });
+    document.getElementById("signOutLink").addEventListener("click", (event) => {
+      event.preventDefault();
+      signOutUser();
+    });
+  </script>
+</body>
+</html>

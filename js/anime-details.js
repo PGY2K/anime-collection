@@ -285,6 +285,11 @@ function initializeEditor(record, media) {
   }
 
   editButton.addEventListener("click", openEditor);
+
+  if (new URLSearchParams(window.location.search).get("edit") === "1") {
+    openEditor();
+  }
+
   closeButton.addEventListener("click", closeEditor);
   cancelButton.addEventListener("click", closeEditor);
 
