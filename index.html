@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Anime Collection</title>
   <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/profile.css" />
 </head>
 <body>
   <main class="shell">
@@ -15,6 +16,9 @@
         <a class="active" href="index.html">Dashboard</a>
         <a href="collection.html">Collection</a>
         <a href="ratings.html">Ratings</a>
+        <a class="profile-nav-link" href="profile.html" aria-label="Open profile" title="Profile">
+          <img id="navProfileAvatar" src="assets/avatars/avatar-1.svg" alt="Profile" />
+        </a>
         <a href="#" id="signOutLink">Sign Out</a>
       </div>
     </nav>
@@ -77,6 +81,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-client.js"></script>
+  <script src="js/profile-nav.js"></script>
   <script src="js/dashboard.js"></script>
   <script>
     requireSignedInUser().then((user) => {

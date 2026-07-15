@@ -1,0 +1,252 @@
+.friends-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.friends-overview {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 220px));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.friends-stat-card,
+.friends-panel,
+.friend-profile-card {
+  border: 1px solid var(--border);
+  background: linear-gradient(145deg, var(--panel-2), var(--panel));
+  box-shadow: 0 16px 45px rgba(0, 0, 0, .28);
+}
+
+.friends-stat-card {
+  padding: 20px;
+  border-radius: 18px;
+}
+
+.friends-stat-card span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.friends-stat-card strong {
+  font-size: 34px;
+}
+
+.friends-grid-layout {
+  display: grid;
+  grid-template-columns: .85fr 1.15fr;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.friends-panel {
+  padding: 22px;
+  border-radius: 20px;
+}
+
+.friends-list-panel {
+  margin-top: 18px;
+}
+
+.friends-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.friends-panel-heading h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.friends-panel-heading p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.friend-code-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+}
+
+.friend-code-input {
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  font-weight: 900;
+}
+
+.friends-message {
+  min-height: 24px;
+  margin-top: 12px;
+  color: var(--muted);
+}
+
+.friends-message.success { color: var(--green); }
+.friends-message.error { color: #ff9da5; }
+
+.request-list,
+.friends-list {
+  display: grid;
+  gap: 10px;
+}
+
+.request-card,
+.friend-list-card {
+  display: grid;
+  grid-template-columns: 58px 1fr auto;
+  gap: 13px;
+  align-items: center;
+  padding: 13px;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 15px;
+  background: rgba(255,255,255,.035);
+}
+
+.friend-avatar {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(155,92,255,.48);
+}
+
+.friend-name {
+  margin: 0 0 5px;
+  font-size: 16px;
+}
+
+.friend-subtext {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.request-actions,
+.friend-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.friend-action-btn {
+  padding: 8px 11px;
+  border: 1px solid rgba(155,92,255,.45);
+  border-radius: 9px;
+  color: white;
+  background: rgba(155,92,255,.13);
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.friend-action-btn:hover { background: rgba(155,92,255,.25); }
+.friend-action-btn.danger { border-color: rgba(255,107,118,.4); color: #ff9da5; background: rgba(255,107,118,.08); }
+.friend-action-btn.accept { border-color: rgba(70,215,125,.4); color: var(--green); background: rgba(70,215,125,.08); }
+
+.friend-profile-header {
+  margin-top: 18px;
+  padding: 28px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: linear-gradient(135deg, rgba(42,20,78,.92), rgba(15,18,58,.92));
+}
+
+.friend-profile-avatar {
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(155,92,255,.65);
+}
+
+.friend-profile-header h1 {
+  margin: 6px 0;
+  font-size: clamp(32px, 5vw, 54px);
+}
+
+.friend-profile-header p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.friend-profile-back {
+  color: #d6baff;
+  font-weight: 800;
+}
+
+.friend-filter-bar {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin: 18px 0;
+}
+
+.friend-anime-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.friend-anime-card {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: linear-gradient(160deg, rgba(31,20,58,.95), rgba(15,15,32,.96));
+}
+
+.friend-anime-poster {
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  background: rgba(155,92,255,.13);
+}
+
+.friend-anime-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.friend-anime-body { padding: 14px; }
+.friend-anime-title { margin: 0 0 9px; min-height: 43px; font-size: 16px; }
+.friend-anime-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.friend-anime-score { color: var(--gold); font-weight: 900; font-size: 13px; }
+.add-queue-btn { width: 100%; margin-top: 12px; }
+.add-queue-btn:disabled { opacity: .58; cursor: default; }
+
+@media (max-width: 950px) {
+  .friends-grid-layout { grid-template-columns: 1fr; }
+  .friend-anime-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 700px) {
+  .friends-heading,
+  .friend-profile-header { align-items: flex-start; flex-direction: column; }
+  .friend-code-form { grid-template-columns: 1fr; }
+  .request-card,
+  .friend-list-card { grid-template-columns: 50px 1fr; }
+  .friend-avatar { width: 50px; height: 50px; }
+  .request-actions,
+  .friend-actions { grid-column: 1 / -1; justify-content: stretch; }
+  .request-actions button,
+  .friend-actions a,
+  .friend-actions button { flex: 1; text-align: center; }
+  .friend-anime-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 500px) {
+  .friends-overview { grid-template-columns: repeat(2, 1fr); }
+  .friend-anime-grid { grid-template-columns: 1fr; }
+}

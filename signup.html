@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Account | Anime Collection</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/auth.css" />
+</head>
+<body>
+  <main class="auth-page">
+    <section class="auth-card signup-card">
+      <div class="brand auth-brand"><span>⛩</span> ANIME COLLECTION</div>
+      <h1>Create Account</h1>
+      <p>Create your profile and start tracking anime.</p>
+
+      <form id="signupForm">
+        <label for="signupEmail">Email</label>
+        <input class="search-box" id="signupEmail" type="email" autocomplete="email" required />
+
+        <label for="signupPassword">Password</label>
+        <input class="search-box" id="signupPassword" type="password" autocomplete="new-password" minlength="6" required />
+
+        <label for="confirmPassword">Confirm Password</label>
+        <input class="search-box" id="confirmPassword" type="password" autocomplete="new-password" minlength="6" required />
+
+        <label for="signupUsername">Username</label>
+        <input
+          class="search-box"
+          id="signupUsername"
+          type="text"
+          autocomplete="username"
+          minlength="3"
+          maxlength="20"
+          pattern="[A-Za-z0-9_]+"
+          required
+        />
+        <p class="auth-help">3–20 characters. Letters, numbers, and underscores only.</p>
+
+        <label>Choose Your Avatar</label>
+        <div class="signup-avatar-grid" id="signupAvatarGrid"></div>
+
+        <button class="primary-btn auth-submit" id="createAccountBtn" type="submit">
+          Create Account
+        </button>
+      </form>
+
+      <div class="auth-message" id="authMessage"></div>
+
+      <p class="auth-switch">
+        Already have an account?
+        <a href="login.html">Sign In</a>
+      </p>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/profile-nav.js"></script>
+  <script src="js/signup.js"></script>
+</body>
+</html>
