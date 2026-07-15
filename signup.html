@@ -59,6 +59,21 @@
     </section>
   </main>
 
+  <div class="auth-confirm-modal hidden" id="signupConfirmModal" aria-hidden="true">
+    <section class="auth-confirm-card" role="dialog" aria-modal="true" aria-labelledby="signupConfirmTitle">
+      <div class="auth-confirm-icon">✉</div>
+      <h2 id="signupConfirmTitle">Check your email</h2>
+      <p>
+        Supabase sent you a confirmation email. Open it and click the confirmation link,
+        then return here to sign in.
+      </p>
+      <div class="auth-confirm-actions">
+        <a class="primary-btn" href="login.html">Go to Sign In</a>
+        <button class="secondary-btn" id="closeSignupConfirmBtn" type="button">Close</button>
+      </div>
+    </section>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-client.js"></script>
   <script src="js/profile-nav.js"></script>

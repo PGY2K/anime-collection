@@ -60,6 +60,23 @@ function validateSignup(username, password, confirmPassword) {
   return "";
 }
 
+
+function getConfirmationRedirectUrl() {
+  return new URL("login.html", window.location.href).href;
+}
+
+function showSignupConfirmationModal() {
+  const modal = document.getElementById("signupConfirmModal");
+  modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden", "false");
+}
+
+function closeSignupConfirmationModal() {
+  const modal = document.getElementById("signupConfirmModal");
+  modal.classList.add("hidden");
+  modal.setAttribute("aria-hidden", "true");
+}
+
 async function createAccount(event) {
   event.preventDefault();
 
@@ -86,6 +103,7 @@ async function createAccount(event) {
     email,
     password,
     options: {
+      emailRedirectTo: getConfirmationRedirectUrl(),
       data: {
         username,
         avatar_id: selectedSignupAvatarId
@@ -107,8 +125,9 @@ async function createAccount(event) {
   }
 
   button.textContent = "Account Created";
-  message.textContent = "Account created. Check your email to confirm it, then sign in.";
-  message.className = "auth-message auth-success";
+  message.textContent = "";
+  message.className = "auth-message";
+  showSignupConfirmationModal();
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -121,4 +140,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   renderSignupAvatars();
   document.getElementById("signupForm").addEventListener("submit", createAccount);
+
+  document
+    .getElementById("closeSignupConfirmBtn")
+    .addEventListener("click", closeSignupConfirmationModal);
+
+  document
+    .getElementById("signupConfirmModal")
+    .addEventListener("click", (event) => {
+      if (event.target.id === "signupConfirmModal") {
+        closeSignupConfirmationModal();
+      }
+    });
 });
