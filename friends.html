@@ -34,7 +34,10 @@
         <h1 class="page-title">Your <span>Friends</span></h1>
         <p class="page-subtitle">Profiles stay private until a friend request is accepted.</p>
       </div>
-      <a class="secondary-btn" href="profile.html">My Profile</a>
+      <div class="friends-header-actions">
+        <button class="secondary-btn" id="inviteFriendsBtn" type="button">Invite Friends</button>
+        <a class="secondary-btn" href="profile.html">My Profile</a>
+      </div>
     </section>
 
     <section class="friends-overview" id="friendsOverview">
@@ -96,6 +99,18 @@
         <div class="loading">Loading friends…</div>
       </div>
     </section>
+    <div class="invite-backdrop" id="inviteFriendsModal" hidden>
+      <section class="invite-dialog" role="dialog" aria-modal="true" aria-labelledby="inviteFriendsTitle">
+        <button class="invite-close" id="closeInviteFriendsBtn" type="button" aria-label="Close">×</button>
+        <h2 id="inviteFriendsTitle">Invite Friends</h2>
+        <p>Send this signup link to someone you want to add on My Anime Tracker.</p>
+        <div class="invite-link-row">
+          <input id="inviteSignupLink" type="text" readonly value="https://pgy2k.github.io/anime-collection/signup.html" />
+          <button class="primary-btn" id="copyInviteLinkBtn" type="button">Copy Link</button>
+        </div>
+        <div class="friends-message" id="inviteFriendsMessage"></div>
+      </section>
+    </div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

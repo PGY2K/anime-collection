@@ -146,6 +146,7 @@ async function sendFriendRequest(event) {
 async function initFriendsPage(user) {
   friendsPageUser = user;
   document.getElementById("addFriendForm").addEventListener("submit", sendFriendRequest);
+  initInviteFriends();
 
   try {
     await refreshFriendsPage();
@@ -154,4 +155,74 @@ async function initFriendsPage(user) {
     document.getElementById("requestList").innerHTML = `<div class="error">${friendsEscape(error.message)}</div>`;
     document.getElementById("friendsList").innerHTML = `<div class="error">${friendsEscape(error.message)}</div>`;
   }
+}
+
+
+const MAT_SIGNUP_URL = "https://pgy2k.github.io/anime-collection/signup.html";
+const MAT_INVITE_TEXT = "Join me on My Anime Tracker to track anime, compare ratings, and see what friends are watching.";
+
+function initInviteFriends() {
+  const inviteButton = document.getElementById("inviteFriendsBtn");
+  const modal = document.getElementById("inviteFriendsModal");
+  const closeButton = document.getElementById("closeInviteFriendsBtn");
+  const copyButton = document.getElementById("copyInviteLinkBtn");
+  const input = document.getElementById("inviteSignupLink");
+  const message = document.getElementById("inviteFriendsMessage");
+
+  if (!inviteButton || !modal || !closeButton || !copyButton || !input || !message) return;
+
+  input.value = MAT_SIGNUP_URL;
+
+  const openFallback = () => {
+    modal.hidden = false;
+    document.body.classList.add("modal-open");
+    input.select();
+  };
+
+  const closeFallback = () => {
+    modal.hidden = true;
+    document.body.classList.remove("modal-open");
+    message.textContent = "";
+    inviteButton.focus();
+  };
+
+  inviteButton.addEventListener("click", async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "Join My Anime Tracker",
+          text: MAT_INVITE_TEXT,
+          url: MAT_SIGNUP_URL
+        });
+        return;
+      } catch (error) {
+        if (error?.name === "AbortError") return;
+      }
+    }
+    openFallback();
+  });
+
+  copyButton.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(MAT_SIGNUP_URL);
+      message.textContent = "Signup link copied.";
+      message.className = "friends-message success";
+      copyButton.textContent = "Copied";
+      setTimeout(() => { copyButton.textContent = "Copy Link"; }, 1600);
+    } catch {
+      input.focus();
+      input.select();
+      document.execCommand("copy");
+      message.textContent = "Signup link copied.";
+      message.className = "friends-message success";
+    }
+  });
+
+  closeButton.addEventListener("click", closeFallback);
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal) closeFallback();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !modal.hidden) closeFallback();
+  });
 }
