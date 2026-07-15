@@ -151,7 +151,11 @@
       signOutUser();
     });
   </script>
-  <script src="js/changelog.js"></script>
+  <script>
+    const changelogScript = document.createElement("script");
+    changelogScript.src = `js/changelog.js?v=${Date.now()}`;
+    document.body.appendChild(changelogScript);
+  </script>
   <script src="js/pwa.js"></script>
 </body>
 </html>

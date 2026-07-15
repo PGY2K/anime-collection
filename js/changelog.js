@@ -1,11 +1,44 @@
 const MAT_CHANGELOG = [
   {
+    version: "v3.0.5.2",
+    date: "July 2026",
+    changes: [
+      "Updated What's New so release notes always load from the latest deployed version.",
+      "Simplified PWA caching so MAT remains online-only and only the offline message is cached."
+    ]
+  },
+  {
+    version: "v3.0.5.1",
+    date: "July 2026",
+    changes: [
+      "Fixed the poster details opening error."
+    ]
+  },
+  {
     version: "v3.0.5",
     date: "July 2026",
     changes: [
-      "Simplified the Dashboard and matched the What's New and Waiting Updates sections.",
+      "Removed Continue Watching from the Dashboard.",
+      "Matched the What's New and Waiting Updates mini-section layouts.",
       "Limited anime ratings to Completed titles.",
       "Improved rating controls across Collection, Details, Friends, and Ratings."
+    ]
+  },
+  {
+    version: "v3.0.4",
+    date: "July 2026",
+    changes: [
+      "Moved anime statistics and Top 5 Anime to user profiles.",
+      "Redesigned profiles and moved editing controls into Settings.",
+      "Cleaned up and reordered the Dashboard."
+    ]
+  },
+  {
+    version: "v3.0.3",
+    date: "July 2026",
+    changes: [
+      "Added Invite Friends sharing tools.",
+      "Added the What's New announcements section."
     ]
   },
   {
