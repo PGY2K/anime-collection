@@ -44,10 +44,10 @@ function renderDetails(record,media){
   const synopsis=stripHtml(media?.description)||"No description is available yet.";
   const genres=media?.genres||[];
   const studios=media?.studios?.nodes?.map(s=>s.name).join(", ")||"Unknown";
+  const owned=Boolean(record);
   const completed=owned&&detailsNormalize(record.status)==="completed";
   const rating=completed?detailsAverage(record.story,record.animation,record.enjoyment):null;
   const meta=[media?.format?.replaceAll("_"," "),media?.episodes?`${media.episodes} Episodes`:null,media?.seasonYear].filter(Boolean).join(" • ");
-  const owned=Boolean(record);
 
   root.innerHTML=`
     <section class="details-hero">
