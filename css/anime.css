@@ -547,3 +547,34 @@
 .description-disclosure summary::after { content: '▾'; float: right; color: var(--purple); }
 .description-disclosure[open] summary::after { content: '▴'; }
 .description-disclosure .synopsis { margin: 0; padding: 0 16px 16px; }
+
+
+/* v3.0.5 completed-only ratings and clearer status action */
+.status-details-btn {
+  min-height: 46px;
+  padding: 11px 18px;
+  border-width: 2px;
+  border-color: rgba(215, 177, 255, .82);
+  font-size: 15px;
+  box-shadow: 0 0 0 3px rgba(155,92,255,.12), 0 12px 30px rgba(111,53,216,.35);
+}
+
+.rating-completed-only {
+  display: grid;
+  gap: 12px;
+  padding: 15px;
+  border: 1px solid rgba(255,210,97,.2);
+  border-radius: 14px;
+  background: rgba(255,210,97,.045);
+}
+
+.rating-availability-note {
+  margin: 0;
+  color: #e6d9b5;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.rating-completed-only.hidden {
+  display: none !important;
+}

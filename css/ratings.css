@@ -50,3 +50,39 @@
   .rating-row img, .rating-poster-placeholder { width: 70px; height: 96px; }
   .rating-overall, .rate-now-btn { grid-column: 1 / -1; width: 100%; text-align: center; }
 }
+
+
+/* v3.0.5 completed ratings actions */
+.rating-row-main {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 86px minmax(0,1fr) auto;
+  gap: 16px;
+  align-items: center;
+  color: inherit;
+}
+
+.rating-row > .rate-now-btn {
+  min-width: 112px;
+}
+
+@media (max-width: 720px) {
+  .rating-row-main {
+    grid-template-columns: 70px minmax(0,1fr);
+  }
+
+  .rating-row-main .rating-overall {
+    grid-column: 1 / -1;
+    width: 100%;
+    text-align: center;
+  }
+}
+
+.rated-rating-row {
+  grid-template-columns: minmax(0,1fr) auto;
+}
+@media (max-width: 720px) {
+  .rated-rating-row {
+    grid-template-columns: 1fr;
+  }
+}

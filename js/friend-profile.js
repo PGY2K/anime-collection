@@ -17,6 +17,7 @@ function fpNormalize(value) {
 }
 
 function fpAverage(item) {
+  if (fpNormalize(item.status) !== "completed") return null;
   const scores = [item.story, item.animation, item.enjoyment]
     .map(Number)
     .filter(Number.isFinite);
@@ -83,41 +84,61 @@ async function fetchFriendPosters(ids) {
   ]));
 }
 
-function renderFriendProfileShell(profile) {
+async function renderFriendProfileShell(profile) {
   const root = document.getElementById("friendProfileRoot");
+  const topFive = friendProfileAnime
+    .map((item) => ({ ...item, rating: fpAverage(item) }))
+    .filter((item) => item.rating !== null)
+    .sort((a,b) => b.rating - a.rating || a.title.localeCompare(b.title))
+    .slice(0,5);
+  const topPosters = await fetchFriendPosters(topFive.map((item) => item.anilist_id));
+  const count = (status) => friendProfileAnime.filter((item) => fpNormalize(item.status) === status).length;
 
   root.innerHTML = `
-    <section class="friend-profile-header">
-      <img class="friend-profile-avatar" src="${profileAvatarPath(profile.avatar_id || 1)}" alt="${fpEscape(profile.username)} avatar" />
-      <div>
-        <a class="friend-profile-back" href="friends.html">← Friends</a>
-        <h1>${fpEscape(profile.username || "Anime Fan")}</h1>
-        <p>Accepted friend profile</p>
+    <a class="friend-profile-back standalone-back" href="friends.html">← Friends</a>
+    <section class="public-profile-card friend-public-profile">
+      <img class="profile-main-avatar" src="${profileAvatarPath(profile.avatar_id || 1)}" alt="${fpEscape(profile.username)} avatar" />
+      <h2>${fpEscape(profile.username || "Anime Fan")}</h2>
+      <p class="profile-private-note">Accepted friend</p>
+      <div class="profile-stat-grid">
+        <div><strong>${count("in progress")}</strong><span>Watching</span></div>
+        <div><strong>${count("waiting")}</strong><span>Waiting</span></div>
+        <div><strong>${count("queued")}</strong><span>Queued</span></div>
+        <div><strong>${count("completed")}</strong><span>Completed</span></div>
+        <div><strong>${count("dropped")}</strong><span>Dropped</span></div>
       </div>
+      <section class="profile-top-section">
+        <div class="profile-section-heading"><h3>⭐ Top 5 Anime</h3><span>Highest rated</span></div>
+        <div class="profile-top-grid">
+          ${topFive.length ? topFive.map((item,index)=>`
+            <a class="profile-top-card" href="anime.html?anilist_id=${item.anilist_id}">
+              ${topPosters.get(Number(item.anilist_id)) ? `<img src="${fpEscape(topPosters.get(Number(item.anilist_id)))}" alt="${fpEscape(item.title)} poster" />` : '<div class="poster-placeholder">🎌</div>'}
+              <span class="profile-top-rank">#${index+1}</span>
+              <div><strong>${fpEscape(item.title)}</strong><small>⭐ ${item.rating.toFixed(1)}</small></div>
+            </a>`).join("") : '<div class="empty-state">No fully rated anime yet.</div>'}
+        </div>
+      </section>
     </section>
 
-    <div class="friend-filter-bar">
-      <button class="filter-btn active" type="button" data-friend-filter="all">All</button>
-      <button class="filter-btn" type="button" data-friend-filter="in progress">Watching</button>
-      <button class="filter-btn" type="button" data-friend-filter="waiting">Waiting</button>
-      <button class="filter-btn" type="button" data-friend-filter="queued">Queue</button>
-      <button class="filter-btn" type="button" data-friend-filter="completed">Completed</button>
-      <button class="filter-btn" type="button" data-friend-filter="favorites">Favorites</button>
-    </div>
+    <section class="friend-collection-section">
+      <div class="profile-section-heading"><h3>Collection</h3><span>Browse and add anime to your queue</span></div>
+      <div class="friend-filter-bar">
+        <button class="filter-btn active" type="button" data-friend-filter="all">All</button>
+        <button class="filter-btn" type="button" data-friend-filter="in progress">Watching</button>
+        <button class="filter-btn" type="button" data-friend-filter="waiting">Waiting</button>
+        <button class="filter-btn" type="button" data-friend-filter="queued">Queue</button>
+        <button class="filter-btn" type="button" data-friend-filter="completed">Completed</button>
+        <button class="filter-btn" type="button" data-friend-filter="favorites">Favorites</button>
+      </div>
+      <section class="friend-anime-grid" id="friendAnimeGrid"><div class="loading">Loading collection…</div></section>
+    </section>`;
 
-    <section class="friend-anime-grid" id="friendAnimeGrid">
-      <div class="loading">Loading collection…</div>
-    </section>
-  `;
-
-  document.querySelectorAll("[data-friend-filter]").forEach((button) => {
-    button.addEventListener("click", () => {
-      document.querySelectorAll("[data-friend-filter]").forEach((item) => item.classList.remove("active"));
-      button.classList.add("active");
-      friendProfileFilter = button.dataset.friendFilter;
-      renderFriendAnime();
-    });
-  });
+  document.querySelectorAll("[data-friend-filter]").forEach((button) => button.addEventListener("click", () => {
+    document.querySelectorAll("[data-friend-filter]").forEach((item) => item.classList.remove("active"));
+    button.classList.add("active");
+    friendProfileFilter = button.dataset.friendFilter;
+    renderFriendAnime();
+  }));
 }
 
 async function renderFriendAnime() {
@@ -147,7 +168,7 @@ async function renderFriendAnime() {
               <h3 class="friend-anime-title">${fpEscape(item.title)}</h3>
               <div class="friend-anime-meta">
                 <span class="status ${fpStatusClass(item.status)}">${fpEscape(item.status || "Queued")}</span>
-                <span class="friend-anime-score">${score === null ? "Not rated" : `⭐ ${score.toFixed(1)}`}</span>
+                ${score === null ? "" : `<span class="friend-anime-score">⭐ ${score.toFixed(1)}</span>`}
               </div>
               <button
                 class="primary-btn add-queue-btn"
@@ -203,7 +224,7 @@ async function initFriendProfile() {
     ]);
 
     friendProfileAnime = anime;
-    renderFriendProfileShell(profile);
+    await renderFriendProfileShell(profile);
     await renderFriendAnime();
   } catch (error) {
     console.error(error);

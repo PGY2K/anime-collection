@@ -77,7 +77,7 @@ function renderRatings() {
           <h2 class="rating-row-title">${rEsc(record.title)}</h2>
           <div class="rating-breakdown">Completed • Rating incomplete</div>
         </div>
-        <a class="rate-now-btn" href="anime.html?id=${encodeURIComponent(record.id)}&edit=1">Rate Now</a>
+        <a class="rate-now-btn" href="anime.html?id=${encodeURIComponent(record.id)}&edit=1">Rate Anime</a>
       </article>
     `).join("") : '<div class="empty-state">Every completed anime has been rated.</div>';
     fillPosters();
@@ -88,7 +88,7 @@ function renderRatings() {
   const search = document.getElementById("ratingsSearch").value.trim().toLowerCase();
   const sort = document.getElementById("ratingsSort").value;
   const favoritesOnly = document.getElementById("favoritesOnly").checked;
-  let items = ratingsRecords.filter((record) => completeRating(record));
+  let items = ratingsRecords.filter((record) => String(record.status || "").toLowerCase() === "completed" && completeRating(record));
   if (search) items = items.filter((record) => String(record.title).toLowerCase().includes(search));
   if (favoritesOnly) items = items.filter((record) => record.favorite);
   items.sort((a, b) => {
@@ -99,19 +99,22 @@ function renderRatings() {
   });
   meta.textContent = `${items.length} rated anime shown`;
   list.innerHTML = items.length ? items.map((record) => `
-    <a class="rating-row" href="anime.html?id=${encodeURIComponent(record.id)}">
-      <div class="rating-poster-placeholder" data-rating-poster="${record.anilist_id}">🎌</div>
-      <div>
-        <h2 class="rating-row-title">${rEsc(record.title)}${record.favorite ? " ♥" : ""}</h2>
-        <div class="rating-breakdown">
-          <span>Story ${Number(record.story).toFixed(1)}</span>
-          <span>Animation ${Number(record.animation).toFixed(1)}</span>
-          <span>Enjoyment ${Number(record.enjoyment).toFixed(1)}</span>
+    <article class="rating-row rated-rating-row">
+      <a class="rating-row-main" href="anime.html?id=${encodeURIComponent(record.id)}">
+        <div class="rating-poster-placeholder" data-rating-poster="${record.anilist_id}">🎌</div>
+        <div>
+          <h2 class="rating-row-title">${rEsc(record.title)}${record.favorite ? " ♥" : ""}</h2>
+          <div class="rating-breakdown">
+            <span>Story ${Number(record.story).toFixed(1)}</span>
+            <span>Animation ${Number(record.animation).toFixed(1)}</span>
+            <span>Enjoyment ${Number(record.enjoyment).toFixed(1)}</span>
+          </div>
         </div>
-      </div>
-      <div class="rating-overall">⭐ ${overall(record).toFixed(1)}</div>
-    </a>
-  `).join("") : '<div class="empty-state">No rated anime match this filter.</div>';
+        <div class="rating-overall">⭐ ${overall(record).toFixed(1)}</div>
+      </a>
+      <a class="rate-now-btn" href="anime.html?id=${encodeURIComponent(record.id)}&edit=1">Rate Anime</a>
+    </article>
+  `).join("") : '<div class="empty-state">No completed rated anime match this filter.</div>';
   fillPosters();
 }
 

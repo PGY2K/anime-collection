@@ -145,6 +145,7 @@ function renderQueue(anime) {
     .join("");
 }
 
+
 async function loadTrendingAnime() {
   const query = `
     query {
@@ -210,8 +211,6 @@ async function addTrendingToQueue(media, button, anime) {
 
   anime.unshift(data);
   button.textContent = "In Your Collection";
-  renderDashboardStats(anime);
-  renderQueue(anime);
   renderTrending(anime, window.dashboardTrendingMedia || []);
   renderRatedByFriends(anime, window.dashboardFriendRatingGroups || []);
 }
@@ -307,7 +306,7 @@ async function loadFriendRatings() {
           friendUsername: friend.username || "Anime Fan",
           rating: dashboardAverage(anime)
         }))
-        .filter((anime) => anime.rating !== null);
+        .filter((anime) => dashboardNormalize(anime.status) === "completed" && anime.rating !== null);
     })
   );
 
@@ -415,8 +414,6 @@ async function addFriendRatedAnimeToQueue(group, button, anime) {
   });
 
   button.textContent = "In Your Collection";
-  renderDashboardStats(anime);
-  renderQueue(anime);
   renderTrending(anime, window.dashboardTrendingMedia || []);
   renderRatedByFriends(anime, window.dashboardFriendRatingGroups || []);
 }
@@ -489,30 +486,15 @@ async function renderRatedByFriends(anime, groups) {
 
 function renderDashboardError(error) {
   console.error(error);
-
-  document.querySelectorAll(".stat-number").forEach((element) => {
-    element.textContent = "!";
-  });
-
-  const message = dashboardEscapeHtml(
-    error?.message || "Could not load your dashboard."
-  );
-
-  document.getElementById("topRated").innerHTML =
-    `<div class="error">${message}</div>`;
-
-  document.getElementById("queueList").innerHTML =
-    `<div class="error">${message}</div>`;
+  const message = dashboardEscapeHtml(error?.message || "Could not load your dashboard.");
+  const trendingContainer = document.getElementById("trendingAnime");
+  if (trendingContainer) trendingContainer.innerHTML = `<div class="error">${message}</div>`;
 }
 
 async function initDashboard() {
   try {
     const anime = await loadDashboardAnime();
-
-    renderDashboardStats(anime);
-    renderTopRated(anime);
-    renderQueue(anime);
-
+  
     const [trendingResult, friendRatingsResult] = await Promise.allSettled([
       loadTrendingAnime(),
       loadFriendRatings()
@@ -537,10 +519,8 @@ async function initDashboard() {
     }
   } catch (error) {
     renderDashboardError(error);
-
     document.getElementById("trendingAnime").innerHTML =
       '<div class="error">Could not load trending anime.</div>';
-
     document.getElementById("friendRatedAnime").innerHTML =
       '<div class="error">Could not load friend ratings.</div>';
   }

@@ -1,5 +1,14 @@
 const MAT_CHANGELOG = [
   {
+    version: "v3.0.5",
+    date: "July 2026",
+    changes: [
+      "Simplified the Dashboard and matched the What's New and Waiting Updates sections.",
+      "Limited anime ratings to Completed titles.",
+      "Improved rating controls across Collection, Details, Friends, and Ratings."
+    ]
+  },
+  {
     version: "v3.0.2",
     date: "July 2026",
     changes: [
@@ -33,6 +42,19 @@ const MAT_CHANGELOG = [
   const list = document.getElementById("changelogList");
 
   if (!openButton || !modal || !closeButton || !list) return;
+
+  const preview = document.getElementById("latestChangelogPreview");
+  const latest = MAT_CHANGELOG[0];
+
+  if (preview && latest) {
+    preview.innerHTML = `
+      <span class="dashboard-mini-icon">📢</span>
+      <div>
+        <strong>${latest.version} • ${latest.date}</strong>
+        <p>${latest.changes[0]}</p>
+      </div>
+    `;
+  }
 
   list.innerHTML = MAT_CHANGELOG.map((entry) => `
     <article class="changelog-entry">

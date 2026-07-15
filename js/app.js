@@ -147,7 +147,7 @@ async function loadCollectionFromSupabase() {
     enjoyment: item.enjoyment,
     lastSeason: item.last_season,
     startedWatching: item.started_watching,
-    rating: averageRating(item.story, item.animation, item.enjoyment)
+    rating: normalize(item.status) === "completed" ? averageRating(item.story, item.animation, item.enjoyment) : null
   }));
 }
 
@@ -321,11 +321,9 @@ function renderCollection() {
                     ${escapeHtml(item.displayStatus)}
                   </span>
 
-                  <span class="rating">
-                    ${Number.isFinite(item.rating)
-                      ? `⭐ ${item.rating.toFixed(1)}`
-                      : "Not rated yet"}
-                  </span>
+                  ${Number.isFinite(item.rating)
+                    ? `<span class="rating">⭐ ${item.rating.toFixed(1)}</span>`
+                    : ""}
                 </div>
               </div>
             </a>

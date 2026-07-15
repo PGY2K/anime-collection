@@ -34,7 +34,6 @@
         <h1>My Anime <span>Tracker</span></h1>
         <p>Track • Rate • Discover</p>
       </div>
-      <button class="whats-new-btn" id="openChangelogBtn" type="button" aria-haspopup="dialog">📢 What's New</button>
     </section>
 
     <section class="install-app-card" id="installAppCard" hidden>
@@ -60,59 +59,41 @@
       </section>
     </div>
 
-    <section class="stats">
-      <article class="card">
-        <div class="stat-label">📺 Total Anime</div>
-        <div class="stat-number" id="totalAnime">—</div>
-      </article>
-
-      <article class="card">
-        <div class="stat-label">✅ Completed</div>
-        <div class="stat-number" id="completedAnime">—</div>
-      </article>
-
-      <article class="card">
-        <div class="stat-label">▶ In Progress</div>
-        <div class="stat-number" id="inProgressAnime">—</div>
-      </article>
-
-      <article class="card">
-        <div class="stat-label">⏳ Waiting</div>
-        <div class="stat-number" id="waitingAnime">—</div>
-      </article>
-
-      <article class="card">
-        <div class="stat-label">❌ Dropped</div>
-        <div class="stat-number" id="droppedAnime">—</div>
-      </article>
-    </section>
-
-    <section class="content-grid">
-      <article class="panel">
+    <section class="dashboard-home-stack">
+      <article class="panel dashboard-home-panel dashboard-mini-panel">
         <div class="panel-title">
-          <h2>🏅 Top Rated</h2>
-          <a href="collection.html">View Collection</a>
+          <div>
+            <h2>📢 What's New</h2>
+            <p class="panel-subtitle">See the latest MAT changes and improvements.</p>
+          </div>
+          <button class="mini-section-action" id="openChangelogBtn" type="button" aria-haspopup="dialog">View Updates</button>
         </div>
-
-        <div class="rank-list" id="topRated">
-          <div class="loading">Loading ratings…</div>
+        <div class="dashboard-mini-state" id="latestChangelogPreview">
+          <span class="dashboard-mini-icon">📢</span>
+          <div>
+            <strong>Latest MAT update</strong>
+            <p>Open the update log to see what changed.</p>
+          </div>
         </div>
       </article>
 
-      <article class="panel">
+      <article class="panel dashboard-home-panel waiting-updates-panel">
         <div class="panel-title">
-          <h2>📥 Queue</h2>
-          <a href="collection.html">View Collection</a>
+          <div>
+            <h2>🔔 Waiting Updates</h2>
+            <p class="panel-subtitle">New episode alerts for anime marked Waiting will appear here.</p>
+          </div>
+          <a href="collection.html?status=waiting">Open Waiting</a>
         </div>
-
-        <div class="queue-list" id="queueList">
-          <div class="loading">Loading queue…</div>
+        <div id="waitingUpdates" class="dashboard-waiting-state">
+          <span class="dashboard-waiting-icon">✓</span>
+          <div>
+            <strong>No new Waiting Updates</strong>
+            <p>MAT will show new episode alerts ONLY for anime you marked Waiting.</p>
+          </div>
         </div>
       </article>
-    </section>
 
-
-    <section class="dashboard-discovery-grid">
       <article class="panel dashboard-discovery-panel">
         <div class="panel-title">
           <div>
@@ -120,7 +101,6 @@
             <p class="panel-subtitle">Anime trending right now.</p>
           </div>
         </div>
-
         <div class="dashboard-media-grid" id="trendingAnime">
           <div class="loading">Loading trending anime…</div>
         </div>
@@ -133,7 +113,6 @@
             <p class="panel-subtitle">See what your accepted friends have rated.</p>
           </div>
         </div>
-
         <div class="dashboard-media-grid" id="friendRatedAnime">
           <div class="loading">Loading friend ratings…</div>
         </div>
