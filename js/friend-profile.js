@@ -18,10 +18,10 @@ function fpNormalize(value) {
 
 function fpAverage(item) {
   if (fpNormalize(item.status) !== "completed") return null;
-  const scores = [item.story, item.animation, item.enjoyment]
-    .map(Number)
+  const scores = ["story","characters","animation","sound","world","pacing","emotion","originality","rewatch_value","enjoyment"]
+    .map((field) => item[field] === null || item[field] === undefined || item[field] === "" ? null : Number(item[field]))
     .filter(Number.isFinite);
-  if (scores.length < 3) return null;
+  if (scores.length < 10) return null;
   return scores.reduce((sum, score) => sum + score, 0) / scores.length;
 }
 

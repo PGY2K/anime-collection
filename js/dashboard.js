@@ -23,14 +23,11 @@ function dashboardNumber(value) {
 }
 
 function dashboardAverage(item) {
-  const scores = [item.story, item.animation, item.enjoyment]
-    .map(dashboardNumber)
+  const scores = ["story","characters","animation","sound","world","pacing","emotion","originality","rewatch_value","enjoyment"]
+    .map((field) => dashboardNumber(item[field]))
     .filter((value) => value !== null);
 
-  if (scores.length < 3) {
-    return null;
-  }
-
+  if (scores.length < 10) return null;
   return scores.reduce((sum, value) => sum + value, 0) / scores.length;
 }
 
@@ -60,7 +57,7 @@ async function dashboardAniListRequest(query, variables = {}) {
 async function loadDashboardAnime() {
   const { data, error } = await supabaseClient
     .from("anime")
-    .select("id, anilist_id, title, status, story, animation, enjoyment, created_at")
+    .select("id, anilist_id, title, status, story, characters, animation, sound, world, pacing, emotion, originality, rewatch_value, enjoyment, created_at")
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -195,7 +192,7 @@ async function addTrendingToQueue(media, button, anime) {
       title,
       status: "Queued"
     })
-    .select("id, anilist_id, title, status, story, animation, enjoyment, created_at")
+    .select("id, anilist_id, title, status, story, characters, animation, sound, world, pacing, emotion, originality, rewatch_value, enjoyment, created_at")
     .single();
 
   if (error) {
@@ -411,7 +408,14 @@ async function addFriendRatedAnimeToQueue(group, button, anime) {
     title: group.title,
     status: "Queued",
     story: null,
+    characters: null,
     animation: null,
+    sound: null,
+    world: null,
+    pacing: null,
+    emotion: null,
+    originality: null,
+    rewatch_value: null,
     enjoyment: null,
     created_at: new Date().toISOString()
   });

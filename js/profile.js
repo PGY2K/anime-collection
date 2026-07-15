@@ -15,10 +15,10 @@ function escapeProfileHtml(value) {
 
 function profileNormalize(value) { return String(value ?? "").trim().toLowerCase(); }
 function profileAverage(item) {
-  const scores = [item.story, item.animation, item.enjoyment]
-    .map((value) => value === null || value === "" ? null : Number(value))
+  const scores = ["story","characters","animation","sound","world","pacing","emotion","originality","rewatch_value","enjoyment"]
+    .map((field) => item[field] === null || item[field] === "" ? null : Number(item[field]))
     .filter(Number.isFinite);
-  if (scores.length < 3) return null;
+  if (scores.length < 10) return null;
   return scores.reduce((sum, value) => sum + value, 0) / scores.length;
 }
 
@@ -46,7 +46,7 @@ async function getOrCreateProfile(user) {
 }
 async function loadProfileAnime() {
   const { data, error } = await supabaseClient.from("anime")
-    .select("id, anilist_id, title, status, story, animation, enjoyment")
+    .select("id, anilist_id, title, status, story, characters, animation, sound, world, pacing, emotion, originality, rewatch_value, enjoyment")
     .order("title");
   if (error) throw error;
   return data || [];

@@ -6,17 +6,17 @@ function normalize(value) {
 }
 
 function toNumber(value) {
-  const number = Number(String(value ?? "").replace(",", "."));
+  if (value === null || value === undefined || value === "") return null;
+  const number = Number(String(value).replace(",", "."));
   return Number.isFinite(number) ? number : null;
 }
 
-function averageRating(story, animation, enjoyment) {
-  const scores = [story, animation, enjoyment]
-    .map(toNumber)
+function averageRating(item) {
+  const scores = ["story","characters","animation","sound","world","pacing","emotion","originality","rewatch_value","enjoyment"]
+    .map((field) => toNumber(item[field]))
     .filter((value) => value !== null);
 
-  if (scores.length < 3) return null;
-
+  if (scores.length < 10) return null;
   return scores.reduce((sum, value) => sum + value, 0) / scores.length;
 }
 
@@ -145,11 +145,18 @@ async function loadCollectionFromSupabase() {
     title: item.title,
     displayStatus: item.status || "Queued",
     story: item.story,
+    characters: item.characters,
     animation: item.animation,
+    sound: item.sound,
+    world: item.world,
+    pacing: item.pacing,
+    emotion: item.emotion,
+    originality: item.originality,
+    rewatch_value: item.rewatch_value,
     enjoyment: item.enjoyment,
     lastSeason: item.last_season,
     startedWatching: item.started_watching,
-    rating: normalize(item.status) === "completed" ? averageRating(item.story, item.animation, item.enjoyment) : null
+    rating: normalize(item.status) === "completed" ? averageRating(item) : null
   }));
 }
 

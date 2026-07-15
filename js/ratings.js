@@ -17,19 +17,21 @@ function rNum(value) {
   return Number.isFinite(number) ? number : null;
 }
 
+const RATING_FIELDS = ["story","characters","animation","sound","world","pacing","emotion","originality","rewatch_value","enjoyment"];
+
 function completeRating(record) {
-  return [record.story, record.animation, record.enjoyment].every((value) => rNum(value) !== null);
+  return RATING_FIELDS.every((field) => rNum(record[field]) !== null);
 }
 
 function overall(record) {
   if (!completeRating(record)) return null;
-  return (Number(record.story) + Number(record.animation) + Number(record.enjoyment)) / 3;
+  return RATING_FIELDS.reduce((sum, field) => sum + Number(record[field]), 0) / RATING_FIELDS.length;
 }
 
 async function loadRatingsRecords() {
   const { data, error } = await supabaseClient
     .from("anime")
-    .select("id, anilist_id, title, status, story, animation, enjoyment, favorite, updated_at")
+    .select("id, anilist_id, title, status, story, characters, animation, sound, world, pacing, emotion, originality, rewatch_value, enjoyment, favorite, updated_at")
     .order("title", { ascending: true });
   if (error) throw error;
   return data || [];
@@ -108,11 +110,7 @@ function renderRatings() {
         <div class="rating-poster-placeholder" data-rating-poster="${record.anilist_id}">🎌</div>
         <div>
           <h2 class="rating-row-title">${rEsc(record.title)}${record.favorite ? " ♥" : ""}</h2>
-          <div class="rating-breakdown">
-            <span>Story ${Number(record.story).toFixed(1)}</span>
-            <span>Animation ${Number(record.animation).toFixed(1)}</span>
-            <span>Enjoyment ${Number(record.enjoyment).toFixed(1)}</span>
-          </div>
+          <div class="rating-breakdown">Completed • 10-category rating</div>
         </div>
         <div class="rating-overall">⭐ ${overall(record).toFixed(1)}</div>
       </a>

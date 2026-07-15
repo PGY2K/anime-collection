@@ -1,4 +1,5 @@
 const MAT_CHANGELOG = [
+  { version: "v3.3.0", date: "July 2026", changes: ["Expanded ratings to ten categories on a 10-point scale.", "Added live slider scores and overall rating updates.", "Renamed Status & Details to Change Status."] },
   {
     version: "v3.2.0",
     date: "July 2026",
