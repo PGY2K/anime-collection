@@ -83,6 +83,15 @@ async function updateRecord(recordId, changes) {
   return data;
 }
 
+async function deleteRecord(recordId) {
+  const { error } = await supabaseClient
+    .from("anime")
+    .delete()
+    .eq("id", recordId);
+
+  if (error) throw error;
+}
+
 async function fetchAniListDetails(anilistId) {
   const query = `
     query ($id: Int) {
@@ -158,6 +167,7 @@ function renderDetails(record, media) {
             </span>
             ${record.favorite ? '<span class="favorite-badge">♥ Favorite</span>' : ""}
             <button class="edit-anime-btn" id="editAnimeBtn" type="button">Edit Anime</button>
+            <button class="remove-anime-btn" id="removeAnimeBtn" type="button">Remove from Collection</button>
           </div>
         </div>
       </div>
@@ -199,6 +209,18 @@ function renderDetails(record, media) {
         </div>
       </aside>
     </section>
+
+    <div class="remove-modal-backdrop hidden" id="removeAnimeModal" aria-hidden="true">
+      <section class="remove-modal-card" role="dialog" aria-modal="true" aria-labelledby="removeAnimeTitle">
+        <h2 id="removeAnimeTitle">Remove from Collection?</h2>
+        <p>Remove <strong>${detailsEscapeHtml(title)}</strong> from your collection? This cannot be undone.</p>
+        <div class="remove-modal-actions">
+          <button class="secondary-action-btn" id="cancelRemoveBtn" type="button">Cancel</button>
+          <button class="confirm-remove-btn" id="confirmRemoveBtn" type="button">Remove</button>
+        </div>
+        <div class="edit-message" id="removeMessage"></div>
+      </section>
+    </div>
 
     <div class="edit-modal-backdrop hidden" id="editAnimeModal" aria-hidden="true">
       <section class="edit-modal-card" role="dialog" aria-modal="true" aria-labelledby="editAnimeTitle">
@@ -271,6 +293,22 @@ function initializeEditor(record, media) {
   const editButton = document.getElementById("editAnimeBtn");
   const closeButton = document.getElementById("closeEditBtn");
   const cancelButton = document.getElementById("cancelEditBtn");
+  const removeModal = document.getElementById("removeAnimeModal");
+  const removeButton = document.getElementById("removeAnimeBtn");
+  const cancelRemoveButton = document.getElementById("cancelRemoveBtn");
+  const confirmRemoveButton = document.getElementById("confirmRemoveBtn");
+
+  function openRemoveModal() {
+    removeModal.classList.remove("hidden");
+    removeModal.setAttribute("aria-hidden", "false");
+    document.body.classList.add("modal-open");
+  }
+
+  function closeRemoveModal() {
+    removeModal.classList.add("hidden");
+    removeModal.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("modal-open");
+  }
 
   function openEditor() {
     modal.classList.remove("hidden");
@@ -285,6 +323,29 @@ function initializeEditor(record, media) {
   }
 
   editButton.addEventListener("click", openEditor);
+  removeButton.addEventListener("click", openRemoveModal);
+  cancelRemoveButton.addEventListener("click", closeRemoveModal);
+  removeModal.addEventListener("click", (event) => {
+    if (event.target === removeModal) closeRemoveModal();
+  });
+
+  confirmRemoveButton.addEventListener("click", async () => {
+    const message = document.getElementById("removeMessage");
+    confirmRemoveButton.disabled = true;
+    confirmRemoveButton.textContent = "Removing...";
+    message.textContent = "";
+
+    try {
+      await deleteRecord(record.id);
+      window.location.href = "collection.html";
+    } catch (error) {
+      console.error(error);
+      message.textContent = error.message || "Could not remove anime.";
+      message.className = "edit-message edit-message-error";
+      confirmRemoveButton.disabled = false;
+      confirmRemoveButton.textContent = "Remove";
+    }
+  });
 
   if (new URLSearchParams(window.location.search).get("edit") === "1") {
     openEditor();
@@ -298,9 +359,10 @@ function initializeEditor(record, media) {
   });
 
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && !modal.classList.contains("hidden")) {
-      closeEditor();
-    }
+    if (event.key !== "Escape") return;
+
+    if (!modal.classList.contains("hidden")) closeEditor();
+    if (!removeModal.classList.contains("hidden")) closeRemoveModal();
   });
 
   form.addEventListener("submit", async (event) => {

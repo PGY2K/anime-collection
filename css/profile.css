@@ -37,3 +37,16 @@
   text-align: center;
   margin-top: 4px;
 }
+
+/* Keep the navigation avatar perfectly circular on narrow screens. */
+.profile-nav-link {
+  flex: 0 0 42px;
+  min-width: 42px;
+  max-width: 42px;
+  aspect-ratio: 1 / 1;
+}
+
+.profile-nav-link img {
+  display: block;
+  aspect-ratio: 1 / 1;
+}
