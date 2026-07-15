@@ -25,7 +25,6 @@
         <a class="profile-nav-link" href="profile.html" aria-label="Open profile" title="Profile">
           <img id="navProfileAvatar" src="assets/avatars/avatar-1.svg" alt="Profile" />
         </a>
-        <a href="#" id="signOutLink">Sign Out</a>
       </div>
     </nav>
 
@@ -111,6 +110,7 @@
         <div class="friends-message" id="inviteFriendsMessage"></div>
       </section>
     </div>
+    <footer>My Anime Tracker • v3.2.0</footer>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -120,11 +120,6 @@
   <script>
     requireSignedInUser().then((user) => {
       if (user) initFriendsPage(user);
-    });
-
-    document.getElementById("signOutLink").addEventListener("click", (event) => {
-      event.preventDefault();
-      signOutUser();
     });
   </script>
   <script src="js/pwa.js"></script>

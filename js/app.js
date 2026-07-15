@@ -72,6 +72,7 @@ async function fetchAniListById(id) {
           extraLarge
           large
         }
+        isAdult
         episodes
         format
         seasonYear
@@ -98,6 +99,7 @@ async function searchAniListPage(search) {
             large
             medium
           }
+          isAdult
           episodes
           format
           seasonYear
@@ -175,16 +177,18 @@ async function addAnimeToSupabase(anime) {
   return data;
 }
 
-function applyPoster(card, posterUrl) {
+function applyPoster(card, posterUrl, isAdult = false) {
   const poster = card.querySelector(".poster");
   if (!poster || !posterUrl) return;
 
+  poster.classList.toggle("mat-adult-poster-hidden", Boolean(isAdult) && !matShow18Posters());
   poster.innerHTML = `
     <img
       src="${escapeHtml(posterUrl)}"
       alt="${escapeHtml(card.dataset.title)} poster"
       loading="lazy"
     />
+    ${matAdultPosterOverlay(isAdult)}
   `;
 }
 
@@ -202,7 +206,7 @@ async function loadPosters() {
         const cached = cache[cacheKey];
 
         if (cached?.poster) {
-          applyPoster(card, cached.poster);
+          applyPoster(card, cached.poster, cached.isAdult);
           return;
         }
 
@@ -213,10 +217,10 @@ async function loadPosters() {
             media?.coverImage?.large ||
             "";
 
-          cache[cacheKey] = { poster };
+          cache[cacheKey] = { poster, isAdult: Boolean(media?.isAdult) };
 
           if (poster) {
-            applyPoster(card, poster);
+            applyPoster(card, poster, Boolean(media?.isAdult));
           }
         } catch (error) {
           console.warn(`Could not load poster for ${card.dataset.title}`, error);
@@ -395,11 +399,14 @@ async function runAddAnimeSearch() {
             const year = anime.seasonYear || "Year unavailable";
 
             return `
-              <article class="search-result-card">
+              <article class="search-result-card${matAdultPosterClass(anime.isAdult)}">
+                <div class="search-result-poster">
                 <img
                   src="${escapeHtml(poster)}"
                   alt="${escapeHtml(title)} poster"
                 />
+                ${matAdultPosterOverlay(anime.isAdult)}
+                </div>
 
                 <div>
                   <h3 class="search-result-title">${escapeHtml(title)}</h3>

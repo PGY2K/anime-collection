@@ -150,7 +150,7 @@ async function loadTrendingAnime() {
   const query = `
     query {
       Page(page: 1, perPage: 8) {
-        media(type: ANIME, sort: TRENDING_DESC, isAdult: false) {
+        media(type: ANIME, sort: TRENDING_DESC) {
           id
           title {
             english
@@ -160,6 +160,7 @@ async function loadTrendingAnime() {
             extraLarge
             large
           }
+          isAdult
           averageScore
           episodes
           format
@@ -235,10 +236,11 @@ function renderTrending(anime, media) {
 
     return `
       <article class="dashboard-media-card">
-        <a class="dashboard-poster dashboard-poster-link" href="anime.html?anilist_id=${item.id}" aria-label="View ${dashboardEscapeHtml(title)} details">
+        <a class="dashboard-poster dashboard-poster-link${matAdultPosterClass(item.isAdult)}" href="anime.html?anilist_id=${item.id}" aria-label="View ${dashboardEscapeHtml(title)} details">
           ${poster
             ? `<img src="${dashboardEscapeHtml(poster)}" alt="${dashboardEscapeHtml(title)} poster" loading="lazy" />`
             : '<div class="poster-placeholder">🎌</div>'}
+          ${matAdultPosterOverlay(item.isAdult)}
           <span class="dashboard-trend-rank">#${index + 1}</span>
         </a>
 
@@ -359,6 +361,7 @@ async function loadFriendRatingPosters(groups) {
       Page(page: 1, perPage: 50) {
         media(id_in: $ids, type: ANIME) {
           id
+          isAdult
           coverImage {
             extraLarge
             large
@@ -373,7 +376,7 @@ async function loadFriendRatingPosters(groups) {
   return new Map(
     (data?.Page?.media || []).map((media) => [
       Number(media.id),
-      media.coverImage?.extraLarge || media.coverImage?.large || ""
+      { url: media.coverImage?.extraLarge || media.coverImage?.large || "", isAdult: Boolean(media.isAdult) }
     ])
   );
 }
@@ -436,15 +439,17 @@ async function renderRatedByFriends(anime, groups) {
   }
 
   container.innerHTML = groups.map((group) => {
-    const poster = posters.get(Number(group.anilistId)) || "";
+    const posterData = posters.get(Number(group.anilistId)) || { url: "", isAdult: false };
+    const poster = posterData.url;
     const inCollection = dashboardInCollection(anime, group.anilistId);
 
     return `
       <article class="dashboard-media-card friend-rating-card">
-        <a class="dashboard-poster dashboard-poster-link" href="anime.html?anilist_id=${group.anilistId}" aria-label="View ${dashboardEscapeHtml(group.title)} details">
+        <a class="dashboard-poster dashboard-poster-link${matAdultPosterClass(posterData.isAdult)}" href="anime.html?anilist_id=${group.anilistId}" aria-label="View ${dashboardEscapeHtml(group.title)} details">
           ${poster
             ? `<img src="${dashboardEscapeHtml(poster)}" alt="${dashboardEscapeHtml(group.title)} poster" loading="lazy" />`
             : '<div class="poster-placeholder">🎌</div>'}
+          ${matAdultPosterOverlay(posterData.isAdult)}
         </a>
 
         <div class="dashboard-media-body">

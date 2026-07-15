@@ -36,15 +36,16 @@ async function loadRatingsRecords() {
 }
 
 async function fetchPoster(anilistId) {
-  const query = `query ($id: Int) { Media(id: $id, type: ANIME) { coverImage { large medium } } }`;
+  const query = `query ($id: Int) { Media(id: $id, type: ANIME) { isAdult coverImage { large medium } } }`;
   const response = await fetch(RATINGS_ANILIST_ENDPOINT, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({ query, variables: { id: Number(anilistId) } })
   });
-  if (!response.ok) return "";
+  if (!response.ok) return { url: "", isAdult: false };
   const json = await response.json();
-  return json?.data?.Media?.coverImage?.large || json?.data?.Media?.coverImage?.medium || "";
+  const media = json?.data?.Media;
+  return { url: media?.coverImage?.large || media?.coverImage?.medium || "", isAdult: Boolean(media?.isAdult) };
 }
 
 async function fillPosters() {
@@ -52,8 +53,11 @@ async function fillPosters() {
   for (let i = 0; i < images.length; i += 5) {
     await Promise.all(images.slice(i, i + 5).map(async (holder) => {
       try {
-        const url = await fetchPoster(holder.dataset.ratingPoster);
-        if (url) holder.outerHTML = `<img src="${rEsc(url)}" alt="Anime poster" loading="lazy">`;
+        const poster = await fetchPoster(holder.dataset.ratingPoster);
+        if (poster.url) {
+          holder.classList.toggle("mat-adult-poster-hidden", poster.isAdult && !matShow18Posters());
+          holder.innerHTML = `<img src="${rEsc(poster.url)}" alt="Anime poster" loading="lazy">${matAdultPosterOverlay(poster.isAdult)}`;
+        }
       } catch (error) { console.warn(error); }
     }));
   }

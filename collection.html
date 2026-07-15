@@ -26,7 +26,6 @@
         <a class="profile-nav-link" href="profile.html" aria-label="Open profile" title="Profile">
           <img id="navProfileAvatar" src="assets/avatars/avatar-1.svg" alt="Profile" />
         </a>
-        <a href="#" id="signOutLink">Sign Out</a>
       </div>
     </nav>
 
@@ -78,7 +77,7 @@
       <div class="loading">Loading anime…</div>
     </section>
 
-    <footer>My Anime Tracker</footer>
+    <footer>My Anime Tracker • v3.2.0</footer>
   </main>
 
   <div class="modal-backdrop hidden" id="addAnimeModal" aria-hidden="true">
@@ -117,17 +116,13 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-client.js"></script>
   <script src="js/profile-nav.js"></script>
+  <script src="js/content-preferences.js"></script>
   <script src="js/app.js"></script>
   <script>
     requireSignedInUser().then((user) => {
       if (user) {
         initCollection();
       }
-    });
-
-    document.getElementById("signOutLink").addEventListener("click", (event) => {
-      event.preventDefault();
-      signOutUser();
     });
   </script>
   <script src="js/pwa.js"></script>

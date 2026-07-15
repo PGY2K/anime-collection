@@ -54,11 +54,11 @@ async function loadProfileAnime() {
 async function loadProfilePosters(items) {
   const ids = [...new Set(items.map((item) => Number(item.anilist_id)).filter(Number.isFinite))];
   if (!ids.length) return new Map();
-  const query = `query ($ids: [Int]) { Page(page: 1, perPage: 20) { media(id_in: $ids, type: ANIME) { id coverImage { extraLarge large } } } }`;
+  const query = `query ($ids: [Int]) { Page(page: 1, perPage: 20) { media(id_in: $ids, type: ANIME) { id isAdult coverImage { extraLarge large } } } }`;
   const response = await fetch(PROFILE_ANILIST_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ query, variables: { ids } }) });
   if (!response.ok) return new Map();
   const json = await response.json();
-  return new Map((json?.data?.Page?.media || []).map((item) => [Number(item.id), item.coverImage?.extraLarge || item.coverImage?.large || ""]));
+  return new Map((json?.data?.Page?.media || []).map((item) => [Number(item.id), { url: item.coverImage?.extraLarge || item.coverImage?.large || "", isAdult: Boolean(item.isAdult) }]));
 }
 function statusCount(status) { return profileAnime.filter((item) => profileNormalize(item.status) === status).length; }
 
@@ -87,8 +87,8 @@ async function renderProfile() {
         <div class="profile-section-heading"><h3>⭐ Top 5 Anime</h3><span>Highest rated</span></div>
         <div class="profile-top-grid">
           ${topFive.length ? topFive.map((item, index) => `
-            <a class="profile-top-card" href="anime.html?id=${encodeURIComponent(item.id)}">
-              ${posters.get(Number(item.anilist_id)) ? `<img src="${escapeProfileHtml(posters.get(Number(item.anilist_id)))}" alt="${escapeProfileHtml(item.title)} poster" />` : '<div class="poster-placeholder">🎌</div>'}
+            <a class="profile-top-card${matAdultPosterClass(posters.get(Number(item.anilist_id))?.isAdult)}" href="anime.html?id=${encodeURIComponent(item.id)}">
+              ${posters.get(Number(item.anilist_id))?.url ? `<img src="${escapeProfileHtml(posters.get(Number(item.anilist_id)).url)}" alt="${escapeProfileHtml(item.title)} poster" />${matAdultPosterOverlay(posters.get(Number(item.anilist_id)).isAdult)}` : '<div class="poster-placeholder">🎌</div>'}
               <span class="profile-top-rank">#${index + 1}</span>
               <div><strong>${escapeProfileHtml(item.title)}</strong><small>⭐ ${item.rating.toFixed(1)}</small></div>
             </a>`).join("") : '<div class="empty-state">Rate anime to build your Top 5.</div>'}
@@ -112,6 +112,16 @@ async function renderProfile() {
           <div class="avatar-grid">${Array.from({length: PROFILE_AVATAR_COUNT}, (_,i)=>i+1).map((id)=>`<button class="avatar-choice ${id===selectedAvatarId?'selected':''}" type="button" data-avatar-id="${id}"><img src="${profileAvatarPath(id)}" alt="Avatar ${id}" /></button>`).join("")}</div>
           <label>Your friend code</label>
           <div class="friend-code-row"><code id="friendCode">${escapeProfileHtml(currentProfileData.friend_code)}</code><button class="secondary-btn" id="copyFriendCodeBtn" type="button">Copy</button></div>
+          <div class="profile-setting-row">
+            <div>
+              <strong>Show 18+ Posters</strong>
+              <small>Only sexually explicit poster artwork is blurred. Anime details remain accessible.</small>
+            </div>
+            <label class="settings-switch" aria-label="Show 18+ Posters">
+              <input id="show18PostersToggle" type="checkbox" ${matShow18Posters() ? "checked" : ""} />
+              <span></span>
+            </label>
+          </div>
           <button class="primary-btn profile-save-btn" type="submit">Save Changes</button>
           <div class="profile-message" id="profileMessage"></div>
         </form>
@@ -127,6 +137,10 @@ function bindProfileEvents() {
   document.getElementById("closeProfileSettings").addEventListener("click", close);
   modal.addEventListener("click", (event) => { if (event.target === modal) close(); });
   document.getElementById("profileSignOutBtn").addEventListener("click", signOutUser);
+  document.getElementById("show18PostersToggle").addEventListener("change", (event) => {
+    matSetShow18Posters(event.target.checked);
+    renderProfile();
+  });
   document.querySelectorAll(".avatar-choice").forEach((button) => button.addEventListener("click", () => {
     selectedAvatarId = Number(button.dataset.avatarId);
     document.querySelectorAll(".avatar-choice").forEach((item)=>item.classList.remove("selected"));

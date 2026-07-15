@@ -1,5 +1,14 @@
 const MAT_CHANGELOG = [
   {
+    version: "v3.2.0",
+    date: "July 2026",
+    changes: [
+      "Added the current MAT version to page footers.",
+      "Added a Show 18+ Posters setting that only controls sexually explicit poster blurring.",
+      "Removed Sign Out from page headers and kept it inside Profile Settings."
+    ]
+  },
+  {
     version: "v3.0.6",
     date: "July 2026",
     changes: [

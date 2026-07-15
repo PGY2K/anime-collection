@@ -62,6 +62,7 @@ async function fetchFriendPosters(ids) {
       Page(page: 1, perPage: 50) {
         media(id_in: $ids, type: ANIME) {
           id
+          isAdult
           coverImage { extraLarge large }
         }
       }
@@ -80,7 +81,7 @@ async function fetchFriendPosters(ids) {
 
   return new Map(media.map((item) => [
     Number(item.id),
-    item.coverImage?.extraLarge || item.coverImage?.large || ""
+    { url: item.coverImage?.extraLarge || item.coverImage?.large || "", isAdult: Boolean(item.isAdult) }
   ]));
 }
 
@@ -111,8 +112,8 @@ async function renderFriendProfileShell(profile) {
         <div class="profile-section-heading"><h3>⭐ Top 5 Anime</h3><span>Highest rated</span></div>
         <div class="profile-top-grid">
           ${topFive.length ? topFive.map((item,index)=>`
-            <a class="profile-top-card" href="anime.html?anilist_id=${item.anilist_id}">
-              ${topPosters.get(Number(item.anilist_id)) ? `<img src="${fpEscape(topPosters.get(Number(item.anilist_id)))}" alt="${fpEscape(item.title)} poster" />` : '<div class="poster-placeholder">🎌</div>'}
+            <a class="profile-top-card${matAdultPosterClass(topPosters.get(Number(item.anilist_id))?.isAdult)}" href="anime.html?anilist_id=${item.anilist_id}">
+              ${topPosters.get(Number(item.anilist_id))?.url ? `<img src="${fpEscape(topPosters.get(Number(item.anilist_id)).url)}" alt="${fpEscape(item.title)} poster" />${matAdultPosterOverlay(topPosters.get(Number(item.anilist_id)).isAdult)}` : '<div class="poster-placeholder">🎌</div>'}
               <span class="profile-top-rank">#${index+1}</span>
               <div><strong>${fpEscape(item.title)}</strong><small>⭐ ${item.rating.toFixed(1)}</small></div>
             </a>`).join("") : '<div class="empty-state">No fully rated anime yet.</div>'}
@@ -156,13 +157,15 @@ async function renderFriendAnime() {
   root.innerHTML = filtered.length
     ? filtered.map((item) => {
         const score = fpAverage(item);
-        const poster = posters.get(Number(item.anilist_id));
+        const posterData = posters.get(Number(item.anilist_id)) || { url: "", isAdult: false };
+        const poster = posterData.url;
         return `
           <article class="friend-anime-card">
-            <a class="friend-anime-poster friend-anime-poster-link" href="anime.html?anilist_id=${item.anilist_id}" aria-label="View ${fpEscape(item.title)} details">
+            <a class="friend-anime-poster friend-anime-poster-link${matAdultPosterClass(posterData.isAdult)}" href="anime.html?anilist_id=${item.anilist_id}" aria-label="View ${fpEscape(item.title)} details">
               ${poster
                 ? `<img src="${fpEscape(poster)}" alt="${fpEscape(item.title)} poster" loading="lazy" />`
                 : '<div class="poster-placeholder">🎌</div>'}
+              ${matAdultPosterOverlay(posterData.isAdult)}
             </a>
             <div class="friend-anime-body">
               <h3 class="friend-anime-title">${fpEscape(item.title)}</h3>
