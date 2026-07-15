@@ -1,4 +1,4 @@
-const CACHE_NAME = "mat-shell-v3";
+const CACHE_NAME = "mat-shell-v3-0-1";
 const APP_SHELL = [
   "./offline.html",
   "./css/style.css",
