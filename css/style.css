@@ -18,3 +18,32 @@
     border-radius: 50% !important;
   }
 }
+
+
+/* v2.4 Waiting status */
+.status-waiting {
+  background: rgba(255, 203, 87, 0.16);
+  color: var(--yellow, #ffcb57);
+}
+
+.stats {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+@media (max-width: 1050px) {
+  .stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 850px) {
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .stats {
+    grid-template-columns: 1fr;
+  }
+}

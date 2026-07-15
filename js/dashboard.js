@@ -56,6 +56,10 @@ function renderDashboardStats(anime) {
     (item) => dashboardNormalize(item.status) === "in progress"
   ).length;
 
+  document.getElementById("waitingAnime").textContent = anime.filter(
+    (item) => dashboardNormalize(item.status) === "waiting"
+  ).length;
+
   document.getElementById("droppedAnime").textContent = anime.filter(
     (item) => dashboardNormalize(item.status) === "dropped"
   ).length;

@@ -34,6 +34,7 @@ function statusClass(status) {
 
   if (value === "completed") return "status-completed";
   if (value === "in progress") return "status-progress";
+  if (value === "waiting") return "status-waiting";
   if (value === "dropped") return "status-dropped";
   if (value === "queued") return "status-queued";
 
@@ -234,7 +235,44 @@ async function loadPosters() {
 let collectionAnime = [];
 let currentFilter = "all";
 
+const collectionFilterCopy = {
+  all: {
+    title: 'Your <span>Collection</span>',
+    description: "Search, filter, and browse your anime."
+  },
+  queued: {
+    title: "Queued",
+    description: "You've added this anime to your collection but haven't started watching it yet."
+  },
+  "in progress": {
+    title: "In Progress",
+    description: "You're currently watching these anime."
+  },
+  waiting: {
+    title: "Waiting",
+    description: "You're waiting for new episodes or the next season."
+  },
+  completed: {
+    title: "Completed",
+    description: "You've finished watching these anime."
+  },
+  dropped: {
+    title: "Dropped",
+    description: "You've decided not to continue watching these anime."
+  }
+};
+
+function updateCollectionHeader() {
+  const copy = collectionFilterCopy[currentFilter] || collectionFilterCopy.all;
+  const title = document.getElementById("collectionPageTitle");
+  const subtitle = document.getElementById("collectionPageSubtitle");
+
+  if (title) title.innerHTML = copy.title;
+  if (subtitle) subtitle.textContent = copy.description;
+}
+
 function renderCollection() {
+  updateCollectionHeader();
   const search = normalize(document.getElementById("searchInput").value);
   const sortValue = document.getElementById("sortSelect").value;
 

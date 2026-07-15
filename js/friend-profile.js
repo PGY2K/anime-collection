@@ -28,6 +28,7 @@ function fpStatusClass(status) {
   const value = fpNormalize(status);
   if (value === "completed") return "status-completed";
   if (value === "in progress") return "status-progress";
+  if (value === "waiting") return "status-waiting";
   if (value === "dropped") return "status-dropped";
   return "status-queued";
 }
@@ -98,6 +99,7 @@ function renderFriendProfileShell(profile) {
     <div class="friend-filter-bar">
       <button class="filter-btn active" type="button" data-friend-filter="all">All</button>
       <button class="filter-btn" type="button" data-friend-filter="in progress">Watching</button>
+      <button class="filter-btn" type="button" data-friend-filter="waiting">Waiting</button>
       <button class="filter-btn" type="button" data-friend-filter="queued">Queue</button>
       <button class="filter-btn" type="button" data-friend-filter="completed">Completed</button>
       <button class="filter-btn" type="button" data-friend-filter="favorites">Favorites</button>

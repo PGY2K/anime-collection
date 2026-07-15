@@ -496,3 +496,35 @@
   cursor: pointer;
   font-weight: 900;
 }
+
+
+/* v2.4 status guide */
+.status-guide {
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.status-guide summary {
+  padding: 12px 14px;
+  cursor: pointer;
+  color: #d8c1ff;
+  font-weight: 900;
+}
+
+.status-guide-list {
+  display: grid;
+  gap: 8px;
+  padding: 0 14px 14px;
+}
+
+.status-guide-list p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.status-guide-list strong {
+  color: white;
+}

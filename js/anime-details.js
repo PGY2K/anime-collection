@@ -17,6 +17,7 @@ function detailsStatusClass(status) {
   const value = detailsNormalize(status);
   if (value === "completed") return "status-completed";
   if (value === "in progress") return "status-progress";
+  if (value === "waiting") return "status-waiting";
   if (value === "dropped") return "status-dropped";
   return "status-queued";
 }
@@ -50,7 +51,7 @@ function scoreOptions(selectedValue) {
 }
 
 function statusOptions(selectedStatus) {
-  return ["Queued", "In Progress", "Completed", "Dropped"]
+  return ["Queued", "In Progress", "Waiting", "Completed", "Dropped"]
     .map((status) => (
       `<option value="${status}" ${status === selectedStatus ? "selected" : ""}>${status}</option>`
     ))
@@ -237,6 +238,17 @@ function renderDetails(record, media) {
             Status
             <select id="editStatus">${statusOptions(record.status || "Queued")}</select>
           </label>
+
+          <details class="status-guide">
+            <summary>ⓘ Status Guide</summary>
+            <div class="status-guide-list">
+              <p><strong>Queued:</strong> You've added this anime to your collection but haven't started watching it yet.</p>
+              <p><strong>In Progress:</strong> You're currently watching these anime.</p>
+              <p><strong>Waiting:</strong> You're waiting for new episodes or the next season.</p>
+              <p><strong>Completed:</strong> You've finished watching these anime.</p>
+              <p><strong>Dropped:</strong> You've decided not to continue watching these anime.</p>
+            </div>
+          </details>
 
           <div class="rating-fields">
             <label>
