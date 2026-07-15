@@ -45,13 +45,13 @@ async function dashboardAniListRequest(query, variables = {}) {
   });
 
   if (!response.ok) {
-    throw new Error("AniList request failed.");
+    throw new Error("Anime data request failed.");
   }
 
   const json = await response.json();
 
   if (json.errors?.length) {
-    throw new Error(json.errors[0].message || "AniList request failed.");
+    throw new Error(json.errors[0].message || "Anime data request failed.");
   }
 
   return json.data;
@@ -236,18 +236,18 @@ function renderTrending(anime, media) {
 
     return `
       <article class="dashboard-media-card">
-        <div class="dashboard-poster">
+        <a class="dashboard-poster dashboard-poster-link" href="anime.html?anilist_id=${item.id}" aria-label="View ${dashboardEscapeHtml(title)} details">
           ${poster
             ? `<img src="${dashboardEscapeHtml(poster)}" alt="${dashboardEscapeHtml(title)} poster" loading="lazy" />`
             : '<div class="poster-placeholder">🎌</div>'}
           <span class="dashboard-trend-rank">#${index + 1}</span>
-        </div>
+        </a>
 
         <div class="dashboard-media-body">
           <h3>${dashboardEscapeHtml(title)}</h3>
           <div class="dashboard-media-meta">
             ${dashboardEscapeHtml(details || "Anime")}
-            ${item.averageScore ? `<span> • AniList ${Math.round(item.averageScore) / 10}</span>` : ""}
+            
           </div>
 
           <button
@@ -444,11 +444,11 @@ async function renderRatedByFriends(anime, groups) {
 
     return `
       <article class="dashboard-media-card friend-rating-card">
-        <div class="dashboard-poster">
+        <a class="dashboard-poster dashboard-poster-link" href="anime.html?anilist_id=${group.anilistId}" aria-label="View ${dashboardEscapeHtml(group.title)} details">
           ${poster
             ? `<img src="${dashboardEscapeHtml(poster)}" alt="${dashboardEscapeHtml(group.title)} poster" loading="lazy" />`
             : '<div class="poster-placeholder">🎌</div>'}
-        </div>
+        </a>
 
         <div class="dashboard-media-body">
           <h3>${dashboardEscapeHtml(group.title)}</h3>

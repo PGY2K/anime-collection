@@ -138,11 +138,11 @@ async function renderFriendAnime() {
         const poster = posters.get(Number(item.anilist_id));
         return `
           <article class="friend-anime-card">
-            <div class="friend-anime-poster">
+            <a class="friend-anime-poster friend-anime-poster-link" href="anime.html?anilist_id=${item.anilist_id}" aria-label="View ${fpEscape(item.title)} details">
               ${poster
                 ? `<img src="${fpEscape(poster)}" alt="${fpEscape(item.title)} poster" loading="lazy" />`
                 : '<div class="poster-placeholder">🎌</div>'}
-            </div>
+            </a>
             <div class="friend-anime-body">
               <h3 class="friend-anime-title">${fpEscape(item.title)}</h3>
               <div class="friend-anime-meta">

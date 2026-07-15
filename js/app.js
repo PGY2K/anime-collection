@@ -370,7 +370,7 @@ async function runAddAnimeSearch() {
   }
 
   resultsContainer.innerHTML =
-    '<div class="loading">Searching AniList…</div>';
+    '<div class="loading">Searching…</div>';
 
   try {
     const results = await searchAniListPage(search);
@@ -458,7 +458,7 @@ async function runAddAnimeSearch() {
     console.error(error);
 
     resultsContainer.innerHTML =
-      '<div class="error">AniList search failed. Please try again.</div>';
+      '<div class="error">Search failed. Please try again.</div>';
   }
 }
 
