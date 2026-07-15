@@ -3,7 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Collection | Anime Collection</title>
+  <title>Collection • My Anime Tracker</title>
+  <meta name="theme-color" content="#8b5cf6" />
+  <meta name="application-name" content="My Anime Tracker" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png" />
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" />
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/profile.css" />
   <link rel="stylesheet" href="css/add-anime.css" />
@@ -11,7 +16,7 @@
 <body>
   <main class="shell">
     <nav class="navbar">
-      <div class="brand"><span>⛩</span> ANIME COLLECTION</div>
+      <a class="brand brand-link" href="index.html" aria-label="My Anime Tracker dashboard"><img class="brand-logo" src="assets/icons/mat-logo.png" alt="" /><span>MAT</span></a>
 
       <div class="nav-links">
         <a href="index.html">Dashboard</a>
@@ -28,7 +33,7 @@
     <section class="page-header collection-heading">
       <div>
         <h1 class="page-title" id="collectionPageTitle">Your <span>Collection</span></h1>
-        <p class="page-subtitle" id="collectionPageSubtitle">Search, filter, and browse your anime.</p>
+        <p class="page-subtitle" id="collectionPageSubtitle">Track everything you're watching, waiting on, completed, queued, or dropped.</p>
       </div>
 
       <button class="primary-btn" id="openAddAnimeBtn" type="button">
@@ -73,7 +78,7 @@
       <div class="loading">Loading anime…</div>
     </section>
 
-    <footer>Anime Collection</footer>
+    <footer>My Anime Tracker</footer>
   </main>
 
   <div class="modal-backdrop hidden" id="addAnimeModal" aria-hidden="true">
@@ -125,5 +130,6 @@
       signOutUser();
     });
   </script>
+  <script src="js/pwa.js"></script>
 </body>
 </html>

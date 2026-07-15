@@ -219,3 +219,12 @@
 .dashboard-poster-link { display:block; color:inherit; text-decoration:none; cursor:pointer; }
 .dashboard-poster-link:focus-visible { outline: 2px solid var(--purple); outline-offset: 3px; }
 .friend-anime-poster-link { display:block; color:inherit; text-decoration:none; cursor:pointer; }
+
+
+/* MAT v3.0 branding */
+.brand-link{display:inline-flex;align-items:center;gap:10px;text-decoration:none;color:inherit;white-space:nowrap}
+.brand-logo{width:34px;height:34px;object-fit:cover;border-radius:9px;box-shadow:0 0 14px rgba(190,110,255,.55);flex:0 0 34px}
+.brand-link span{color:#fff;font-weight:900;letter-spacing:.08em}
+.auth-brand{justify-content:center}
+.auth-brand .brand-logo{width:48px;height:48px;flex-basis:48px;border-radius:12px}
+@media(max-width:520px){.brand-logo{width:30px;height:30px;flex-basis:30px}.brand-link{gap:7px}}

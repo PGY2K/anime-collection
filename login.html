@@ -3,16 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sign In | Anime Collection</title>
+  <title>Sign In • My Anime Tracker</title>
+  <meta name="theme-color" content="#8b5cf6" />
+  <meta name="application-name" content="My Anime Tracker" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png" />
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" />
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/auth.css" />
 </head>
 <body>
   <main class="auth-page">
     <section class="auth-card">
-      <div class="brand auth-brand"><span>⛩</span> ANIME COLLECTION</div>
+      <a class="brand auth-brand brand-link" href="index.html" aria-label="My Anime Tracker"><img class="brand-logo" src="assets/icons/mat-logo.png" alt="" /><span>My Anime Tracker</span></a>
       <h1>Welcome Back</h1>
-      <p>Sign in to manage your personal anime collection.</p>
+      <p>Sign in to track, rate, and discover anime.</p>
 
       <form id="loginForm">
         <label for="email">Email</label>
@@ -62,5 +67,6 @@
       window.location.href = "collection.html";
     });
   </script>
+  <script src="js/pwa.js"></script>
 </body>
 </html>

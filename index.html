@@ -3,14 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Anime Collection</title>
+  <title>Dashboard • My Anime Tracker</title>
+  <meta name="theme-color" content="#8b5cf6" />
+  <meta name="application-name" content="My Anime Tracker" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png" />
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" />
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/profile.css" />
 </head>
 <body>
   <main class="shell">
     <nav class="navbar">
-      <div class="brand"><span>⛩</span> ANIME COLLECTION</div>
+      <a class="brand brand-link" href="index.html" aria-label="My Anime Tracker dashboard"><img class="brand-logo" src="assets/icons/mat-logo.png" alt="" /><span>MAT</span></a>
 
       <div class="nav-links">
         <a class="active" href="index.html">Dashboard</a>
@@ -26,7 +31,7 @@
 
     <section class="hero">
       <div>
-        <h1>Anime <span>Collection</span></h1>
+        <h1>My Anime <span>Tracker</span></h1>
         <p>Track • Rate • Discover</p>
       </div>
     </section>
@@ -111,7 +116,7 @@
       </article>
     </section>
 
-    <footer>Anime Collection</footer>
+    <footer>My Anime Tracker</footer>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -130,5 +135,6 @@
       signOutUser();
     });
   </script>
+  <script src="js/pwa.js"></script>
 </body>
 </html>
