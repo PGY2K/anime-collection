@@ -578,3 +578,376 @@
 .rating-completed-only.hidden {
   display: none !important;
 }
+
+
+/* v3.0.6 Public anime comments */
+.anime-comments-section {
+  margin: 22px 0;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: linear-gradient(145deg, var(--panel-2), var(--panel));
+}
+
+.comments-section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.comments-section-heading h2 {
+  margin: 0;
+}
+
+.comments-section-heading p {
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+
+.comments-sort-label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.comments-sort-label select {
+  min-width: 125px;
+  padding: 9px 11px;
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 10px;
+  color: white;
+  background: rgba(255, 255, 255, .055);
+}
+
+.comments-sort-label option {
+  color: #111;
+}
+
+.comment-compose,
+.reply-compose {
+  display: grid;
+  gap: 10px;
+}
+
+.comment-compose {
+  margin-bottom: 20px;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, .03);
+}
+
+.comment-compose textarea,
+.reply-compose textarea {
+  width: 100%;
+  resize: vertical;
+  padding: 12px 13px;
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 11px;
+  color: white;
+  background: rgba(255, 255, 255, .045);
+  outline: none;
+}
+
+.comment-compose textarea:focus,
+.reply-compose textarea:focus {
+  border-color: var(--purple);
+}
+
+.comment-compose-footer,
+.reply-compose > div {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.comment-compose-footer {
+  justify-content: space-between;
+}
+
+.comment-message {
+  color: #ff9da5;
+  font-size: 13px;
+}
+
+.comment-submit-btn {
+  min-height: 40px;
+  padding: 9px 15px;
+  border: 1px solid rgba(190, 130, 255, .55);
+  border-radius: 11px;
+  color: white;
+  background: linear-gradient(135deg, #9b5cff, #6f35d8);
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.comment-submit-btn.compact {
+  min-height: 34px;
+  padding: 7px 12px;
+}
+
+.comment-submit-btn:disabled {
+  cursor: wait;
+  opacity: .65;
+}
+
+.comments-list,
+.comment-thread,
+.comment-replies {
+  display: grid;
+  gap: 12px;
+}
+
+.comment-thread + .comment-thread {
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, .065);
+}
+
+.comment-card {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 12px;
+}
+
+.comment-replies {
+  margin-left: 56px;
+  padding-left: 16px;
+  border-left: 2px solid rgba(155, 92, 255, .22);
+}
+
+.comment-reply-card {
+  grid-template-columns: 36px 1fr;
+}
+
+.comment-author-button,
+.comment-author-name {
+  border: 0;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.comment-author-button {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.comment-reply-card .comment-author-button {
+  width: 36px;
+  height: 36px;
+}
+
+.comment-author-button img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.comment-content {
+  min-width: 0;
+}
+
+.comment-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.comment-author-name {
+  padding: 0;
+  color: white;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.comment-author-name:hover {
+  color: #d8c1ff;
+}
+
+.comment-body {
+  margin: 7px 0 9px;
+  color: #e5e1ec;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.comment-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.comment-like-btn,
+.comment-text-action {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.comment-like-btn {
+  padding: 5px 9px;
+  border: 1px solid rgba(255, 255, 255, .09);
+  border-radius: 999px;
+  color: #cfc9d9;
+  background: rgba(255, 255, 255, .035);
+}
+
+.comment-like-btn.liked {
+  border-color: rgba(255, 92, 145, .4);
+  color: #ff7faa;
+  background: rgba(255, 92, 145, .1);
+}
+
+.comment-text-action {
+  padding: 5px 3px;
+  color: #c9b2ef;
+}
+
+.comment-text-action.danger {
+  color: #ff9da5;
+}
+
+.reply-form-slot {
+  margin-top: 10px;
+}
+
+.comments-empty {
+  padding: 26px;
+  border: 1px dashed rgba(255, 255, 255, .1);
+  border-radius: 14px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.comment-profile-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(4, 4, 12, .82);
+  backdrop-filter: blur(12px);
+}
+
+.comment-profile-backdrop[hidden] {
+  display: none;
+}
+
+.comment-profile-dialog {
+  position: relative;
+  width: min(410px, 100%);
+  padding: 30px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: linear-gradient(150deg, rgba(30, 20, 56, .99), rgba(11, 11, 27, .99));
+  box-shadow: 0 28px 90px rgba(0, 0, 0, .55);
+  text-align: center;
+}
+
+.comment-profile-close {
+  position: absolute;
+  top: 13px;
+  right: 13px;
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 11px;
+  color: white;
+  background: rgba(255, 255, 255, .05);
+  cursor: pointer;
+  font-size: 22px;
+}
+
+.comment-profile-avatar {
+  width: 96px;
+  height: 96px;
+  border: 3px solid rgba(190, 130, 255, .55);
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.comment-profile-dialog h2 {
+  margin: 14px 0 4px;
+}
+
+.comment-profile-private {
+  margin: 0;
+  color: var(--muted);
+}
+
+.comment-profile-message {
+  min-height: 22px;
+  margin: 18px 0;
+  color: #d7d1e0;
+  line-height: 1.5;
+}
+
+.comment-profile-primary,
+.comment-profile-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 10px 16px;
+  border-radius: 11px;
+  cursor: pointer;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.comment-profile-primary {
+  border: 1px solid rgba(190, 130, 255, .55);
+  color: white;
+  background: linear-gradient(135deg, #9b5cff, #6f35d8);
+}
+
+.comment-profile-secondary {
+  border: 1px solid rgba(255, 255, 255, .1);
+  color: white;
+  background: rgba(255, 255, 255, .05);
+}
+
+@media (max-width: 600px) {
+  .anime-comments-section {
+    padding: 18px;
+  }
+
+  .comments-section-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .comments-sort-label select {
+    width: 100%;
+  }
+
+  .comment-replies {
+    margin-left: 18px;
+    padding-left: 12px;
+  }
+
+  .comment-compose-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .comment-submit-btn {
+    width: 100%;
+  }
+}

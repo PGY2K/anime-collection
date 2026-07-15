@@ -1,5 +1,14 @@
 const MAT_CHANGELOG = [
   {
+    version: "v3.0.6",
+    date: "July 2026",
+    changes: [
+      "Added public comments to every anime.",
+      "Added comment likes, replies, and sorting by Relevant, Recent, or Oldest.",
+      "Added locked commenter profiles with friend request options."
+    ]
+  },
+  {
     version: "v3.0.5.2",
     date: "July 2026",
     changes: [
