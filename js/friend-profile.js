@@ -86,6 +86,7 @@ async function fetchFriendPosters(ids) {
 }
 
 async function renderFriendProfileShell(profile) {
+  const profileBadges = await matLoadUserBadges(profile.user_id);
   const root = document.getElementById("friendProfileRoot");
   const topFive = friendProfileAnime
     .map((item) => ({ ...item, rating: fpAverage(item) }))
@@ -100,6 +101,7 @@ async function renderFriendProfileShell(profile) {
     <section class="public-profile-card friend-public-profile">
       <img class="profile-main-avatar" src="${profileAvatarPath(profile.avatar_id || 1)}" alt="${fpEscape(profile.username)} avatar" />
       <h2>${fpEscape(profile.username || "Anime Fan")}</h2>
+      ${matBadgeRowHtml(profileBadges, { emptyText: "No badges awarded yet." })}
       <p class="profile-private-note">Accepted friend</p>
       <div class="profile-stat-grid">
         <div><strong>${count("in progress")}</strong><span>Watching</span></div>
@@ -134,8 +136,12 @@ async function renderFriendProfileShell(profile) {
       <section class="friend-anime-grid" id="friendAnimeGrid"><div class="loading">Loading collection…</div></section>
     </section>`;
 
+  matBindBadgeButtons(root);
+
   document.querySelectorAll("[data-friend-filter]").forEach((button) => button.addEventListener("click", () => {
-    document.querySelectorAll("[data-friend-filter]").forEach((item) => item.classList.remove("active"));
+    matBindBadgeButtons(root);
+
+  document.querySelectorAll("[data-friend-filter]").forEach((item) => item.classList.remove("active"));
     button.classList.add("active");
     friendProfileFilter = button.dataset.friendFilter;
     renderFriendAnime();

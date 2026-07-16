@@ -51,27 +51,45 @@
     </section>
 
     <section class="friends-grid-layout">
-      <article class="friends-panel add-friend-panel">
-        <div class="friends-panel-heading">
-          <div>
-            <h2>Add Friend</h2>
-            <p>Enter their permanent friend code.</p>
-          </div>
-        </div>
+      <article class="friends-panel friend-code-panel">
+        <div class="friend-code-tools">
+          <section class="friend-code-tool own-friend-code-tool" aria-labelledby="yourFriendCodeTitle">
+            <div class="friends-panel-heading compact-heading">
+              <div>
+                <h2 id="yourFriendCodeTitle">Your Friend Code</h2>
+                <p>Share this permanent code with people you know.</p>
+              </div>
+            </div>
+            <div class="own-friend-code-row">
+              <strong id="yourFriendCode">Loading…</strong>
+              <button class="secondary-btn copy-friend-code-btn" id="copyFriendCodeBtn" type="button">Copy Code</button>
+            </div>
+            <div class="friends-message" id="copyFriendCodeMessage"></div>
+          </section>
 
-        <form id="addFriendForm" class="friend-code-form">
-          <input
-            class="search-box friend-code-input"
-            id="friendCodeInput"
-            type="text"
-            maxlength="20"
-            placeholder="Friend code"
-            autocomplete="off"
-            required
-          />
-          <button class="primary-btn" type="submit">Send Request</button>
-        </form>
-        <div class="friends-message" id="addFriendMessage"></div>
+          <section class="friend-code-tool add-friend-tool" aria-labelledby="addFriendTitle">
+            <div class="friends-panel-heading compact-heading">
+              <div>
+                <h2 id="addFriendTitle">Add Friend</h2>
+                <p>Enter their permanent friend code.</p>
+              </div>
+            </div>
+
+            <form id="addFriendForm" class="friend-code-form">
+              <input
+                class="search-box friend-code-input"
+                id="friendCodeInput"
+                type="text"
+                maxlength="20"
+                placeholder="Friend code"
+                autocomplete="off"
+                required
+              />
+              <button class="primary-btn" type="submit">Send Request</button>
+            </form>
+            <div class="friends-message" id="addFriendMessage"></div>
+          </section>
+        </div>
       </article>
 
       <article class="friends-panel">

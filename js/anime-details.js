@@ -557,12 +557,21 @@ async function openCommentProfile(targetUserId, username, avatarId) {
   modal.hidden = false;
   document.body.classList.add("modal-open");
 
+  let publicBadges = [];
+  try {
+    publicBadges = await matLoadUserBadges(targetUserId);
+  } catch (badgeError) {
+    console.warn("Could not load profile badges", badgeError);
+  }
+
   content.innerHTML = `
     <img class="comment-profile-avatar" src="${commentAvatarPath(avatarId)}" alt="" />
     <h2 id="commentProfileName">${detailsEscapeHtml(username || "Anime Fan")}</h2>
+    ${matBadgeRowHtml(publicBadges, { emptyText: "No badges awarded yet.", compact: true })}
     <p class="comment-profile-private">Profile locked</p>
     <div class="comment-profile-message" id="commentProfileMessage">Checking friendship…</div>
   `;
+  matBindBadgeButtons(content);
 
   if (targetUserId === animeCommentsState.currentUserId) {
     content.insertAdjacentHTML("beforeend", '<a class="comment-profile-primary" href="profile.html">View My Profile</a>');

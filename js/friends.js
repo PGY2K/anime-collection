@@ -143,13 +143,70 @@ async function sendFriendRequest(event) {
   message.className = "friends-message success";
 }
 
+
+async function loadOwnFriendCode(user) {
+  const codeElement = document.getElementById("yourFriendCode");
+  const copyButton = document.getElementById("copyFriendCodeBtn");
+  const message = document.getElementById("copyFriendCodeMessage");
+  if (!codeElement || !copyButton || !message) return;
+
+  const { data, error } = await supabaseClient
+    .from("profiles")
+    .select("friend_code")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (error) {
+    codeElement.textContent = "Unavailable";
+    copyButton.disabled = true;
+    message.textContent = error.message;
+    message.className = "friends-message error";
+    return;
+  }
+
+  const friendCode = String(data?.friend_code || "").trim().toUpperCase();
+  if (!friendCode) {
+    codeElement.textContent = "Not generated";
+    copyButton.disabled = true;
+    return;
+  }
+
+  codeElement.textContent = friendCode;
+  copyButton.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(friendCode);
+    } catch {
+      const temporaryInput = document.createElement("textarea");
+      temporaryInput.value = friendCode;
+      temporaryInput.setAttribute("readonly", "");
+      temporaryInput.style.position = "fixed";
+      temporaryInput.style.opacity = "0";
+      document.body.appendChild(temporaryInput);
+      temporaryInput.select();
+      document.execCommand("copy");
+      temporaryInput.remove();
+    }
+
+    message.textContent = "Friend code copied.";
+    message.className = "friends-message success";
+    copyButton.textContent = "Copied";
+    setTimeout(() => {
+      copyButton.textContent = "Copy Code";
+      message.textContent = "";
+    }, 1800);
+  });
+}
+
 async function initFriendsPage(user) {
   friendsPageUser = user;
   document.getElementById("addFriendForm").addEventListener("submit", sendFriendRequest);
   initInviteFriends();
 
   try {
-    await refreshFriendsPage();
+    await Promise.all([
+      loadOwnFriendCode(user),
+      refreshFriendsPage()
+    ]);
   } catch (error) {
     console.error(error);
     document.getElementById("requestList").innerHTML = `<div class="error">${friendsEscape(error.message)}</div>`;

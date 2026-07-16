@@ -1,6 +1,15 @@
 const MAT_CHANGELOG = [
   {
-    version: window.MAT_VERSION || "v3.3.2",
+    version: window.MAT_VERSION || "v3.4.0",
+    date: "July 2026",
+    changes: [
+      "Added official profile badges using custom MAT badge artwork.",
+      "Added badge details on hover and click, including locked profiles.",
+      "Added an owner-only Admin Control Panel with friend-code badge management."
+    ]
+  },
+  {
+    version: "v3.3.2",
     date: "July 2026",
     changes: [
       "Redesigned the Discord footer link as a clear MAT-themed button.",

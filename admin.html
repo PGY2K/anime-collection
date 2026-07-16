@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Profile • My Anime Tracker</title>
+  <title>Admin Control Panel • My Anime Tracker</title>
   <meta name="theme-color" content="#8b5cf6" />
   <meta name="application-name" content="My Anime Tracker" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png" />
   <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" />
   <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/profile.css" />
+  <link rel="stylesheet" href="css/admin.css" />
 </head>
 <body>
   <main class="shell">
@@ -21,21 +21,21 @@
         <a href="collection.html">Collection</a>
         <a href="ratings.html">Ratings</a>
         <a href="friends.html">Friends</a>
-        <a class="profile-nav-link active" href="profile.html" aria-label="Open profile" title="Profile">
+        <a class="profile-nav-link" href="profile.html" aria-label="Open profile" title="Profile">
           <img id="navProfileAvatar" src="assets/avatars/avatar-1.svg" alt="Profile" />
         </a>
       </div>
     </nav>
 
-    <section class="page-header profile-heading">
+    <section class="page-header">
       <div>
-        <h1 class="page-title">Your <span>Profile</span></h1>
-        <p class="page-subtitle">Your anime identity, stats, and top-rated favorites.</p>
+        <h1 class="page-title">Admin <span>Control Panel</span></h1>
+        <p class="page-subtitle">Owner-only tools for managing MAT.</p>
       </div>
     </section>
 
-    <section class="profile-layout" id="profileRoot">
-      <div class="loading">Loading profile…</div>
+    <section class="admin-panel" id="adminRoot">
+      <div class="loading">Checking permissions…</div>
     </section>
     <footer class="mat-footer"></footer>
   </main>
@@ -43,12 +43,11 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-client.js"></script>
   <script src="js/profile-nav.js"></script>
-  <script src="js/content-preferences.js"></script>
   <script src="js/badges.js"></script>
-  <script src="js/profile.js"></script>
+  <script src="js/admin.js"></script>
   <script>
     requireSignedInUser().then((user) => {
-      if (user) initProfile(user);
+      if (user) initAdminPanel(user);
     });
   </script>
   <script src="js/version.js"></script>

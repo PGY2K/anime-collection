@@ -3,6 +3,7 @@ let currentProfileUser = null;
 let currentProfileData = null;
 let selectedAvatarId = 1;
 let profileAnime = [];
+let profileBadges = [];
 
 function escapeProfileHtml(value) {
   return String(value ?? "")
@@ -73,6 +74,7 @@ async function renderProfile() {
     <section class="public-profile-card">
       <img class="profile-main-avatar" src="${profileAvatarPath(selectedAvatarId)}" alt="Your profile avatar" />
       <h2>${escapeProfileHtml(currentProfileData.username || "Anime Fan")}</h2>
+      ${matBadgeRowHtml(profileBadges, { emptyText: "No badges awarded yet." })}
       <p class="profile-private-note">Visible only to accepted friends.</p>
 
       <div class="profile-stat-grid">
@@ -97,6 +99,7 @@ async function renderProfile() {
 
       <div class="profile-actions-row">
         <button class="secondary-btn" id="openProfileSettings" type="button">⚙️ Settings</button>
+        ${currentProfileData.can_manage_badges ? '<a class="secondary-btn profile-admin-link" href="admin.html">Admin Control Panel</a>' : ''}
         <button class="profile-signout-btn" id="profileSignOutBtn" type="button">Sign Out</button>
       </div>
     </section>
@@ -127,6 +130,7 @@ async function renderProfile() {
         </form>
       </section>
     </div>`;
+  matBindBadgeButtons(root);
   bindProfileEvents();
 }
 
@@ -167,7 +171,11 @@ async function saveProfile(event) {
 async function initProfile(user) {
   currentProfileUser = user;
   try {
-    [currentProfileData, profileAnime] = await Promise.all([getOrCreateProfile(user), loadProfileAnime()]);
+    [currentProfileData, profileAnime, profileBadges] = await Promise.all([
+      getOrCreateProfile(user),
+      loadProfileAnime(),
+      matLoadUserBadges(user.id)
+    ]);
     await renderProfile();
   } catch (error) {
     console.error(error);

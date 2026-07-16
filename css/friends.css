@@ -320,3 +320,69 @@
   .friends-header-actions .secondary-btn { text-align: center; }
   .invite-link-row { grid-template-columns: 1fr; }
 }
+
+/* v3.4.0 friend-code tools */
+.friend-code-panel {
+  min-width: 0;
+}
+
+.friend-code-tools {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+}
+
+.friend-code-tool {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid rgba(255,255,255,.075);
+  border-radius: 16px;
+  background: rgba(255,255,255,.025);
+}
+
+.compact-heading {
+  margin-bottom: 14px;
+}
+
+.own-friend-code-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.own-friend-code-row strong {
+  min-width: 0;
+  padding: 13px 14px;
+  overflow: hidden;
+  border: 1px solid rgba(155,92,255,.36);
+  border-radius: 12px;
+  color: #fff;
+  background: rgba(155,92,255,.1);
+  font-size: clamp(.95rem, 2.5vw, 1.12rem);
+  letter-spacing: .13em;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.copy-friend-code-btn {
+  white-space: nowrap;
+}
+
+@media (max-width: 1050px) {
+  .friends-grid-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .friend-code-tools,
+  .own-friend-code-row {
+    grid-template-columns: 1fr;
+  }
+
+  .copy-friend-code-btn {
+    width: 100%;
+  }
+}
