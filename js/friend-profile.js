@@ -2,6 +2,8 @@ const FRIEND_ANILIST_ENDPOINT = "https://graphql.anilist.co";
 let friendProfileAnime = [];
 let friendProfileFilter = "all";
 let activeFriendUserId = null;
+let friendProfileFranchises = [];
+let friendProfileTopFive = [];
 
 function fpEscape(value) {
   return String(value ?? "")
@@ -17,6 +19,9 @@ function fpNormalize(value) {
 }
 
 function fpAverage(item) {
+  const rawDirect = item?.overall_rating;
+  const direct = rawDirect === null || rawDirect === undefined || rawDirect === "" ? null : Number(rawDirect);
+  if(Number.isFinite(direct) && direct > 0) return direct;
   if (fpNormalize(item.status) !== "completed") return null;
   const scores = ["story","characters","animation","sound","world","pacing","emotion","originality","rewatch_value","enjoyment"]
     .map((field) => item[field] === null || item[field] === undefined || item[field] === "" ? null : Number(item[field]))
@@ -44,6 +49,8 @@ async function fetchFriendProfile(userId) {
   return data[0];
 }
 
+async function fetchFriendFranchises(userId){ const {data,error}=await supabaseClient.rpc("get_friend_franchises",{p_friend_user_id:userId}); if(error)throw error; return data||[]; }
+
 async function fetchFriendAnime(userId) {
   const { data, error } = await supabaseClient.rpc("get_friend_anime", {
     p_friend_user_id: userId
@@ -51,6 +58,21 @@ async function fetchFriendAnime(userId) {
 
   if (error) throw error;
   return data || [];
+}
+
+
+async function fetchFriendTopFive(userId) {
+  const { data, error } = await supabaseClient.rpc("get_friend_top_five", {
+    p_friend_user_id: userId
+  });
+  if (error) throw error;
+  return (data || []).map((item) => ({
+    ...item,
+    rating: Number(item.rating),
+    href: item.kind === "franchise"
+      ? `franchise.html?key=${item.franchise_key}&user=${userId}`
+      : `anime.html?anilist_id=${item.anilist_id}`
+  }));
 }
 
 async function fetchFriendPosters(ids) {
@@ -88,11 +110,7 @@ async function fetchFriendPosters(ids) {
 async function renderFriendProfileShell(profile) {
   const profileBadges = await matLoadUserBadges(profile.user_id);
   const root = document.getElementById("friendProfileRoot");
-  const topFive = friendProfileAnime
-    .map((item) => ({ ...item, rating: fpAverage(item) }))
-    .filter((item) => item.rating !== null)
-    .sort((a,b) => b.rating - a.rating || a.title.localeCompare(b.title))
-    .slice(0,5);
+  const topFive = friendProfileTopFive;
   const topPosters = await fetchFriendPosters(topFive.map((item) => item.anilist_id));
   const count = (status) => friendProfileAnime.filter((item) => fpNormalize(item.status) === status).length;
 
@@ -114,7 +132,7 @@ async function renderFriendProfileShell(profile) {
         <div class="profile-section-heading"><h3>⭐ Top 5 Anime</h3><span>Highest rated</span></div>
         <div class="profile-top-grid">
           ${topFive.length ? topFive.map((item,index)=>`
-            <a class="profile-top-card${matAdultPosterClass(topPosters.get(Number(item.anilist_id))?.isAdult)}" href="anime.html?anilist_id=${item.anilist_id}">
+            <a class="profile-top-card${matAdultPosterClass(topPosters.get(Number(item.anilist_id))?.isAdult)}" href="${item.href || `anime.html?anilist_id=${item.anilist_id}`}">
               ${topPosters.get(Number(item.anilist_id))?.url ? `<img src="${fpEscape(topPosters.get(Number(item.anilist_id)).url)}" alt="${fpEscape(item.title)} poster" />${matAdultPosterOverlay(topPosters.get(Number(item.anilist_id)).isAdult)}` : '<div class="poster-placeholder">🎌</div>'}
               <span class="profile-top-rank">#${index+1}</span>
               <div><strong>${fpEscape(item.title)}</strong><small>⭐ ${item.rating.toFixed(1)}</small></div>
@@ -124,7 +142,7 @@ async function renderFriendProfileShell(profile) {
     </section>
 
     <section class="friend-collection-section">
-      <div class="profile-section-heading"><h3>Collection</h3><span>Browse and add anime to your queue</span></div>
+      <div class="profile-section-heading"><h3>Collection</h3><span>Browse their anime collection</span></div>
       <div class="friend-filter-bar">
         <button class="filter-btn active" type="button" data-friend-filter="all">All</button>
         <button class="filter-btn" type="button" data-friend-filter="in progress">Watching</button>
@@ -167,7 +185,7 @@ async function renderFriendAnime() {
         const poster = posterData.url;
         return `
           <article class="friend-anime-card">
-            <a class="friend-anime-poster friend-anime-poster-link${matAdultPosterClass(posterData.isAdult)}" href="anime.html?anilist_id=${item.anilist_id}" aria-label="View ${fpEscape(item.title)} details">
+            <a class="friend-anime-poster friend-anime-poster-link${matAdultPosterClass(posterData.isAdult)}" href="${item.href || `anime.html?anilist_id=${item.anilist_id}`}" aria-label="View ${fpEscape(item.title)} details">
               ${poster
                 ? `<img src="${fpEscape(poster)}" alt="${fpEscape(item.title)} poster" loading="lazy" />`
                 : '<div class="poster-placeholder">🎌</div>'}
@@ -179,41 +197,11 @@ async function renderFriendAnime() {
                 <span class="status ${fpStatusClass(item.status)}">${fpEscape(item.status || "Queued")}</span>
                 ${score === null ? "" : `<span class="friend-anime-score">⭐ ${score.toFixed(1)}</span>`}
               </div>
-              <button
-                class="primary-btn add-queue-btn"
-                type="button"
-                data-anilist-id="${item.anilist_id}"
-                data-title="${fpEscape(item.title)}"
-              >
-                + Add to Queue
-              </button>
             </div>
           </article>
         `;
       }).join("")
     : '<div class="empty-state">No anime in this section.</div>';
-
-  root.querySelectorAll(".add-queue-btn").forEach((button) => {
-    button.addEventListener("click", async () => {
-      button.disabled = true;
-      button.textContent = "Adding…";
-
-      const { error } = await supabaseClient.rpc("add_friend_anime_to_queue", {
-        p_friend_user_id: activeFriendUserId,
-        p_anilist_id: Number(button.dataset.anilistId),
-        p_title: button.dataset.title
-      });
-
-      if (error) {
-        alert(error.message);
-        button.disabled = false;
-        button.textContent = "+ Add to Queue";
-        return;
-      }
-
-      button.textContent = "Added to Queue";
-    });
-  });
 }
 
 async function initFriendProfile() {
@@ -227,16 +215,21 @@ async function initFriendProfile() {
   }
 
   try {
-    const [profile, anime] = await Promise.all([
+    const [profile, anime, franchises, topFive] = await Promise.all([
       fetchFriendProfile(activeFriendUserId),
-      fetchFriendAnime(activeFriendUserId)
+      fetchFriendAnime(activeFriendUserId),
+      fetchFriendFranchises(activeFriendUserId),
+      fetchFriendTopFive(activeFriendUserId)
     ]);
 
+    friendProfileFranchises = franchises;
+    friendProfileTopFive = topFive;
     friendProfileAnime = anime;
     await renderFriendProfileShell(profile);
     await renderFriendAnime();
   } catch (error) {
     console.error(error);
-    root.innerHTML = `<div class="error">${fpEscape(error.message || "Could not load friend profile.")}</div>`;
+    window.matShowNetworkError?.(error, { type: "service", retry: () => location.reload(), goBack: () => history.back() });
+    root.innerHTML = `<div class="error">Could not load friend profile.</div>`;
   }
 }

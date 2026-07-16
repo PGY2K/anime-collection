@@ -23,6 +23,9 @@ const DETAILS_RATING_FIELDS = [
   { key: "enjoyment", label: "Enjoyment", description: "How much you personally enjoyed the overall experience." }
 ];
 function detailsAverage(record){
+  const rawDirect=record?.overall_rating;
+  const direct=rawDirect===null||rawDirect===undefined||rawDirect===""?null:Number(rawDirect);
+  if(Number.isFinite(direct)&&direct>0) return direct;
   const scores=DETAILS_RATING_FIELDS
     .map(({key})=>record?.[key]===null||record?.[key]===undefined||record?.[key]===""?null:Number(record[key]))
     .filter(Number.isFinite);
@@ -35,13 +38,74 @@ async function fetchOwnRecordById(id){ const {data,error}=await supabaseClient.f
 async function fetchOwnRecordByAnimeId(anilistId){ const {data,error}=await supabaseClient.from("anime").select("*").eq("anilist_id",Number(anilistId)).maybeSingle(); if(error)throw error; return data; }
 async function updateRecord(id,changes){ const {data,error}=await supabaseClient.from("anime").update({...changes,updated_at:new Date().toISOString()}).eq("id",id).select("*").single(); if(error)throw error; return data; }
 async function deleteRecord(id){ const {error}=await supabaseClient.from("anime").delete().eq("id",id); if(error)throw error; }
-async function addToQueue(media){ const title=media?.title?.english||media?.title?.romaji||"Untitled"; const {data,error}=await supabaseClient.from("anime").insert({anilist_id:media.id,title,status:"Queued"}).select("*").single(); if(error){ if(error.code==="23505") throw new Error("This anime is already in your collection."); throw error;} return data; }
+async function addStandaloneToCollection(media) {
+  const title = media?.title?.english || media?.title?.romaji || "Untitled";
+  const { data, error } = await supabaseClient
+    .from("anime")
+    .insert({ anilist_id: Number(media.id), title, status: null })
+    .select("*")
+    .single();
+  if (error) {
+    if (error.code === "23505") throw new Error("This anime is already in your collection.");
+    throw error;
+  }
+  return data;
+}
+
+async function addFranchiseToCollection(franchise, media) {
+  const { data: authData, error: authError } = await supabaseClient.auth.getUser();
+  if (authError) throw authError;
+  const userId = authData?.user?.id;
+  if (!userId) throw new Error("You must be signed in.");
+
+  await matStoreFranchise(franchise);
+  const { data: existing, error: lookupError } = await supabaseClient
+    .from("user_franchises")
+    .select("franchise_key")
+    .eq("user_id", userId)
+    .eq("franchise_key", Number(franchise.franchiseKey))
+    .maybeSingle();
+  if (lookupError) throw lookupError;
+  if (existing) throw new Error("This anime is already in your collection.");
+
+  const { error } = await supabaseClient.from("user_franchises").insert({
+    user_id: userId,
+    franchise_key: Number(franchise.franchiseKey),
+    status: null,
+    updated_at: new Date().toISOString()
+  });
+  if (error) throw error;
+
+  if (media?.id) {
+    await supabaseClient
+      .from("anime")
+      .update({ franchise_key: Number(franchise.franchiseKey), franchise_title: franchise.title })
+      .eq("user_id", userId)
+      .eq("anilist_id", Number(media.id));
+  }
+}
+
+async function ownFranchiseMembership(franchiseKey) {
+  if (!franchiseKey) return false;
+  const { data, error } = await supabaseClient
+    .from("user_franchises")
+    .select("franchise_key")
+    .eq("franchise_key", Number(franchiseKey))
+    .maybeSingle();
+  if (error) throw error;
+  return Boolean(data);
+}
 
 async function fetchAnimeDetails(anilistId){
   const query=`query($id:Int){Media(id:$id,type:ANIME){id title{romaji english native} description(asHtml:true) bannerImage coverImage{extraLarge large} episodes duration format season seasonYear status genres studios(isMain:true){nodes{name}} trailer{id site thumbnail}}}`;
-  const response=await fetch(ANIME_DETAILS_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify({query,variables:{id:Number(anilistId)}})});
-  if(!response.ok)throw new Error("Could not load anime details.");
-  const json=await response.json(); return json?.data?.Media??null;
+  try {
+    const response=await fetch(ANIME_DETAILS_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify({query,variables:{id:Number(anilistId)}})});
+    if(!response.ok){const error=new Error("Anime information request failed.");error.matErrorType="source";throw error;}
+    const json=await response.json(); return json?.data?.Media??null;
+  } catch(error) {
+    if(!error.matErrorType) error.matErrorType = navigator.onLine === false ? "offline" : "source";
+    throw error;
+  }
 }
 
 function trailerMarkup(media){
@@ -52,7 +116,7 @@ function trailerMarkup(media){
   return `<a class="trailer-external-link" href="${detailsEscapeHtml(trailer.id)}" target="_blank" rel="noopener">Watch trailer</a>`;
 }
 
-function renderDetails(record,media){
+function renderDetails(record,media,options={}){
   const root=document.getElementById("detailsRoot");
   const title=media?.title?.english||media?.title?.romaji||record?.title||"Anime";
   const poster=media?.coverImage?.extraLarge||media?.coverImage?.large||"";
@@ -61,8 +125,12 @@ function renderDetails(record,media){
   const genres=media?.genres||[];
   const studios=media?.studios?.nodes?.map(s=>s.name).join(", ")||"Unknown";
   const owned=Boolean(record);
-  const completed=owned&&detailsNormalize(record.status)==="completed";
-  const rating=completed?detailsAverage(record):null;
+  const franchiseKey = options.franchiseKey || new URLSearchParams(location.search).get("franchise_key") || record?.franchise_key || null;
+  const franchise = options.franchise || null;
+  const franchiseOwned = Boolean(options.franchiseOwned);
+  const informationalOnly = Boolean(franchiseKey);
+  const completed=owned&&!informationalOnly&&detailsNormalize(record.status)==="completed";
+  const rating=owned&&!informationalOnly?detailsAverage(record):null;
   const meta=[media?.format?.replaceAll("_"," "),media?.episodes?`${media.episodes} Episodes`:null,media?.seasonYear].filter(Boolean).join(" • ");
 
   root.innerHTML=`
@@ -72,14 +140,20 @@ function renderDetails(record,media){
       <div class="details-hero-content">
         ${poster?`<img class="details-poster" src="${detailsEscapeHtml(poster)}" alt="${detailsEscapeHtml(title)} poster">`:'<div class="details-poster"></div>'}
         <div>
-          <a class="back-link" href="javascript:history.back()">← Back</a>
+          ${franchiseKey?`<a class="back-link" href="franchise.html?key=${encodeURIComponent(franchiseKey)}">← Back to Franchise</a>`:`<a class="back-link" href="javascript:history.back()">← Back</a>`}
           <h1 class="details-title">${detailsEscapeHtml(title)}</h1>
           <div class="details-meta">${detailsEscapeHtml(meta||"Anime")}</div>
           <div class="details-actions">
-            ${owned?`<span class="details-status status ${detailsStatusClass(record.status)}">${detailsEscapeHtml(record.status||"Queued")}</span>`:""}
-            ${rating!==null?`<span class="details-rating">⭐ ${rating.toFixed(1)}</span>`:""}
-            ${owned&&record.favorite?'<span class="favorite-badge">♥ Favorite</span>':""}
-            ${owned?'<button class="edit-anime-btn status-details-btn" id="editAnimeBtn" type="button">Change Status</button><button class="remove-anime-btn" id="removeAnimeBtn" type="button">Remove from Collection</button>':'<button class="edit-anime-btn" id="addToQueueBtn" type="button">+ Add to Queue</button>'}
+            ${owned&&!informationalOnly?`<span class="details-status status ${detailsStatusClass(record.status)}">${detailsEscapeHtml(record.status||"Queued")}</span>`:""}
+            ${owned&&!informationalOnly&&rating!==null?`<span class="details-rating-badge">⭐ ${rating.toFixed(1)}</span>`:""}
+            ${owned&&!informationalOnly&&record.favorite?'<span class="favorite-badge">♥ Favorite</span>':""}
+            ${owned && !informationalOnly
+              ? `<span class="collection-membership-message">This anime is already in your collection.</span><button class="edit-anime-btn status-details-btn" id="editAnimeBtn" type="button">Change Status</button><button class="remove-anime-btn" id="removeAnimeBtn" type="button">Remove from Collection</button>`
+              : informationalOnly
+                ? (franchiseOwned
+                    ? '<span class="collection-membership-message">This anime is already in your collection.</span>'
+                    : '<button class="edit-anime-btn" id="addToCollectionBtn" type="button">+ Add to Collection</button>')
+                : '<button class="edit-anime-btn" id="addToCollectionBtn" type="button">+ Add to Collection</button>'}
           </div>
         </div>
       </div>
@@ -98,14 +172,30 @@ function renderDetails(record,media){
         </details>
         <h2 class="section-spacing">Genres</h2>
         <div class="genre-list">${genres.length?genres.map(g=>`<span class="genre-chip">${detailsEscapeHtml(g)}</span>`).join(""):'<span class="genre-chip">Unknown</span>'}</div>
-        ${owned?`<h2 class="section-spacing">Your Notes</h2><p class="notes-display">${record.notes?detailsEscapeHtml(record.notes):"No notes yet."}</p>`:""}
+        ${owned&&!informationalOnly?`<h2 class="section-spacing">Your Notes</h2><p class="notes-display">${record.notes?detailsEscapeHtml(record.notes):"No notes yet."}</p>`:""}
       </article>
       <aside class="details-panel">
-        ${owned?`<h2>Your Tracking</h2><div class="info-list">${rating!==null?`<div class="info-row"><span class="info-label">Overall Rating</span><span class="info-value">⭐ ${rating.toFixed(1)}</span></div>`:""}<div class="info-row"><span class="info-label">Last Season</span><span class="info-value">${detailsEscapeHtml(record.last_season||"—")}</span></div><div class="info-row"><span class="info-label">Started Watching</span><span class="info-value">${detailsEscapeHtml(record.started_watching||"—")}</span></div></div>`:""}
+        ${owned&&!informationalOnly?`<h2>Your Tracking</h2><div class="info-list"><div class="info-row"><span class="info-label">Last Season</span><span class="info-value">${detailsEscapeHtml(record.last_season||"—")}</span></div><div class="info-row"><span class="info-label">Started Watching</span><span class="info-value">${detailsEscapeHtml(record.started_watching||"—")}</span></div></div>`:""}
         <h2 class="section-spacing">Information</h2>
         <div class="info-list"><div class="info-row"><span class="info-label">Studio</span><span class="info-value">${detailsEscapeHtml(studios)}</span></div><div class="info-row"><span class="info-label">Episodes</span><span class="info-value">${detailsEscapeHtml(media?.episodes??"Unknown")}</span></div><div class="info-row"><span class="info-label">Format</span><span class="info-value">${detailsEscapeHtml(media?.format?.replaceAll("_"," ")||"Unknown")}</span></div><div class="info-row"><span class="info-label">Year</span><span class="info-value">${detailsEscapeHtml(media?.seasonYear??"Unknown")}</span></div></div>
       </aside>
     </section>
+
+    ${owned&&!informationalOnly?`
+    <section class="standalone-entry-section">
+      <div class="profile-section-heading"><h2>Entry</h2></div>
+      <article class="standalone-entry-card">
+        <div class="standalone-entry-poster">
+          ${poster?`<img src="${detailsEscapeHtml(poster)}" alt="${detailsEscapeHtml(title)} poster" loading="lazy">`:'<div class="poster-placeholder">🎌</div>'}
+        </div>
+        <div class="standalone-entry-copy">
+          <h3>${detailsEscapeHtml(title)}</h3>
+          <p>${detailsEscapeHtml(meta||"Anime")}</p>
+          ${rating!==null?`<span class="entry-rating-readout">⭐ ${rating.toFixed(1)}</span>`:'<span class="entry-rating-readout unrated">Not rated</span>'}
+        </div>
+        <button class="entry-rate-btn standalone-entry-rate-btn" id="rateAnimeBtn" type="button">${rating!==null?"Edit Rating":"Rate"}</button>
+      </article>
+    </section>`:""}
 
     <section class="anime-comments-section" id="animeCommentsSection">
       <div class="comments-section-heading">
@@ -143,11 +233,31 @@ function renderDetails(record,media){
       </section>
     </div>
 
-    ${owned?editorMarkup(record,title):""}
+    ${owned&&!informationalOnly?editorMarkup(record,title):""}
   `;
 
-  if(owned) initializeEditor(record,media);
-  else document.getElementById("addToQueueBtn")?.addEventListener("click",async(event)=>{ const btn=event.currentTarget; btn.disabled=true; btn.textContent="Adding..."; try{ const newRecord=await addToQueue(media); window.location.href=`anime.html?id=${encodeURIComponent(newRecord.id)}`; }catch(error){ alert(error.message||"Could not add anime."); btn.disabled=false; btn.textContent="+ Add to Queue"; }});
+  if (owned && !informationalOnly) {
+    initializeEditor(record, media);
+  } else {
+    document.getElementById("addToCollectionBtn")?.addEventListener("click", async (event) => {
+      const button = event.currentTarget;
+      button.disabled = true;
+      button.textContent = "Adding...";
+      try {
+        if (franchise) {
+          await addFranchiseToCollection(franchise, media);
+          window.location.href = `franchise.html?key=${encodeURIComponent(franchise.franchiseKey)}`;
+        } else {
+          const newRecord = await addStandaloneToCollection(media);
+          window.location.href = `anime.html?id=${encodeURIComponent(newRecord.id)}`;
+        }
+      } catch (error) {
+        alert(error.message || "Could not add anime to your collection.");
+        button.disabled = false;
+        button.textContent = "+ Add to Collection";
+      }
+    });
+  }
 
   initAnimeComments(Number(media?.id));
 }
@@ -164,43 +274,113 @@ function ratingSliderMarkup(record){
   }).join("");
 }
 
-function editorMarkup(record,title){ return `
+function editorMarkup(record,title){
+  const current=detailsAverage(record)||5;
+  return `
 <div class="remove-modal-backdrop hidden" id="removeAnimeModal" aria-hidden="true"><section class="remove-modal-card" role="dialog" aria-modal="true"><h2>Remove from Collection?</h2><p>Remove <strong>${detailsEscapeHtml(title)}</strong> from your collection? This cannot be undone.</p><div class="remove-modal-actions"><button class="secondary-action-btn" id="cancelRemoveBtn" type="button">Cancel</button><button class="confirm-remove-btn" id="confirmRemoveBtn" type="button">Remove</button></div><div class="edit-message" id="removeMessage"></div></section></div>
-<div class="edit-modal-backdrop hidden" id="editAnimeModal" aria-hidden="true"><section class="edit-modal-card" role="dialog" aria-modal="true"><div class="edit-modal-header"><div><h2>Change Status</h2><p>Update ${detailsEscapeHtml(title)} status, progress, notes, and completed rating.</p></div><button class="edit-close-btn" id="closeEditBtn" type="button">×</button></div><form id="editAnimeForm" class="edit-form"><label>Status<select id="editStatus">${statusOptions(record.status||"Queued")}</select></label><details class="status-guide"><summary>ⓘ Status Guide</summary><div class="status-guide-list"><p><strong>Queued:</strong> You've added this anime to your collection but haven't started watching it yet.</p><p><strong>In Progress:</strong> You're currently watching these anime.</p><p><strong>Waiting:</strong> You're waiting for new episodes or the next season.</p><p><strong>Completed:</strong> You've finished watching these anime.</p><p><strong>Dropped:</strong> You've decided not to continue watching these anime.</p></div></details><div class="rating-completed-only ${detailsNormalize(record.status)==="completed"?"":"hidden"}" id="completedRatingFields"><div class="live-overall-rating"><span>Overall Score</span><strong id="liveOverallRating">${detailsAverage(record)?.toFixed(1)||"5.0"}</strong><small>/ 10</small></div><p class="rating-availability-note">Move each slider from 1 to 10. Your overall score updates automatically.</p><div class="rating-slider-list">${ratingSliderMarkup(record)}</div></div><label>Last Season Watched<input id="editLastSeason" type="text" value="${detailsEscapeHtml(record.last_season||"")}" placeholder="Example: Season 2"></label><label>Started Watching<input id="editStartedWatching" type="date" value="${detailsEscapeHtml(record.started_watching||"")}"></label><label>Notes<textarea id="editNotes" rows="5" placeholder="Add personal notes...">${detailsEscapeHtml(record.notes||"")}</textarea></label><label class="favorite-toggle"><input id="editFavorite" type="checkbox" ${record.favorite?"checked":""}><span>Mark as favorite</span></label><div class="edit-message" id="editMessage"></div><div class="edit-form-actions"><button class="secondary-action-btn" id="cancelEditBtn" type="button">Cancel</button><button class="save-anime-btn" id="saveEditBtn" type="submit">Save Changes</button></div></form></section></div>`; }
-
-function initializeEditor(record,media){
-  const modal=document.getElementById("editAnimeModal"),form=document.getElementById("editAnimeForm"),removeModal=document.getElementById("removeAnimeModal");
-  const open=()=>{modal.classList.remove("hidden");document.body.classList.add("modal-open")}; const close=()=>{modal.classList.add("hidden");document.body.classList.remove("modal-open")};
-  const openRemove=()=>{removeModal.classList.remove("hidden");document.body.classList.add("modal-open")}; const closeRemove=()=>{removeModal.classList.add("hidden");document.body.classList.remove("modal-open")};
-  const statusSelect=document.getElementById("editStatus"),ratingFields=document.getElementById("completedRatingFields");
-  const syncRatingVisibility=()=>{ratingFields.classList.toggle("hidden",detailsNormalize(statusSelect.value)!=="completed")};
-  statusSelect.addEventListener("change",syncRatingVisibility);
-  syncRatingVisibility();
-  const updateLiveOverall=()=>{
-    const values=DETAILS_RATING_FIELDS.map(({key})=>Number(document.getElementById(`rating-${key}`)?.value));
-    const average=values.reduce((sum,value)=>sum+value,0)/values.length;
-    const output=document.getElementById("liveOverallRating");
-    if(output)output.textContent=average.toFixed(1);
-  };
-  document.querySelectorAll("[data-rating-field]").forEach((slider)=>{
-    slider.addEventListener("input",()=>{
-      const output=document.getElementById(`${slider.id}-value`);
-      if(output)output.textContent=slider.value;
-      updateLiveOverall();
-    });
-  });
-  updateLiveOverall();
-  document.getElementById("editAnimeBtn").onclick=open; document.getElementById("removeAnimeBtn").onclick=openRemove; document.getElementById("closeEditBtn").onclick=close; document.getElementById("cancelEditBtn").onclick=close; document.getElementById("cancelRemoveBtn").onclick=closeRemove;
-  document.getElementById("confirmRemoveBtn").onclick=async()=>{try{await deleteRecord(record.id);location.href="collection.html"}catch(e){document.getElementById("removeMessage").textContent=e.message||"Could not remove anime."}};
-  if(new URLSearchParams(location.search).get("edit")==="1")open();
-  form.onsubmit=async(e)=>{e.preventDefault(); const status=document.getElementById("editStatus").value; const completed=detailsNormalize(status)==="completed"; const ratingChanges=Object.fromEntries(DETAILS_RATING_FIELDS.map(({key})=>[key,completed?Number(document.getElementById(`rating-${key}`).value):null])); const changes={status,...ratingChanges,last_season:document.getElementById("editLastSeason").value.trim()||null,started_watching:document.getElementById("editStartedWatching").value||null,notes:document.getElementById("editNotes").value.trim()||null,favorite:document.getElementById("editFavorite").checked}; try{const updated=await updateRecord(record.id,changes);close();renderDetails(updated,media)}catch(err){document.getElementById("editMessage").textContent=err.message||"Could not save changes."}};
+<div class="edit-modal-backdrop hidden" id="editAnimeModal" aria-hidden="true"><section class="edit-modal-card" role="dialog" aria-modal="true"><div class="edit-modal-header"><div><h2>Change Status</h2><p>Update ${detailsEscapeHtml(title)}.</p></div><button class="edit-close-btn" id="closeEditBtn" type="button">×</button></div><form id="editAnimeForm" class="edit-form"><label>Status<select id="editStatus">${statusOptions(record.status||"Queued")}</select></label><details class="status-guide"><summary>ⓘ Status Guide</summary><div class="status-guide-list"><p><strong>Queued:</strong> You've added this anime to your collection but haven't started watching it yet.</p><p><strong>In Progress:</strong> You're currently watching this anime.</p><p><strong>Waiting:</strong> You're waiting for new episodes or the next season.</p><p><strong>Completed:</strong> You've finished watching this anime.</p><p><strong>Dropped:</strong> You've decided not to continue watching this anime.</p></div></details><div class="edit-message" id="editMessage"></div><div class="edit-form-actions"><button class="secondary-action-btn" id="cancelEditBtn" type="button">Cancel</button><button class="save-anime-btn" type="submit">Save Status</button></div></form></section></div>
+<div class="edit-modal-backdrop hidden" id="rateAnimeModal" aria-hidden="true"><section class="edit-modal-card" role="dialog" aria-modal="true"><div class="edit-modal-header"><div><h2>Rate ${detailsEscapeHtml(title)}</h2><p>Use one overall score or open Advanced Rating.</p></div><button class="edit-close-btn" id="closeRateBtn" type="button">×</button></div><form id="rateAnimeForm" class="edit-form"><div class="simple-rating-box"><div><strong>Overall Rating</strong><small>Choose one score from 1–10.</small></div><output id="liveOverallRating">${current.toFixed(1)}</output><div class="rating-slider-control"><span>1</span><input id="simpleOverallRating" type="range" min="1" max="10" step="0.1" value="${current}"><span>10</span></div></div><details id="standaloneAdvancedRating" class="advanced-rating-disclosure"><summary>Advanced Rating</summary><div class="rating-slider-list">${ratingSliderMarkup(record)}</div></details><div class="edit-message" id="ratingMessage"></div><div class="edit-form-actions"><button class="secondary-action-btn" id="cancelRateBtn" type="button">Cancel</button><button class="save-anime-btn" type="submit">Save Rating</button></div></form></section></div>`;
 }
 
-async function initAnimeDetails(){
-  const root=document.getElementById("detailsRoot"); const params=new URLSearchParams(location.search); const recordId=params.get("id"); const anilistId=params.get("anilist_id");
-  if(!recordId&&!anilistId){root.innerHTML='<div class="error">No anime was selected.</div>';return;}
-  try{ let record=recordId?await fetchOwnRecordById(recordId):await fetchOwnRecordByAnimeId(anilistId); const mediaId=record?.anilist_id||anilistId; const media=await fetchAnimeDetails(mediaId); renderDetails(record,media); }
-  catch(error){console.error(error);root.innerHTML=`<div class="error">${detailsEscapeHtml(error.message||"Could not load anime details.")}</div>`;}
+function initializeEditor(record,media){
+  const statusModal=document.getElementById("editAnimeModal");
+  const ratingModal=document.getElementById("rateAnimeModal");
+  const removeModal=document.getElementById("removeAnimeModal");
+  const openModal=(modal)=>{modal.classList.remove("hidden");document.body.classList.add("modal-open")};
+  const closeModal=(modal)=>{modal.classList.add("hidden");document.body.classList.remove("modal-open")};
+  const overall=document.getElementById("simpleOverallRating");
+  const overallOutput=document.getElementById("liveOverallRating");
+  const advanced=document.getElementById("standaloneAdvancedRating");
+  const updateAdvanced=()=>{
+    const values=DETAILS_RATING_FIELDS.map(({key})=>Number(document.getElementById(`rating-${key}`).value));
+    const avg=values.reduce((a,b)=>a+b,0)/values.length;
+    overall.value=avg.toFixed(1);
+    overallOutput.textContent=avg.toFixed(1);
+  };
+  overall.addEventListener("input",()=>overallOutput.textContent=Number(overall.value).toFixed(1));
+  document.querySelectorAll("[data-rating-field]").forEach(slider=>slider.addEventListener("input",()=>{
+    document.getElementById(`${slider.id}-value`).textContent=slider.value;
+    if(advanced.open) updateAdvanced();
+  }));
+  advanced.addEventListener("toggle",()=>{overall.disabled=advanced.open;if(advanced.open)updateAdvanced()});
+
+  document.getElementById("editAnimeBtn").onclick=()=>openModal(statusModal);
+  document.getElementById("rateAnimeBtn").onclick=()=>openModal(ratingModal);
+  document.getElementById("removeAnimeBtn").onclick=()=>openModal(removeModal);
+  document.getElementById("closeEditBtn").onclick=()=>closeModal(statusModal);
+  document.getElementById("cancelEditBtn").onclick=()=>closeModal(statusModal);
+  document.getElementById("closeRateBtn").onclick=()=>closeModal(ratingModal);
+  document.getElementById("cancelRateBtn").onclick=()=>closeModal(ratingModal);
+  document.getElementById("cancelRemoveBtn").onclick=()=>closeModal(removeModal);
+  document.getElementById("confirmRemoveBtn").onclick=async()=>{try{await deleteRecord(record.id);location.href="collection.html"}catch(e){document.getElementById("removeMessage").textContent=e.message||"Could not remove anime."}};
+  if(new URLSearchParams(location.search).get("edit")==="1")openModal(statusModal);
+
+  document.getElementById("editAnimeForm").onsubmit=async(event)=>{
+    event.preventDefault();
+    try{
+      const updated=await updateRecord(record.id,{status:document.getElementById("editStatus").value});
+      closeModal(statusModal);renderDetails(updated,media);
+    }catch(error){document.getElementById("editMessage").textContent=error.message||"Could not save status."}
+  };
+  document.getElementById("rateAnimeForm").onsubmit=async(event)=>{
+    event.preventDefault();
+    const useAdvanced=advanced.open;
+    const changes={rating_mode:useAdvanced?"advanced":"simple",overall_rating:Number(overallOutput.textContent)};
+    DETAILS_RATING_FIELDS.forEach(({key})=>changes[key]=useAdvanced?Number(document.getElementById(`rating-${key}`).value):null);
+    try{
+      const updated=await updateRecord(record.id,changes);
+      closeModal(ratingModal);renderDetails(updated,media);
+    }catch(error){document.getElementById("ratingMessage").textContent=error.message||"Could not save rating."}
+  };
+}
+async function initAnimeDetails() {
+  const root = document.getElementById("detailsRoot");
+  const params = new URLSearchParams(location.search);
+  const recordId = params.get("id");
+  const anilistId = params.get("anilist_id");
+  if (!recordId && !anilistId) {
+    root.innerHTML = '<div class="error">No anime was selected.</div>';
+    return;
+  }
+
+  try {
+    const record = recordId ? await fetchOwnRecordById(recordId) : await fetchOwnRecordByAnimeId(anilistId);
+    const mediaId = Number(record?.anilist_id || anilistId);
+    const media = await fetchAnimeDetails(mediaId);
+
+    let franchiseKey = params.get("franchise_key") || record?.franchise_key || null;
+    let franchise = null;
+    if (franchiseKey) {
+      const entries = await matLoadFranchiseEntries(franchiseKey);
+      const { data: catalog } = await supabaseClient
+        .from("franchise_catalog")
+        .select("franchise_key,title,cover_anilist_id")
+        .eq("franchise_key", Number(franchiseKey))
+        .maybeSingle();
+      if (catalog) {
+        franchise = {
+          franchiseKey: Number(catalog.franchise_key),
+          title: catalog.title,
+          coverAnilistId: Number(catalog.cover_anilist_id),
+          entries
+        };
+      }
+    } else {
+      franchise = await matResolveFranchise(mediaId, matFranchisePrefs({}));
+      if (franchise) {
+        await matStoreFranchise(franchise);
+        franchiseKey = franchise.franchiseKey;
+      }
+    }
+
+    const franchiseOwned = franchiseKey ? await ownFranchiseMembership(franchiseKey) : false;
+    renderDetails(record, media, { franchiseKey, franchise, franchiseOwned });
+  } catch (error) {
+    console.error(error);
+    const type = error?.matErrorType || (navigator.onLine === false ? "offline" : "unexpected");
+    window.matShowNetworkError?.(error, { type, retry: () => location.reload(), goBack: () => history.back() });
+    root.innerHTML = `<div class="error">Could not load anime details.</div>`;
+  }
 }
 
 

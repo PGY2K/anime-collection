@@ -4,6 +4,8 @@ let currentProfileData = null;
 let selectedAvatarId = 1;
 let profileAnime = [];
 let profileBadges = [];
+let profileFranchises = [];
+let profileFranchiseEntryRatings = [];
 
 function escapeProfileHtml(value) {
   return String(value ?? "")
@@ -16,6 +18,9 @@ function escapeProfileHtml(value) {
 
 function profileNormalize(value) { return String(value ?? "").trim().toLowerCase(); }
 function profileAverage(item) {
+  const rawDirect = item?.overall_rating;
+  const direct = rawDirect === null || rawDirect === undefined || rawDirect === "" ? null : Number(rawDirect);
+  if(Number.isFinite(direct) && direct > 0) return direct;
   const scores = ["story","characters","animation","sound","world","pacing","emotion","originality","rewatch_value","enjoyment"]
     .map((field) => item[field] === null || item[field] === "" ? null : Number(item[field]))
     .filter(Number.isFinite);
@@ -47,28 +52,106 @@ async function getOrCreateProfile(user) {
 }
 async function loadProfileAnime() {
   const { data, error } = await supabaseClient.from("anime")
-    .select("id, anilist_id, title, status, story, characters, animation, sound, world, pacing, emotion, originality, rewatch_value, enjoyment")
+    .select("id, anilist_id, title, status, franchise_key, franchise_title, rating_mode, overall_rating, story, characters, animation, sound, world, pacing, emotion, originality, rewatch_value, enjoyment")
     .order("title");
   if (error) throw error;
   return data || [];
 }
+
+async function loadProfileFranchiseEntryRatings() {
+  const { data, error } = await supabaseClient
+    .from("user_franchise_entry_ratings")
+    .select("franchise_key, anilist_id, overall_rating, rating_mode, story, characters, animation, sound, world, pacing, emotion, originality, rewatch_value, enjoyment");
+  if (error) {
+    if (error.code === "42P01") return [];
+    throw error;
+  }
+  return data || [];
+}
+
+function profileEntryRating(row) {
+  const rawDirect = row?.overall_rating;
+  const direct = rawDirect === null || rawDirect === undefined || rawDirect === "" ? null : Number(rawDirect);
+  if (Number.isFinite(direct) && direct > 0) return direct;
+  const scores = ["story","characters","animation","sound","world","pacing","emotion","originality","rewatch_value","enjoyment"]
+    .map((field) => row?.[field] === null || row?.[field] === undefined || row?.[field] === "" ? null : Number(row[field]))
+    .filter(Number.isFinite);
+  return scores.length === 10 ? scores.reduce((sum, value) => sum + value, 0) / 10 : null;
+}
+
 async function loadProfilePosters(items) {
   const ids = [...new Set(items.map((item) => Number(item.anilist_id)).filter(Number.isFinite))];
   if (!ids.length) return new Map();
   const query = `query ($ids: [Int]) { Page(page: 1, perPage: 20) { media(id_in: $ids, type: ANIME) { id isAdult coverImage { extraLarge large } } } }`;
-  const response = await fetch(PROFILE_ANILIST_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ query, variables: { ids } }) });
-  if (!response.ok) return new Map();
-  const json = await response.json();
-  return new Map((json?.data?.Page?.media || []).map((item) => [Number(item.id), { url: item.coverImage?.extraLarge || item.coverImage?.large || "", isAdult: Boolean(item.isAdult) }]));
+  try {
+    const response = await fetch(PROFILE_ANILIST_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ query, variables: { ids } }) });
+    if (!response.ok) return new Map();
+    const json = await response.json();
+    return new Map((json?.data?.Page?.media || []).map((item) => [Number(item.id), { url: item.coverImage?.extraLarge || item.coverImage?.large || "", isAdult: Boolean(item.isAdult) }]));
+  } catch (error) {
+    if (window.matIsOffline?.()) throw error;
+    console.warn("Profile posters could not be loaded.", error);
+    return new Map();
+  }
 }
 function statusCount(status) { return profileAnime.filter((item) => profileNormalize(item.status) === status).length; }
 
+
+function profileTopItems() {
+  const franchiseItems = profileFranchises.map((franchise) => {
+    const dedicatedScores = profileFranchiseEntryRatings
+      .filter((row) => Number(row.franchise_key) === Number(franchise.franchise_key))
+      .map(profileEntryRating)
+      .filter(Number.isFinite);
+
+    let rating = dedicatedScores.length
+      ? dedicatedScores.reduce((sum, value) => sum + value, 0) / dedicatedScores.length
+      : null;
+
+    if (rating === null) {
+      const direct = franchise.overall_rating === null || franchise.overall_rating === undefined || franchise.overall_rating === ""
+        ? null
+        : Number(franchise.overall_rating);
+      if (Number.isFinite(direct) && direct > 0) rating = direct;
+    }
+
+    if (rating === null) {
+      const legacyScores = profileAnime
+        .filter((item) => Number(item.franchise_key) === Number(franchise.franchise_key))
+        .map(profileAverage)
+        .filter(Number.isFinite);
+      if (legacyScores.length) rating = legacyScores.reduce((sum, value) => sum + value, 0) / legacyScores.length;
+    }
+
+    return rating === null ? null : {
+      kind: "franchise",
+      title: franchise.title,
+      rating,
+      href: `franchise.html?key=${franchise.franchise_key}`,
+      posterId: franchise.cover_anilist_id
+    };
+  }).filter(Boolean);
+
+  const standalone = profileAnime
+    .filter((item) => !item.franchise_key)
+    .map((item) => ({
+      kind: "anime",
+      title: item.title,
+      rating: profileAverage(item),
+      href: `anime.html?id=${item.id}`,
+      posterId: item.anilist_id
+    }))
+    .filter((item) => item.rating !== null);
+
+  return [...franchiseItems, ...standalone]
+    .sort((a, b) => b.rating - a.rating || a.title.localeCompare(b.title))
+    .slice(0, 5);
+}
+
 async function renderProfile() {
   selectedAvatarId = Number(currentProfileData.avatar_id) || 1;
-  const topFive = profileAnime.map((item) => ({ ...item, rating: profileAverage(item) }))
-    .filter((item) => item.rating !== null)
-    .sort((a,b) => b.rating - a.rating || a.title.localeCompare(b.title)).slice(0,5);
-  const posters = await loadProfilePosters(topFive);
+  const topFive = profileTopItems();
+  const posters = await loadProfilePosters(topFive.map(item=>({anilist_id:item.posterId})));
   const root = document.getElementById("profileRoot");
   root.innerHTML = `
     <section class="public-profile-card">
@@ -89,8 +172,8 @@ async function renderProfile() {
         <div class="profile-section-heading"><h3>⭐ Top 5 Anime</h3><span>Highest rated</span></div>
         <div class="profile-top-grid">
           ${topFive.length ? topFive.map((item, index) => `
-            <a class="profile-top-card${matAdultPosterClass(posters.get(Number(item.anilist_id))?.isAdult)}" href="anime.html?id=${encodeURIComponent(item.id)}">
-              ${posters.get(Number(item.anilist_id))?.url ? `<img src="${escapeProfileHtml(posters.get(Number(item.anilist_id)).url)}" alt="${escapeProfileHtml(item.title)} poster" />${matAdultPosterOverlay(posters.get(Number(item.anilist_id)).isAdult)}` : '<div class="poster-placeholder">🎌</div>'}
+            <a class="profile-top-card${matAdultPosterClass(posters.get(Number(item.posterId))?.isAdult)}" href="${item.href}">
+              ${posters.get(Number(item.posterId))?.url ? `<img src="${escapeProfileHtml(posters.get(Number(item.posterId)).url)}" alt="${escapeProfileHtml(item.title)} poster" />${matAdultPosterOverlay(posters.get(Number(item.posterId)).isAdult)}` : '<div class="poster-placeholder">🎌</div>'}
               <span class="profile-top-rank">#${index + 1}</span>
               <div><strong>${escapeProfileHtml(item.title)}</strong><small>⭐ ${item.rating.toFixed(1)}</small></div>
             </a>`).join("") : '<div class="empty-state">Rate anime to build your Top 5.</div>'}
@@ -125,7 +208,7 @@ async function renderProfile() {
               <span></span>
             </label>
           </div>
-          <button class="primary-btn profile-save-btn" type="submit">Save Changes</button>
+          <section class="franchise-settings"><h3>Franchise Options</h3><p>TV seasons and movies are grouped by default. Optional formats can be included when organizing franchises.</p><label class="profile-setting-row"><span><strong>Group TV Seasons</strong></span><input id="franchiseGroupTv" type="checkbox" ${currentProfileData.franchise_group_tv!==false?"checked":""}></label><label class="profile-setting-row"><span><strong>Group Movies</strong></span><input id="franchiseGroupMovies" type="checkbox" ${currentProfileData.franchise_group_movies!==false?"checked":""}></label><label class="profile-setting-row"><span><strong>Include OVAs</strong></span><input id="franchiseIncludeOva" type="checkbox" ${currentProfileData.franchise_include_ova?"checked":""}></label><label class="profile-setting-row"><span><strong>Include Specials</strong></span><input id="franchiseIncludeSpecials" type="checkbox" ${currentProfileData.franchise_include_specials?"checked":""}></label><label class="profile-setting-row"><span><strong>Include ONAs</strong></span><input id="franchiseIncludeOna" type="checkbox" ${currentProfileData.franchise_include_ona?"checked":""}></label><label class="profile-setting-row"><span><strong>Include Recaps</strong></span><input id="franchiseIncludeRecaps" type="checkbox" ${currentProfileData.franchise_include_recaps?"checked":""}></label></section><button class="primary-btn profile-save-btn" type="submit">Save Changes</button>
           <div class="profile-message" id="profileMessage"></div>
         </form>
       </section>
@@ -161,9 +244,9 @@ async function saveProfile(event) {
   const message = document.getElementById("profileMessage");
   const username = document.getElementById("profileUsername").value.trim();
   if (username.length < 3) { message.textContent = "Username must be at least 3 characters."; message.className = "profile-message profile-error"; return; }
-  const { error } = await supabaseClient.from("profiles").update({ username, avatar_id: selectedAvatarId, updated_at: new Date().toISOString() }).eq("user_id", currentProfileUser.id);
+  const { error } = await supabaseClient.from("profiles").update({ username, avatar_id: selectedAvatarId, franchise_group_tv: document.getElementById("franchiseGroupTv").checked, franchise_group_movies: document.getElementById("franchiseGroupMovies").checked, franchise_include_ova: document.getElementById("franchiseIncludeOva").checked, franchise_include_specials: document.getElementById("franchiseIncludeSpecials").checked, franchise_include_ona: document.getElementById("franchiseIncludeOna").checked, franchise_include_recaps: document.getElementById("franchiseIncludeRecaps").checked, updated_at: new Date().toISOString() }).eq("user_id", currentProfileUser.id);
   if (error) { message.textContent = error.code === "23505" ? "That username is already taken." : error.message; message.className = "profile-message profile-error"; return; }
-  currentProfileData.username = username; currentProfileData.avatar_id = selectedAvatarId;
+  currentProfileData.username = username; currentProfileData.avatar_id = selectedAvatarId; currentProfileData.franchise_group_tv=document.getElementById("franchiseGroupTv").checked; currentProfileData.franchise_group_movies=document.getElementById("franchiseGroupMovies").checked; currentProfileData.franchise_include_ova=document.getElementById("franchiseIncludeOva").checked; currentProfileData.franchise_include_specials=document.getElementById("franchiseIncludeSpecials").checked; currentProfileData.franchise_include_ona=document.getElementById("franchiseIncludeOna").checked; currentProfileData.franchise_include_recaps=document.getElementById("franchiseIncludeRecaps").checked;
   document.getElementById("navProfileAvatar").src = profileAvatarPath(selectedAvatarId);
   message.textContent = "Profile saved."; message.className = "profile-message profile-success";
   setTimeout(renderProfile, 600);
@@ -171,14 +254,17 @@ async function saveProfile(event) {
 async function initProfile(user) {
   currentProfileUser = user;
   try {
-    [currentProfileData, profileAnime, profileBadges] = await Promise.all([
+    [currentProfileData, profileAnime, profileBadges, profileFranchises, profileFranchiseEntryRatings] = await Promise.all([
       getOrCreateProfile(user),
       loadProfileAnime(),
-      matLoadUserBadges(user.id)
+      matLoadUserBadges(user.id),
+      matLoadOwnFranchises(),
+      loadProfileFranchiseEntryRatings()
     ]);
     await renderProfile();
   } catch (error) {
     console.error(error);
-    document.getElementById("profileRoot").innerHTML = `<div class="error">${escapeProfileHtml(error.message || "Could not load profile.")}</div>`;
+    window.matShowNetworkError?.(error, { type: navigator.onLine === false ? "offline" : "service", retry: () => location.reload(), goBack: () => history.back() });
+    document.getElementById("profileRoot").innerHTML = `<div class="error">Could not load profile.</div>`;
   }
 }

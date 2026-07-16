@@ -117,11 +117,12 @@
   <script src="js/supabase-client.js"></script>
   <script src="js/profile-nav.js"></script>
   <script src="js/content-preferences.js"></script>
+  <script src="js/franchises.js"></script>
   <script src="js/app.js"></script>
   <script>
     requireSignedInUser().then((user) => {
       if (user) {
-        initCollection();
+        initCollection(user);
       }
     });
   </script>
