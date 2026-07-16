@@ -1,6 +1,14 @@
 const MAT_CHANGELOG = [
   {
-    version: window.MAT_VERSION || "v3.3.1",
+    version: window.MAT_VERSION || "v3.3.2",
+    date: "July 2026",
+    changes: [
+      "Redesigned the Discord footer link as a clear MAT-themed button.",
+      "Added the Discord logo and Support & Suggestions label."
+    ]
+  },
+  {
+    version: "v3.3.1",
     date: "July 2026",
     changes: [
       "Fixed Open Waiting so it opens the Waiting collection filter.",
