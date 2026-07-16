@@ -60,7 +60,7 @@
     <section class="ratings-list" id="ratingsList">
       <div class="loading">Loading ratings…</div>
     </section>
-    <footer>My Anime Tracker • v3.2.0</footer>
+    <footer class="mat-footer"></footer>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -71,6 +71,7 @@
   <script>
     requireSignedInUser().then((user) => { if (user) initRatings(); });
   </script>
+  <script src="js/version.js"></script>
   <script src="js/pwa.js"></script>
 </body>
 </html>

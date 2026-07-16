@@ -1,4 +1,14 @@
 const MAT_CHANGELOG = [
+  {
+    version: window.MAT_VERSION || "v3.3.1",
+    date: "July 2026",
+    changes: [
+      "Fixed Open Waiting so it opens the Waiting collection filter.",
+      "Made Open Waiting visually match MAT action buttons.",
+      "Added the MAT Discord link for support and suggestions.",
+      "Synchronized the footer version with What's New."
+    ]
+  },
   { version: "v3.3.0", date: "July 2026", changes: ["Expanded ratings to ten categories on a 10-point scale.", "Added live slider scores and overall rating updates.", "Renamed Status & Details to Change Status."] },
   {
     version: "v3.2.0",

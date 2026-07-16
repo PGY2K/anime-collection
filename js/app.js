@@ -504,8 +504,20 @@ function initAddAnimeModal() {
   });
 }
 
+function initializeCollectionFilterFromUrl() {
+  const requestedStatus = normalize(new URLSearchParams(window.location.search).get("status"));
+  const supportedFilters = new Set(Object.keys(collectionFilterCopy));
+
+  currentFilter = supportedFilters.has(requestedStatus) ? requestedStatus : "all";
+
+  document.querySelectorAll(".filter-btn").forEach((button) => {
+    button.classList.toggle("active", button.dataset.filter === currentFilter);
+  });
+}
+
 async function initCollection() {
   try {
+    initializeCollectionFilterFromUrl();
     await refreshCollection();
 
     document
@@ -524,6 +536,11 @@ async function initCollection() {
 
         button.classList.add("active");
         currentFilter = button.dataset.filter;
+
+        const url = new URL(window.location.href);
+        if (currentFilter === "all") url.searchParams.delete("status");
+        else url.searchParams.set("status", currentFilter);
+        window.history.replaceState({}, "", url);
 
         renderCollection();
       });
