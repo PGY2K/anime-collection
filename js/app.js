@@ -1,5 +1,4 @@
 const ANILIST_ENDPOINT = "https://graphql.anilist.co";
-const CACHE_KEY = "animeCollectionAniListCacheV4";
 let collectionAnime=[]; let collectionFranchises=[]; let collectionFranchiseEntryRatings=[]; let currentFilter="all"; let currentUser=null; let currentProfile=null;
 function normalize(v){return String(v??"").trim().toLowerCase()}
 function escapeHtml(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
@@ -7,7 +6,7 @@ function statusClass(status){const v=normalize(status);if(v==="completed")return
 function itemRating(item){return matEntryRating(item)}
 async function requestAniList(query,variables){const r=await fetch(ANILIST_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify({query,variables})});if(!r.ok)throw new Error("Anime search failed.");return (await r.json())?.data}
 async function searchAniListPage(search){const q=`query($search:String){Page(page:1,perPage:8){media(search:$search,type:ANIME,sort:SEARCH_MATCH){id title{romaji english} coverImage{large medium} isAdult episodes format seasonYear status}}}`;return (await requestAniList(q,{search}))?.Page?.media||[]}
-async function fetchPoster(id){const q=`query($id:Int){Media(id:$id,type:ANIME){id isAdult coverImage{extraLarge large}}}`;return (await requestAniList(q,{id:Number(id)}))?.Media||null}
+async function fetchPoster(id){return (await matFetchMediaBatch([Number(id)]))[0]||null}
 async function loadCollection(){const {data,error}=await supabaseClient.from("anime").select("*").order("created_at",{ascending:false});if(error)throw error;return data||[]}
 async function loadProfile(){const {data,error}=await supabaseClient.from("profiles").select("*").eq("user_id",currentUser.id).single();if(error)throw error;return data}
 async function loadFranchiseEntryRatings(){const {data,error}=await supabaseClient.from("user_franchise_entry_ratings").select("franchise_key,anilist_id,overall_rating,rating_mode,story,characters,animation,sound,world,pacing,emotion,originality,rewatch_value,enjoyment,updated_at");if(error){if(error.code==="42P01")return[];throw error}return data||[]}
@@ -59,6 +58,8 @@ async function renderCollection(){
   const ratingOf=x=>x.kind==="franchise"?derivedFranchiseRating(x.franchise,x.entries):itemRating(x.item); const titleOf=x=>x.kind==="franchise"?x.franchise.title:x.item.title;
   items.sort((a,b)=>sort==="title-desc"?titleOf(b).localeCompare(titleOf(a)):sort==="rating-desc"?(ratingOf(b)??-1)-(ratingOf(a)??-1):sort==="rating-asc"?(ratingOf(a)??999)-(ratingOf(b)??999):titleOf(a).localeCompare(titleOf(b)));
   document.getElementById("resultCount").textContent=`${items.length} ${items.length===1?"item":"items"} shown`;
+  const posterIds=items.map(x=>x.kind==="franchise"?(x.franchise.cover_anilist_id||x.entries[0]?.anilist_id):x.item.anilist_id).map(Number).filter(Number.isFinite);
+  try{await matFetchMediaBatch(posterIds)}catch(error){console.warn("Some collection posters could not be refreshed; cached artwork will be used when available.",error)}
   const cards=await Promise.all(items.map(async x=>{
     if(x.kind==="franchise"){
       const f=x.franchise;const rating=ratingOf(x);const poster=await posterHtml(f.cover_anilist_id||x.entries[0]?.anilist_id,f.title,"franchise-poster");

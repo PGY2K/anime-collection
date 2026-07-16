@@ -1,7 +1,10 @@
 const MAT_FRANCHISE_ENDPOINT = "https://graphql.anilist.co";
 const MAT_FRANCHISE_CACHE_KEY = "matFranchiseCacheV2";
+const MAT_MEDIA_CACHE_KEY = "matMediaCacheV1";
+const MAT_MEDIA_CACHE_TTL = 1000 * 60 * 60 * 24 * 7;
 const MAT_RATING_FIELDS = ["story","characters","animation","sound","world","pacing","emotion","originality","rewatch_value","enjoyment"];
 const MAT_MEDIA_MEMORY_CACHE = new Map();
+const MAT_MEDIA_INFLIGHT = new Map();
 
 function matText(value){ return String(value ?? "").trim(); }
 function matLower(value){ return matText(value).toLowerCase(); }
@@ -26,43 +29,88 @@ function matFranchiseRating(item){
 }
 function matReadFranchiseCache(){ try{return JSON.parse(localStorage.getItem(MAT_FRANCHISE_CACHE_KEY)||"{}")}catch{return{}} }
 function matWriteFranchiseCache(cache){ try{localStorage.setItem(MAT_FRANCHISE_CACHE_KEY,JSON.stringify(cache))}catch{} }
+function matReadMediaCache(){
+  try {
+    const raw=JSON.parse(localStorage.getItem(MAT_MEDIA_CACHE_KEY)||"{}");
+    const now=Date.now();
+    for(const [id,record] of Object.entries(raw)){
+      if(!record?.savedAt || now-record.savedAt>MAT_MEDIA_CACHE_TTL) delete raw[id];
+      else if(record.media) MAT_MEDIA_MEMORY_CACHE.set(Number(id),record.media);
+    }
+    return raw;
+  } catch { return {}; }
+}
+function matWriteMediaCache(cache){
+  try {
+    const entries=Object.entries(cache).sort((a,b)=>(b[1]?.savedAt||0)-(a[1]?.savedAt||0)).slice(0,250);
+    localStorage.setItem(MAT_MEDIA_CACHE_KEY,JSON.stringify(Object.fromEntries(entries)));
+  } catch {}
+}
+function matCacheMedia(rows){
+  const cache=matReadMediaCache();
+  const savedAt=Date.now();
+  for(const row of rows||[]){
+    if(!row?.id) continue;
+    MAT_MEDIA_MEMORY_CACHE.set(Number(row.id),row);
+    cache[String(row.id)]={savedAt,media:row};
+  }
+  matWriteMediaCache(cache);
+}
+function matDelay(ms){ return new Promise(resolve=>setTimeout(resolve,ms)); }
 
 async function matFranchiseQuery(query, variables){
-  try {
-    const response=await fetch(MAT_FRANCHISE_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify({query,variables})});
-    if(!response.ok) throw new Error("Could not load franchise information.");
-    const json=await response.json();
-    if(json.errors?.length) throw new Error(json.errors[0].message||"Could not load franchise information.");
-    return json.data;
-  } catch (error) {
-    if (window.matIsOffline?.()) {
-      window.matShowOfflineDialog?.();
-      throw new Error("No internet connection. MAT requires an internet connection. Check your connection and try again.");
+  let lastError;
+  for(let attempt=0;attempt<2;attempt++){
+    try {
+      const response=await fetch(MAT_FRANCHISE_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify({query,variables})});
+      if(!response.ok){
+        const error=new Error(`Could not load franchise information (${response.status}).`);
+        error.status=response.status;
+        throw error;
+      }
+      const json=await response.json();
+      if(json.errors?.length) throw new Error(json.errors[0].message||"Could not load franchise information.");
+      return json.data;
+    } catch (error) {
+      lastError=error;
+      if (window.matIsOffline?.()) {
+        window.matShowOfflineDialog?.();
+        throw new Error("No internet connection. MAT requires an internet connection. Check your connection and try again.");
+      }
+      const retryable=/failed to fetch|networkerror|load failed/i.test(String(error?.message||"")) || [429,500,502,503,504].includes(Number(error?.status));
+      if(attempt===0 && retryable){ await matDelay(450); continue; }
+      if (retryable) throw new Error("Unable to load anime information. The service may be temporarily unavailable. Please try again.");
+      throw error;
     }
-    if (/failed to fetch|networkerror|load failed/i.test(String(error?.message || ""))) {
-      throw new Error("Unable to load anime information. The service may be temporarily unavailable. Please try again.");
-    }
-    throw error;
   }
+  throw lastError;
 }
+
+matReadMediaCache();
 
 async function matFetchRelationNode(id){
   const key=Number(id);
   if(MAT_MEDIA_MEMORY_CACHE.has(key)) return MAT_MEDIA_MEMORY_CACHE.get(key);
-  const query=`query($id:Int){Media(id:$id,type:ANIME){id format episodes duration seasonYear status isAdult description(asHtml:true) bannerImage startDate{year month day} title{romaji english} coverImage{extraLarge large} trailer{id site thumbnail} relations{edges{relationType node{id type format episodes duration seasonYear status isAdult startDate{year month day} title{romaji english} coverImage{extraLarge large}}}}}}`;
-  const media=(await matFranchiseQuery(query,{id:key}))?.Media||null;
-  MAT_MEDIA_MEMORY_CACHE.set(key,media);
-  return media;
+  if(MAT_MEDIA_INFLIGHT.has(key)) return MAT_MEDIA_INFLIGHT.get(key);
+  const task=(async()=>{
+    const query=`query($id:Int){Media(id:$id,type:ANIME){id format episodes duration seasonYear status isAdult description(asHtml:true) bannerImage startDate{year month day} title{romaji english} coverImage{extraLarge large} trailer{id site thumbnail} relations{edges{relationType node{id type format episodes duration seasonYear status isAdult startDate{year month day} title{romaji english} coverImage{extraLarge large}}}}}}`;
+    const media=(await matFranchiseQuery(query,{id:key}))?.Media||null;
+    if(media) matCacheMedia([media]);
+    return media;
+  })().finally(()=>MAT_MEDIA_INFLIGHT.delete(key));
+  MAT_MEDIA_INFLIGHT.set(key,task);
+  return task;
 }
 
 async function matFetchMediaBatch(ids){
   const clean=[...new Set((ids||[]).map(Number).filter(Number.isFinite))];
   if(!clean.length) return [];
   const missing=clean.filter(id=>!MAT_MEDIA_MEMORY_CACHE.has(id));
-  if(missing.length){
-    const query=`query($ids:[Int]){Page(page:1,perPage:50){media(id_in:$ids,type:ANIME){id format episodes duration seasonYear status isAdult description(asHtml:true) bannerImage startDate{year month day} title{romaji english} coverImage{extraLarge large} trailer{id site thumbnail}}}}`;
-    const rows=(await matFranchiseQuery(query,{ids:missing}))?.Page?.media||[];
-    rows.forEach(row=>MAT_MEDIA_MEMORY_CACHE.set(Number(row.id),row));
+  const query=`query($ids:[Int]){Page(page:1,perPage:50){media(id_in:$ids,type:ANIME){id format episodes duration seasonYear status isAdult description(asHtml:true) bannerImage startDate{year month day} title{romaji english} coverImage{extraLarge large} trailer{id site thumbnail}}}}`;
+  for(let i=0;i<missing.length;i+=50){
+    const chunk=missing.slice(i,i+50);
+    const rows=(await matFranchiseQuery(query,{ids:chunk}))?.Page?.media||[];
+    matCacheMedia(rows);
   }
   return clean.map(id=>MAT_MEDIA_MEMORY_CACHE.get(id)).filter(Boolean);
 }
