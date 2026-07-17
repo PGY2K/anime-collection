@@ -20,6 +20,20 @@ async function loadNavigationProfile() {
     .maybeSingle();
 
   avatar.src = profileAvatarPath(data?.avatar_id || 1);
+
+  const referralCode = String(user.user_metadata?.referral_code || "").trim().toUpperCase();
+  if (data && referralCode) {
+    const { error: referralError } = await supabaseClient.rpc("claim_referral", {
+      p_referral_code: referralCode
+    });
+    if (!referralError) {
+      await supabaseClient.auth.updateUser({
+        data: { ...user.user_metadata, referral_code: null }
+      });
+    } else {
+      console.warn("Referral could not be applied.", referralError);
+    }
+  }
 }
 
 document.addEventListener("DOMContentLoaded", loadNavigationProfile);

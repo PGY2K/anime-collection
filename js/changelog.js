@@ -1,5 +1,42 @@
 const MAT_RELEASES = [
   {
+    version: window.MAT_VERSION || "v4.3.0",
+    date: "July 2026",
+    announcementTitle: "Invites and automatic badges are ready",
+    announcement: "Invitation links can now fill referral codes automatically while still allowing manual edits, and MAT now uses the new artwork for automatic badges and Beta Tester. View the Changelog tab for the complete list of changes.",
+    groups: {
+      NEW: [
+        "Added editable referral codes to account creation.",
+        "Added automatic referral-link filling with clear signup guidance.",
+        "Added automatic badge awarding for Community Favorite, Recruiter, Anime Completion Master, and Rating Legend."
+      ],
+      IMPROVED: [
+        "Added official artwork to all four automatic badge progress cards.",
+        "Replaced the Beta Tester badge artwork with the new diamond design."
+      ],
+      FIXED: [
+        "Connected Recruiter progress to the profile referral count instead of a placeholder value."
+      ]
+    }
+  },
+  {
+    version: window.MAT_VERSION || "v4.2.0",
+    date: "July 2026",
+    announcementTitle: "Badge progress now has a home",
+    announcement: "Profiles now include a dedicated Badges button, a new page for viewing earned badges and automatic-badge progress, plus cleaner Friends and Joined information in the profile corners. View the Changelog tab for the complete list of changes.",
+    groups: {
+      NEW: [
+        "Added a dedicated Badges page for earned badges and automatic-badge progress.",
+        "Added progress tracking for comment likes, completed anime, rated anime, and referrals."
+      ],
+      IMPROVED: [
+        "Moved Friends to the top-left of profile cards as plain text.",
+        "Added the account join date to the top-right of profile cards.",
+        "Replaced the centered Friends control with a Badges button."
+      ]
+    }
+  },
+  {
     version: window.MAT_VERSION || "v4.1.0",
     date: "July 2026",
     announcementTitle: "Community counts and easier installation",

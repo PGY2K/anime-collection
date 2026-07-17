@@ -15,6 +15,12 @@ function fpEscape(value) {
     .replaceAll("'", "&#039;");
 }
 
+
+function fpJoinedLabel(value) {
+  const date = value ? new Date(value) : null;
+  if (!date || Number.isNaN(date.getTime())) return "Joined MAT";
+  return `Joined ${date.toLocaleDateString(undefined, { month: "short", year: "numeric" })}`;
+}
 function fpNormalize(value) {
   return String(value ?? "").trim().toLowerCase();
 }
@@ -118,10 +124,14 @@ async function renderFriendProfileShell(profile) {
   root.innerHTML = `
     <a class="friend-profile-back standalone-back" href="friends.html">← Friends</a>
     <section class="public-profile-card friend-public-profile">
+      <div class="profile-corner-meta">
+        <span class="profile-corner-friends">👥 ${friendProfileFriendCount.toLocaleString()} Friends</span>
+        <span class="profile-corner-joined">${fpEscape(fpJoinedLabel(profile.created_at))}</span>
+      </div>
       <img class="profile-main-avatar" src="${profileAvatarPath(profile.avatar_id || 1)}" alt="${fpEscape(profile.username)} avatar" />
       <h2>${fpEscape(profile.username || "Anime Fan")}</h2>
       ${matBadgeRowHtml(profileBadges, { emptyText: "No badges awarded yet." })}
-      <span class="profile-friend-count">👥 ${friendProfileFriendCount.toLocaleString()} Friends</span>
+      <a class="secondary-btn profile-badges-page-btn" href="badges.html?user=${encodeURIComponent(profile.user_id)}">🏅 Badges</a>
       <p class="profile-private-note">Accepted friend</p>
       <div class="profile-stat-grid">
         <div><strong>${count("in progress")}</strong><span>Watching</span></div>

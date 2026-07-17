@@ -200,7 +200,7 @@ async function loadOwnFriendCode(user) {
 async function initFriendsPage(user) {
   friendsPageUser = user;
   document.getElementById("addFriendForm").addEventListener("submit", sendFriendRequest);
-  initInviteFriends();
+  initInviteFriends(user);
 
   try {
     await Promise.all([
@@ -218,7 +218,7 @@ async function initFriendsPage(user) {
 const MAT_SIGNUP_URL = "https://pgy2k.github.io/anime-collection/signup.html";
 const MAT_INVITE_TEXT = "Join me on My Anime Tracker to track anime, compare ratings, and see what friends are watching.";
 
-function initInviteFriends() {
+async function initInviteFriends(user) {
   const inviteButton = document.getElementById("inviteFriendsBtn");
   const modal = document.getElementById("inviteFriendsModal");
   const closeButton = document.getElementById("closeInviteFriendsBtn");
@@ -228,7 +228,17 @@ function initInviteFriends() {
 
   if (!inviteButton || !modal || !closeButton || !copyButton || !input || !message) return;
 
-  input.value = MAT_SIGNUP_URL;
+  let inviteUrl = MAT_SIGNUP_URL;
+  if (user?.id) {
+    const { data } = await supabaseClient
+      .from("profiles")
+      .select("friend_code")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    const code = String(data?.friend_code || "").trim().toUpperCase();
+    if (code) inviteUrl = `${MAT_SIGNUP_URL}?ref=${encodeURIComponent(code)}`;
+  }
+  input.value = inviteUrl;
 
   const openFallback = () => {
     modal.hidden = false;
@@ -249,7 +259,7 @@ function initInviteFriends() {
         await navigator.share({
           title: "Join My Anime Tracker",
           text: MAT_INVITE_TEXT,
-          url: MAT_SIGNUP_URL
+          url: inviteUrl
         });
         return;
       } catch (error) {
@@ -261,7 +271,7 @@ function initInviteFriends() {
 
   copyButton.addEventListener("click", async () => {
     try {
-      await navigator.clipboard.writeText(MAT_SIGNUP_URL);
+      await navigator.clipboard.writeText(inviteUrl);
       message.textContent = "Signup link copied.";
       message.className = "friends-message success";
       copyButton.textContent = "Copied";

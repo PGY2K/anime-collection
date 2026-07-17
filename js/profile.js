@@ -8,6 +8,12 @@ let profileFranchises = [];
 let profileFranchiseEntryRatings = [];
 let profileFriendCount = 0;
 
+function profileJoinedLabel(value) {
+  const date = value ? new Date(value) : null;
+  if (!date || Number.isNaN(date.getTime())) return "Joined MAT";
+  return `Joined ${date.toLocaleDateString(undefined, { month: "short", year: "numeric" })}`;
+}
+
 function escapeProfileHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -46,10 +52,27 @@ async function createProfile(user) {
   }
   throw new Error("Could not generate a unique profile.");
 }
+async function claimPendingReferral(user) {
+  const referralCode = String(user?.user_metadata?.referral_code || "").trim().toUpperCase();
+  if (!referralCode) return;
+
+  const { error } = await supabaseClient.rpc("claim_referral", { p_referral_code: referralCode });
+  if (error) {
+    console.warn("Referral could not be applied.", error);
+    return;
+  }
+
+  await supabaseClient.auth.updateUser({
+    data: { ...user.user_metadata, referral_code: null }
+  });
+}
+
 async function getOrCreateProfile(user) {
   const { data, error } = await supabaseClient.from("profiles").select("*").eq("user_id", user.id).maybeSingle();
   if (error) throw error;
-  return data || createProfile(user);
+  const profile = data || await createProfile(user);
+  await claimPendingReferral(user);
+  return profile;
 }
 async function loadProfileAnime() {
   const { data, error } = await supabaseClient.from("anime")
@@ -156,10 +179,14 @@ async function renderProfile() {
   const root = document.getElementById("profileRoot");
   root.innerHTML = `
     <section class="public-profile-card">
+      <div class="profile-corner-meta">
+        <span class="profile-corner-friends">👥 ${profileFriendCount.toLocaleString()} Friends</span>
+        <span class="profile-corner-joined">${escapeProfileHtml(profileJoinedLabel(currentProfileUser?.created_at || currentProfileData.created_at))}</span>
+      </div>
       <img class="profile-main-avatar" src="${profileAvatarPath(selectedAvatarId)}" alt="Your profile avatar" />
       <h2>${escapeProfileHtml(currentProfileData.username || "Anime Fan")}</h2>
       ${matBadgeRowHtml(profileBadges, { emptyText: "No badges awarded yet." })}
-      <span class="profile-friend-count">👥 ${profileFriendCount.toLocaleString()} Friends</span>
+      <a class="secondary-btn profile-badges-page-btn" href="badges.html">🏅 Badges</a>
       <p class="profile-private-note">Visible only to accepted friends.</p>
 
       <div class="profile-stat-grid">

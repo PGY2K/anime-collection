@@ -243,3 +243,38 @@
   align-items: center;
   justify-content: center;
 }
+
+
+/* v4.2.0 profile badge hub and corner metadata */
+.public-profile-card { position: relative; }
+.profile-corner-meta {
+  position: absolute;
+  top: 22px;
+  left: 24px;
+  right: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  pointer-events: none;
+}
+.profile-corner-friends, .profile-corner-joined {
+  border: 0;
+  background: none;
+  box-shadow: none;
+  text-decoration: none;
+}
+.profile-badges-page-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+  text-decoration: none;
+}
+@media (max-width: 560px) {
+  .public-profile-card { padding-top: 72px; }
+  .profile-corner-meta { top: 18px; left: 18px; right: 18px; font-size: 12px; }
+}

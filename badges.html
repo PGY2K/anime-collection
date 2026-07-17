@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Badges • My Anime Tracker</title>
+  <meta name="theme-color" content="#8b5cf6" />
+  <meta name="application-name" content="My Anime Tracker" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png" />
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/profile.css" />
+  <link rel="stylesheet" href="css/badges-page.css" />
+</head>
+<body>
+  <main class="shell">
+    <nav class="navbar">
+      <a class="brand brand-link" href="index.html" aria-label="My Anime Tracker dashboard"><img class="brand-logo" src="assets/icons/mat-logo.png" alt="" /><span>MAT</span></a>
+      <div class="nav-links">
+        <a href="index.html">Dashboard</a>
+        <a href="collection.html">Collection</a>
+        <a href="ratings.html">Ratings</a>
+        <a href="friends.html">Friends</a>
+        <a class="profile-nav-link active" href="profile.html" aria-label="Open profile" title="Profile">
+          <img id="navProfileAvatar" src="assets/avatars/avatar-1.svg" alt="Profile" />
+        </a>
+      </div>
+    </nav>
+
+    <section class="page-header badges-page-heading">
+      <div>
+        <a class="badges-back-link" id="badgesBackLink" href="profile.html">← Profile</a>
+        <h1 class="page-title"><span>Badges</span></h1>
+        <p class="page-subtitle" id="badgesPageSubtitle">View earned badges and progress toward automatic badges.</p>
+      </div>
+    </section>
+
+    <section id="badgesPageRoot"><div class="loading">Loading badges…</div></section>
+    <footer class="mat-footer"></footer>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/network-errors.js"></script>
+  <script src="js/profile-nav.js"></script>
+  <script src="js/badges.js"></script>
+  <script src="js/badges-page.js"></script>
+  <script>requireSignedInUser().then((user) => { if (user) initBadgesPage(user); });</script>
+  <script src="js/version.js"></script>
+  <script src="js/pwa.js"></script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+.badges-page-heading { align-items: flex-end; }
+.badges-back-link { display: inline-block; margin-bottom: 10px; color: var(--muted); text-decoration: none; font-weight: 800; }
+.badges-back-link:hover { color: #fff; }
+.badges-summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 18px 0; padding: 18px 20px; border: 1px solid var(--border); border-radius: 18px; background: linear-gradient(145deg,var(--panel-2),var(--panel)); }
+.badges-summary strong { display: block; font-size: 24px; }
+.badges-summary span { color: var(--muted); font-size: 13px; }
+.badges-section { margin-top: 24px; }
+.badges-section-heading { display: flex; align-items: end; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
+.badges-section-heading h2 { margin: 0; font-size: 22px; }
+.badges-section-heading span { color: var(--muted); font-size: 12px; }
+.badges-earned-grid, .badge-progress-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; }
+.badges-earned-card, .badge-progress-card { padding: 18px; border: 1px solid var(--border); border-radius: 18px; background: rgba(255,255,255,.035); }
+.badges-earned-card { display: flex; gap: 14px; align-items: center; }
+.badges-earned-card img { width: 64px; height: 64px; border-radius: 15px; object-fit: cover; background: rgba(255,255,255,.05); }
+.badges-earned-card h3, .badge-progress-card h3 { margin: 0 0 6px; font-size: 16px; }
+.badges-earned-card p, .badge-progress-card p { margin: 0; color: var(--muted); line-height: 1.45; font-size: 13px; }
+.badges-earned-card small { display: block; margin-top: 7px; color: var(--gold); }
+.badge-progress-top { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+.badge-progress-art { width: 58px; height: 58px; flex: 0 0 auto; border-radius: 14px; object-fit: cover; }
+.badge-progress-value { margin-top: 16px; display: flex; justify-content: space-between; gap: 12px; color: #ddd7e9; font-size: 13px; font-weight: 900; }
+.badge-progress-track { height: 10px; margin-top: 8px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.09); }
+.badge-progress-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg,var(--purple),#c084fc); }
+.badge-progress-card.is-earned { border-color: rgba(91,215,154,.4); box-shadow: inset 0 0 0 1px rgba(91,215,154,.12); }
+.badge-progress-card.is-earned .badge-progress-fill { background: var(--green); }
+.badge-progress-status { margin-top: 10px; color: var(--muted); font-size: 12px; }
+.badge-progress-card.is-earned .badge-progress-status { color: var(--green); font-weight: 900; }
+.badges-private-note { padding: 22px; border: 1px solid var(--border); border-radius: 18px; color: var(--muted); text-align: center; background: rgba(255,255,255,.03); }
+@media(max-width:900px){ .badges-earned-grid,.badge-progress-grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media(max-width:580px){ .badges-summary{align-items:flex-start;flex-direction:column}.badges-earned-grid,.badge-progress-grid{grid-template-columns:1fr} }

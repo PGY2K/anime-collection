@@ -61,6 +61,24 @@ function validateSignup(username, password, confirmPassword) {
 }
 
 
+
+function initializeReferralField() {
+  const input = document.getElementById("signupReferralCode");
+  const help = document.getElementById("signupReferralHelp");
+  if (!input || !help) return;
+
+  const referralFromLink = new URLSearchParams(window.location.search).get("ref");
+  if (referralFromLink) {
+    input.value = referralFromLink.trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
+    help.innerHTML = "✓ Automatically filled from your invitation link.<br>You can change it if needed.";
+    help.classList.add("referral-auto-filled");
+  }
+
+  input.addEventListener("input", () => {
+    input.value = input.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
+  });
+}
+
 function getConfirmationRedirectUrl() {
   return new URL("login.html", window.location.href).href;
 }
@@ -86,6 +104,7 @@ async function createAccount(event) {
   const password = document.getElementById("signupPassword").value;
   const confirmPassword = document.getElementById("confirmPassword").value;
   const username = document.getElementById("signupUsername").value.trim();
+  const referralCode = document.getElementById("signupReferralCode").value.trim().toUpperCase();
   const validationError = validateSignup(username, password, confirmPassword);
 
   if (validationError) {
@@ -106,7 +125,8 @@ async function createAccount(event) {
       emailRedirectTo: getConfirmationRedirectUrl(),
       data: {
         username,
-        avatar_id: selectedSignupAvatarId
+        avatar_id: selectedSignupAvatarId,
+        referral_code: referralCode || null
       }
     }
   });
@@ -139,6 +159,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   renderSignupAvatars();
+  initializeReferralField();
   document.getElementById("signupForm").addEventListener("submit", createAccount);
 
   document

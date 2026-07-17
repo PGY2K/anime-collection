@@ -1,4 +1,4 @@
-window.MAT_VERSION = "v4.1.0";
+window.MAT_VERSION = "v4.3.0";
 window.MAT_DISCORD_URL = "https://discord.gg/FWQXmgKACk";
 
 (function renderMatFooter() {

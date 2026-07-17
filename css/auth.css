@@ -197,3 +197,8 @@ body { min-height: 100vh; }
     grid-template-columns: 1fr;
   }
 }
+
+.referral-auto-filled {
+  color: #70e69d;
+  line-height: 1.5;
+}
