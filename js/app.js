@@ -23,6 +23,7 @@ async function addAnime(anime){
   if(franchise){
     await matStoreFranchise(franchise);
     await matEnsureUserFranchise(currentUser.id,franchise,"Queued");
+    await matClaimPioneerBadge({franchiseKey:franchise.franchiseKey,anilistId:anime.id});
     const entryIds=franchise.entries.map(entry=>Number(entry.anilist_id));
     if(entryIds.length){
       await supabaseClient.from("anime").update({franchise_key:franchise.franchiseKey,franchise_title:franchise.title}).in("anilist_id",entryIds);
@@ -31,6 +32,7 @@ async function addAnime(anime){
   }
   const {data,error}=await supabaseClient.from("anime").insert({anilist_id:anime.id,title,status:"Queued",media_format:anime.format||null}).select("*").single();
   if(error){if(error.code==="23505")throw new Error("That anime is already in your collection.");throw error}
+  await matClaimPioneerBadge({anilistId:anime.id});
   return data;
 }
 const copy={all:["Your <span>Collection</span>","Search, filter, and browse your anime and franchises."],queued:["Queued","You've added these anime but haven't started watching them yet."],"in progress":["In Progress","You're currently watching these anime."],waiting:["Waiting","You're waiting for new episodes or the next season."],completed:["Completed","You've finished watching these anime."],dropped:["Dropped","You've decided not to continue watching these anime."]};

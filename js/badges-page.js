@@ -109,9 +109,14 @@ async function initBadgesPage(currentUser) {
     let progressMarkup = '<div class="badges-private-note">Automatic badge progress is visible only to the profile owner.</div>';
     if (isOwnPage) {
       const progress = await loadOwnBadgeProgress(currentUser.id);
+      const pioneerEarned = badges.some((badge) =>
+        String(badge.slug || "").toLowerCase() === "pioneer" ||
+        String(badge.name || "").toLowerCase() === "pioneer"
+      );
       const automaticBadges = [
         { image: "assets/badges/community-favorite.png", name: "Community Favorite", description: "Receive 1,000 total likes across all of your comments.", current: progress.likes, target: 1000 },
-        { image: "assets/badges/recruiter.png", name: "Recruiter", description: "Invite a new member who signs up using your friend code or invitation link.", current: progress.referrals, target: 1 },
+        { image: "assets/badges/recruiter.png", name: "Recruiter", description: "Invite 3 new members who sign up using your friend code or invitation link.", current: progress.referrals, target: 3 },
+        { image: "assets/badges/pioneer.png", name: "Pioneer", description: "Add an anime that has never been tracked on MAT before.", current: pioneerEarned ? 1 : 0, target: 1, status: "Be the first MAT user to add an untracked anime" },
         { image: "assets/badges/anime-completion-master.png", name: "Anime Completion Master", description: "Complete 2,500 anime.", current: progress.completed, target: 2500 },
         { image: "assets/badges/rating-legend.png", name: "Rating Legend", description: "Rate 10,000 anime.", current: progress.rated, target: 10000 }
       ];

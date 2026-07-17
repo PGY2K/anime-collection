@@ -1,5 +1,21 @@
 const MAT_RELEASES = [
   {
+    version: "v4.4.0",
+    date: "July 2026",
+    announcementTitle: "Pioneer discoveries and tougher recruiting",
+    announcement: "MAT now rewards the first user to track a previously untracked anime with the permanent Pioneer badge, and Recruiter now requires three successful referrals. View the Changelog tab for the complete list of changes.",
+    groups: {
+      NEW: [
+        "Added the permanent Pioneer badge for the first user to add an anime that has never been tracked on MAT before.",
+        "Added official Pioneer rocket artwork to earned badge displays."
+      ],
+      IMPROVED: [
+        "Raised the Recruiter badge requirement from one successful referral to three.",
+        "Updated Recruiter progress from 0 / 1 to 0 / 3 while preserving existing referral totals and previously earned badges."
+      ]
+    }
+  },
+  {
     version: window.MAT_VERSION || "v4.3.1",
     date: "July 2026",
     announcementTitle: "Referral rewards now complete correctly",

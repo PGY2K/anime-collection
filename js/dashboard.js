@@ -207,6 +207,7 @@ async function addTrendingToQueue(media, button, anime) {
     return;
   }
 
+  await matClaimPioneerBadge({ anilistId: media.id });
   anime.unshift(data);
   button.textContent = "In Your Collection";
   renderTrending(anime, window.dashboardTrendingMedia || []);
@@ -401,6 +402,8 @@ async function addFriendRatedAnimeToQueue(group, button, anime) {
     alert(error.message);
     return;
   }
+
+  await matClaimPioneerBadge({ anilistId: group.anilistId });
 
   anime.unshift({
     id: data,

@@ -49,6 +49,7 @@ async function addStandaloneToCollection(media) {
     if (error.code === "23505") throw new Error("This anime is already in your collection.");
     throw error;
   }
+  await matClaimPioneerBadge({ anilistId: media.id });
   return data;
 }
 
@@ -75,6 +76,8 @@ async function addFranchiseToCollection(franchise, media) {
     updated_at: new Date().toISOString()
   });
   if (error) throw error;
+
+  await matClaimPioneerBadge({ franchiseKey: franchise.franchiseKey, anilistId: media?.id || null });
 
   if (media?.id) {
     await supabaseClient
