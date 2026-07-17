@@ -1,4 +1,4 @@
-window.MAT_VERSION = "v4.0.0";
+window.MAT_VERSION = "v4.1.0";
 window.MAT_DISCORD_URL = "https://discord.gg/FWQXmgKACk";
 
 (function renderMatFooter() {
@@ -7,6 +7,7 @@ window.MAT_DISCORD_URL = "https://discord.gg/FWQXmgKACk";
       footer.classList.add("mat-footer");
       footer.innerHTML = `
         <span class="mat-footer-version">My Anime Tracker • ${window.MAT_VERSION}</span>
+        <button class="mat-footer-install" id="matFooterInstallButton" type="button">Install App</button>
         <a
           class="mat-footer-discord"
           href="${window.MAT_DISCORD_URL}"

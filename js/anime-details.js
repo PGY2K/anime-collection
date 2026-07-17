@@ -108,6 +108,24 @@ async function fetchAnimeDetails(anilistId){
   }
 }
 
+async function fetchCollectionCount(anilistId, franchiseKey) {
+  const rpc = franchiseKey ? "get_franchise_collection_count" : "get_anime_collection_count";
+  const args = franchiseKey ? { p_franchise_key: Number(franchiseKey) } : { p_anilist_id: Number(anilistId) };
+  const { data, error } = await supabaseClient.rpc(rpc, args);
+  if (error) { console.warn("Collection count unavailable:", error.message); return 0; }
+  return Number(data) || 0;
+}
+function openCollectionCountPopup(count, isFranchise) {
+  document.getElementById("collectionCountModal")?.remove();
+  document.body.insertAdjacentHTML("beforeend", `<div class="mat-popup-backdrop" id="collectionCountModal"><section class="mat-popup-card" role="dialog" aria-modal="true"><button class="mat-popup-close" id="collectionCountClose" type="button">×</button><h2>Collection Count</h2><p><strong>${Number(count).toLocaleString()}</strong> users have this ${isFranchise ? "franchise" : "anime"} in their collection.</p><div class="mat-popup-actions"><button class="secondary-btn" id="collectionCountDismiss" type="button">Close</button></div></section></div>`);
+  const close=()=>document.getElementById("collectionCountModal")?.remove();
+  document.getElementById("collectionCountClose").onclick=close; document.getElementById("collectionCountDismiss").onclick=close;
+}
+async function bindCollectionCount(anilistId, franchiseKey) {
+  const button=document.getElementById("communityCollectionCount"); if(!button)return;
+  const count=await fetchCollectionCount(anilistId, franchiseKey); button.querySelector("span").textContent=count.toLocaleString(); button.onclick=()=>openCollectionCountPopup(count, Boolean(franchiseKey));
+}
+
 function trailerMarkup(media){
   const trailer=media?.trailer;
   if(!trailer?.id) return `<div class="trailer-unavailable">No trailer is available for this anime.</div>`;
@@ -143,6 +161,7 @@ function renderDetails(record,media,options={}){
           ${franchiseKey?`<a class="back-link" href="franchise.html?key=${encodeURIComponent(franchiseKey)}">← Back to Franchise</a>`:`<a class="back-link" href="javascript:history.back()">← Back</a>`}
           <h1 class="details-title">${detailsEscapeHtml(title)}</h1>
           <div class="details-meta">${detailsEscapeHtml(meta||"Anime")}</div>
+          <button class="community-count-btn" id="communityCollectionCount" type="button" aria-label="View collection count">📚 <span>—</span></button>
           <div class="details-actions">
             ${owned&&!informationalOnly?`<span class="details-status status ${detailsStatusClass(record.status)}">${detailsEscapeHtml(record.status||"Queued")}</span>`:""}
             ${owned&&!informationalOnly&&rating!==null?`<span class="details-rating-badge">⭐ ${rating.toFixed(1)}</span>`:""}
@@ -259,6 +278,7 @@ function renderDetails(record,media,options={}){
     });
   }
 
+  bindCollectionCount(Number(media?.id), franchiseKey);
   initAnimeComments(Number(media?.id));
 }
 

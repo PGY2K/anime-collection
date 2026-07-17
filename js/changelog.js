@@ -1,6 +1,23 @@
 const MAT_RELEASES = [
   {
-    version: window.MAT_VERSION || "v4.0.0",
+    version: window.MAT_VERSION || "v4.1.0",
+    date: "July 2026",
+    announcementTitle: "Community counts and easier installation",
+    announcement: "Anime and franchise pages now show how many MAT collections they appear in, profiles display public friend counts, and the app install option now lives neatly in the footer. View the Changelog tab for the complete list of changes.",
+    groups: {
+      NEW: [
+        "Added a clickable collection-count indicator to anime and franchise pages.",
+        "Added public accepted-friend counts to user profiles.",
+        "Added an Install App option to every page footer with a guided popup."
+      ],
+      IMPROVED: [
+        "Moved installation guidance into a clean footer popup.",
+        "Added clear install states for available, installed, unsupported, and temporarily unavailable situations."
+      ]
+    }
+  },
+  {
+    version: "v4.0.0",
     date: "July 2026",
     announcementTitle: "Franchise tracking has arrived",
     announcement: "Long-running anime can now stay organized under one franchise, so your collection is easier to browse without losing access to individual seasons and movies. Ratings now stay connected across franchise entries as well. View the Changelog tab for the complete list of changes.",

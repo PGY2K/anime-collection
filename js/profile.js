@@ -6,6 +6,7 @@ let profileAnime = [];
 let profileBadges = [];
 let profileFranchises = [];
 let profileFranchiseEntryRatings = [];
+let profileFriendCount = 0;
 
 function escapeProfileHtml(value) {
   return String(value ?? "")
@@ -158,6 +159,7 @@ async function renderProfile() {
       <img class="profile-main-avatar" src="${profileAvatarPath(selectedAvatarId)}" alt="Your profile avatar" />
       <h2>${escapeProfileHtml(currentProfileData.username || "Anime Fan")}</h2>
       ${matBadgeRowHtml(profileBadges, { emptyText: "No badges awarded yet." })}
+      <span class="profile-friend-count">👥 ${profileFriendCount.toLocaleString()} Friends</span>
       <p class="profile-private-note">Visible only to accepted friends.</p>
 
       <div class="profile-stat-grid">
@@ -254,12 +256,13 @@ async function saveProfile(event) {
 async function initProfile(user) {
   currentProfileUser = user;
   try {
-    [currentProfileData, profileAnime, profileBadges, profileFranchises, profileFranchiseEntryRatings] = await Promise.all([
+    [currentProfileData, profileAnime, profileBadges, profileFranchises, profileFranchiseEntryRatings, profileFriendCount] = await Promise.all([
       getOrCreateProfile(user),
       loadProfileAnime(),
       matLoadUserBadges(user.id),
       matLoadOwnFranchises(),
-      loadProfileFranchiseEntryRatings()
+      loadProfileFranchiseEntryRatings(),
+      supabaseClient.rpc("get_public_friend_count", { p_user_id: user.id }).then(({data,error}) => error ? 0 : Number(data) || 0)
     ]);
     await renderProfile();
   } catch (error) {

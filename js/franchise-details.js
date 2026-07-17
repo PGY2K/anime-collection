@@ -20,6 +20,7 @@ let fdEntryRatings = [];
 let fdExistingAnimeRatings = [];
 let fdProfile = null;
 let fdHeroMedia = null;
+let fdCollectionCount = 0;
 
 function fdEsc(value) {
   return String(value ?? "")
@@ -115,6 +116,8 @@ async function fdLoad(key) {
   const mediaMap = new Map(media.map((item) => [Number(item.id), item]));
   fdEntryMedia = fdEntries.map((entry) => ({ ...entry, media: mediaMap.get(Number(entry.anilist_id)) || null }));
   fdHeroMedia = mediaMap.get(Number(fdFranchise.cover_anilist_id)) || await matFetchRelationNode(fdFranchise.cover_anilist_id);
+  const countResult = await supabaseClient.rpc("get_franchise_collection_count", { p_franchise_key: Number(key) });
+  fdCollectionCount = countResult.error ? 0 : Number(countResult.data) || 0;
 
   if (!viewingFriend) {
     const entryIds = fdEntries.map((entry) => Number(entry.anilist_id)).filter(Number.isFinite);
@@ -220,6 +223,8 @@ function fdStatusModalMarkup() {
   </div>`;
 }
 
+function openFranchiseCollectionPopup(){ document.getElementById("franchiseCountModal")?.remove(); document.body.insertAdjacentHTML("beforeend", `<div class="mat-popup-backdrop" id="franchiseCountModal"><section class="mat-popup-card"><button class="mat-popup-close" id="franchiseCountClose" type="button">×</button><h2>Collection Count</h2><p><strong>${fdCollectionCount.toLocaleString()}</strong> users have this franchise in their collection.</p><div class="mat-popup-actions"><button class="secondary-btn" id="franchiseCountDismiss" type="button">Close</button></div></section></div>`); const close=()=>document.getElementById("franchiseCountModal")?.remove(); document.getElementById("franchiseCountClose").onclick=close; document.getElementById("franchiseCountDismiss").onclick=close; }
+
 function fdRender() {
   const root = document.getElementById("franchiseRoot");
   const poster = fdHeroMedia?.coverImage?.extraLarge || fdHeroMedia?.coverImage?.large || "";
@@ -234,6 +239,7 @@ function fdRender() {
       <div class="franchise-hero-copy">
         <h1>${fdEsc(fdFranchise.title)}</h1>
         <span class="franchise-pill">Franchise</span>
+        <button class="community-count-btn" id="franchiseCollectionCount" type="button">📚 <span>${fdCollectionCount.toLocaleString()}</span></button>
         <details class="description-disclosure franchise-description"><summary>Description</summary><p>${fdEsc(synopsis)}</p></details>
         <div class="details-actions franchise-actions">
           <span class="details-status status ${fdStatusClass(fdFranchise.status)}">${fdEsc(fdFranchise.status || "Queued")}</span>
@@ -249,6 +255,7 @@ function fdRender() {
     ${ownView ? fdStatusModalMarkup() : ""}
     <div id="entryRatingModalHost"></div>`;
 
+  document.getElementById("franchiseCollectionCount")?.addEventListener("click", () => openFranchiseCollectionPopup());
   if (ownView) fdBind();
 }
 

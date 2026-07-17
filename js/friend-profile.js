@@ -4,6 +4,7 @@ let friendProfileFilter = "all";
 let activeFriendUserId = null;
 let friendProfileFranchises = [];
 let friendProfileTopFive = [];
+let friendProfileFriendCount = 0;
 
 function fpEscape(value) {
   return String(value ?? "")
@@ -120,6 +121,7 @@ async function renderFriendProfileShell(profile) {
       <img class="profile-main-avatar" src="${profileAvatarPath(profile.avatar_id || 1)}" alt="${fpEscape(profile.username)} avatar" />
       <h2>${fpEscape(profile.username || "Anime Fan")}</h2>
       ${matBadgeRowHtml(profileBadges, { emptyText: "No badges awarded yet." })}
+      <span class="profile-friend-count">👥 ${friendProfileFriendCount.toLocaleString()} Friends</span>
       <p class="profile-private-note">Accepted friend</p>
       <div class="profile-stat-grid">
         <div><strong>${count("in progress")}</strong><span>Watching</span></div>
@@ -215,15 +217,17 @@ async function initFriendProfile() {
   }
 
   try {
-    const [profile, anime, franchises, topFive] = await Promise.all([
+    const [profile, anime, franchises, topFive, friendCount] = await Promise.all([
       fetchFriendProfile(activeFriendUserId),
       fetchFriendAnime(activeFriendUserId),
       fetchFriendFranchises(activeFriendUserId),
-      fetchFriendTopFive(activeFriendUserId)
+      fetchFriendTopFive(activeFriendUserId),
+      supabaseClient.rpc("get_public_friend_count", { p_user_id: activeFriendUserId }).then(({data,error}) => error ? 0 : Number(data) || 0)
     ]);
 
     friendProfileFranchises = franchises;
     friendProfileTopFive = topFive;
+    friendProfileFriendCount = friendCount;
     friendProfileAnime = anime;
     await renderFriendProfileShell(profile);
     await renderFriendAnime();

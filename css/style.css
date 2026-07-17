@@ -781,3 +781,13 @@ body.modal-open { overflow: hidden; }
 }
 
 .mat-network-dialog-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.mat-network-dialog-actions .primary-btn,.mat-network-dialog-actions .secondary-btn{width:100%}@media(max-width:520px){.mat-network-dialog-actions{grid-template-columns:1fr}}
+
+
+/* v4.1.0 footer install and shared count popups */
+.mat-footer-install,.community-count-btn,.profile-friend-count{border:1px solid rgba(139,92,246,.45);background:rgba(139,92,246,.12);color:inherit;border-radius:999px;padding:.55rem .85rem;font:inherit;font-weight:700;cursor:pointer;text-decoration:none}
+.mat-footer-install:hover,.community-count-btn:hover,.profile-friend-count:hover{background:rgba(139,92,246,.22)}
+.mat-popup-backdrop{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:1rem;background:rgba(5,5,12,.78)}
+.mat-popup-backdrop[hidden]{display:none}
+.mat-popup-card{position:relative;width:min(430px,100%);padding:1.5rem;border:1px solid rgba(139,92,246,.35);border-radius:18px;background:#151522;box-shadow:0 24px 80px rgba(0,0,0,.45)}
+.mat-popup-card h2{margin:0 2rem .65rem 0}.mat-popup-card p{margin:0;color:#c7c7d4;line-height:1.55}.mat-popup-close{position:absolute;right:.85rem;top:.75rem;border:0;background:transparent;color:inherit;font-size:1.7rem;cursor:pointer}.mat-popup-actions{display:flex;justify-content:flex-end;gap:.65rem;margin-top:1.25rem;flex-wrap:wrap}
+.community-count-btn{display:inline-flex;align-items:center;gap:.35rem}.profile-friend-count{display:inline-flex;margin:.35rem auto .75rem;cursor:default}
