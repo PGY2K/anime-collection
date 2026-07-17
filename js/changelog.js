@@ -1,6 +1,23 @@
 const MAT_RELEASES = [
   {
-    version: window.MAT_VERSION || "v4.3.0",
+    version: window.MAT_VERSION || "v4.3.1",
+    date: "July 2026",
+    announcementTitle: "Referral rewards now complete correctly",
+    announcement: "MAT now records valid referrals after account confirmation, updates the inviter’s referral total, and awards the Recruiter badge automatically. View the Changelog tab for the complete list of changes.",
+    groups: {
+      FIXED: [
+        "Fixed referral codes remaining unclaimed after a referred user created and confirmed an account.",
+        "Fixed inviter referral counts staying at zero.",
+        "Fixed the Recruiter badge not unlocking after the first successful referral."
+      ],
+      IMPROVED: [
+        "Added safer duplicate and self-referral protection.",
+        "Kept pending referral data until Supabase confirms that the referral was successfully claimed."
+      ]
+    }
+  },
+  {
+    version: "v4.3.0",
     date: "July 2026",
     announcementTitle: "Invites and automatic badges are ready",
     announcement: "Invitation links can now fill referral codes automatically while still allowing manual edits, and MAT now uses the new artwork for automatic badges and Beta Tester. View the Changelog tab for the complete list of changes.",

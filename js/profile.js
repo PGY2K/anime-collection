@@ -56,11 +56,14 @@ async function claimPendingReferral(user) {
   const referralCode = String(user?.user_metadata?.referral_code || "").trim().toUpperCase();
   if (!referralCode) return;
 
-  const { error } = await supabaseClient.rpc("claim_referral", { p_referral_code: referralCode });
+  const { data: claimResult, error } = await supabaseClient.rpc("claim_referral", { p_referral_code: referralCode });
   if (error) {
     console.warn("Referral could not be applied.", error);
     return;
   }
+
+  const claimFinished = claimResult?.claimed === true || claimResult?.reason === "already_claimed";
+  if (!claimFinished) return;
 
   await supabaseClient.auth.updateUser({
     data: { ...user.user_metadata, referral_code: null }

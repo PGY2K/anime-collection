@@ -23,14 +23,15 @@ async function loadNavigationProfile() {
 
   const referralCode = String(user.user_metadata?.referral_code || "").trim().toUpperCase();
   if (data && referralCode) {
-    const { error: referralError } = await supabaseClient.rpc("claim_referral", {
+    const { data: claimResult, error: referralError } = await supabaseClient.rpc("claim_referral", {
       p_referral_code: referralCode
     });
-    if (!referralError) {
+    const claimFinished = claimResult?.claimed === true || claimResult?.reason === "already_claimed";
+    if (!referralError && claimFinished) {
       await supabaseClient.auth.updateUser({
         data: { ...user.user_metadata, referral_code: null }
       });
-    } else {
+    } else if (referralError) {
       console.warn("Referral could not be applied.", referralError);
     }
   }
