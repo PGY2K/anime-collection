@@ -15,7 +15,7 @@ function badgesPageRated(row) {
 async function loadOwnBadgeProgress(userId) {
   const [animeResult, commentsResult, profileResult] = await Promise.all([
     supabaseClient.from("anime").select("status, overall_rating, story, characters, animation, sound, world, pacing, emotion, originality, rewatch_value, enjoyment"),
-    supabaseClient.from("anime_comments").select("id").eq("user_id", userId),
+    supabaseClient.from("anime_comments").select("id, parent_comment_id").eq("user_id", userId),
     supabaseClient.from("profiles").select("referral_count").eq("user_id", userId).maybeSingle()
   ]);
 
@@ -24,7 +24,9 @@ async function loadOwnBadgeProgress(userId) {
   if (profileResult.error) throw profileResult.error;
 
   const anime = animeResult.data || [];
-  const commentIds = (commentsResult.data || []).map((row) => Number(row.id)).filter(Number.isFinite);
+  const userComments = commentsResult.data || [];
+  const commentIds = userComments.map((row) => Number(row.id)).filter(Number.isFinite);
+  const replyCount = userComments.filter((row) => row.parent_comment_id !== null && row.parent_comment_id !== undefined).length;
   let totalLikes = 0;
 
   if (commentIds.length) {
@@ -43,7 +45,8 @@ async function loadOwnBadgeProgress(userId) {
     likes: totalLikes,
     completed: anime.filter((row) => String(row.status || "").trim().toLowerCase() === "completed").length,
     rated: anime.filter(badgesPageRated).length,
-    referrals: Number(profileResult.data?.referral_count) || 0
+    referrals: Number(profileResult.data?.referral_count) || 0,
+    replies: replyCount
   };
 }
 
@@ -78,6 +81,20 @@ function earnedBadgeCard(badge) {
     </article>`;
 }
 
+function specialBadgeCard(badge, earned) {
+  const badgeType = String(badge.badge_type || "special").toLowerCase();
+  return `
+    <article class="badges-earned-card special-badge-card${earned ? " is-earned" : ""}">
+      <img src="${badgesPageEscape(badge.image_path || MAT_BADGE_FALLBACK_IMAGE)}" alt="" />
+      <div>
+        <div class="special-badge-label">${badgesPageEscape(badgeType === "subscription" ? "Subscription" : badgeType === "manual" ? "Official Award" : "Hidden Achievement")}</div>
+        <h3>${badgesPageEscape(badge.name || "MAT Badge")}</h3>
+        <p>${badgesPageEscape(badge.description || "Official MAT badge.")}</p>
+        <small>${earned ? "Earned" : badgeType === "subscription" ? "Coming Soon" : "Not earned"}</small>
+      </div>
+    </article>`;
+}
+
 async function initBadgesPage(currentUser) {
   const root = document.getElementById("badgesPageRoot");
   const params = new URLSearchParams(location.search);
@@ -91,6 +108,7 @@ async function initBadgesPage(currentUser) {
       if (refreshError) console.warn("Automatic badges could not be refreshed.", refreshError);
     }
     const badges = await matLoadUserBadges(targetUserId);
+    const catalog = isOwnPage ? await matLoadBadgeCatalog() : [];
     let username = "Your";
 
     if (!isOwnPage) {
@@ -115,12 +133,36 @@ async function initBadgesPage(currentUser) {
       );
       const automaticBadges = [
         { image: "assets/badges/community-favorite.png", name: "Community Favorite", description: "Receive 1,000 total likes across all of your comments.", current: progress.likes, target: 1000 },
+        { image: "assets/badges/conversation-champion.png", name: "Conversation Champion", description: "Reply to 5,000 comments.", current: progress.replies, target: 5000 },
         { image: "assets/badges/recruiter.png", name: "Recruiter", description: "Invite 3 new members who sign up using your friend code or invitation link.", current: progress.referrals, target: 3 },
         { image: "assets/badges/pioneer.png", name: "Pioneer", description: "Add an anime that has never been tracked on MAT before.", current: pioneerEarned ? 1 : 0, target: 1, status: "Be the first MAT user to add an untracked anime" },
         { image: "assets/badges/anime-completion-master.png", name: "Anime Completion Master", description: "Complete 2,500 anime.", current: progress.completed, target: 2500 },
         { image: "assets/badges/rating-legend.png", name: "Rating Legend", description: "Rate 10,000 anime.", current: progress.rated, target: 10000 }
       ];
       progressMarkup = `<div class="badge-progress-grid">${automaticBadges.map(badgeProgressCard).join("")}</div>`;
+    }
+
+    let specialMarkup = "";
+    if (isOwnPage) {
+      const earnedBySlug = new Map(badges.map((badge) => [String(badge.slug || "").toLowerCase(), badge]));
+      const displayBadge = (badge) => earnedBySlug.get(String(badge.slug || "").toLowerCase()) || badge;
+      const achievementBadges = catalog.filter((badge) => ["event-champion", "secret-badge"].includes(String(badge.slug || "").toLowerCase()));
+      const subscriptionBadges = catalog.filter((badge) => String(badge.slug || "").toLowerCase() === "vip");
+      specialMarkup = `
+        <section class="badges-section">
+          <div class="badges-section-heading"><h2>Special Badges</h2><span>Official awards and hidden achievements</span></div>
+          <div class="badges-earned-grid">${achievementBadges.map((badge) => {
+            const slug = String(badge.slug || "").toLowerCase();
+            return specialBadgeCard(displayBadge(badge), earnedBySlug.has(slug));
+          }).join("")}</div>
+        </section>
+        <section class="badges-section">
+          <div class="badges-section-heading"><h2>Subscription Badges</h2><span>Badges connected to MAT memberships</span></div>
+          <div class="badges-earned-grid">${subscriptionBadges.map((badge) => {
+            const slug = String(badge.slug || "").toLowerCase();
+            return specialBadgeCard(displayBadge(badge), earnedBySlug.has(slug));
+          }).join("")}</div>
+        </section>`;
     }
 
     root.innerHTML = `
@@ -131,6 +173,7 @@ async function initBadgesPage(currentUser) {
         <div class="badges-section-heading"><h2>Earned Badges</h2><span>Official badges on this profile</span></div>
         <div class="badges-earned-grid">${earnedMarkup}</div>
       </section>
+      ${specialMarkup}
       <section class="badges-section">
         <div class="badges-section-heading"><h2>Automatic Badge Progress</h2><span>Progress updates from MAT activity</span></div>
         ${progressMarkup}

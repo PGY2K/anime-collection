@@ -1,4 +1,4 @@
-const CACHE_NAME = "mat-offline-fallback-v2";
+const CACHE_NAME = "mat-offline-fallback-v4";
 const OFFLINE_ASSETS = [
   "./offline.html",
   "./assets/icons/icon-192.png",
@@ -6,6 +6,11 @@ const OFFLINE_ASSETS = [
   "./assets/icons/mat-logo.png",
   "./js/pioneer-badge.js",
   "./assets/badges/pioneer.png",
+  "./assets/badges/anime-completion-master.png",
+  "./assets/badges/event-champion.png",
+  "./assets/badges/secret-badge.png",
+  "./assets/badges/conversation-champion.png",
+  "./assets/badges/vip.png",
 ];
 
 self.addEventListener("install", (event) => {

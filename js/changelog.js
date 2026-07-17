@@ -1,5 +1,36 @@
 const MAT_RELEASES = [
   {
+    version: "v4.5.1",
+    date: "July 2026",
+    announcementTitle: "Full badge control for administrators",
+    announcement: "MAT administrators can now award or remove every badge type from the Admin Control Panel, including automatic, secret, subscription, and manual badges. View the Changelog tab for the complete details.",
+    groups: {
+      FIXED: [
+        "Removed the manual-only restriction from the Admin Control Panel badge list.",
+        "Updated the admin badge functions so authorized administrators can add or remove any badge assigned to a user."
+      ]
+    }
+  },
+  {
+    version: "v4.5.0",
+    date: "July 2026",
+    announcementTitle: "New ways to stand out on MAT",
+    announcement: "MAT now includes Event Champion, a discoverable Secret Badge, Conversation Champion reply progress, and a preview of the upcoming VIP badge. Anime Completion Master artwork has also been repaired. View the Changelog tab for the complete list of changes.",
+    groups: {
+      NEW: [
+        "Added Event Champion, a permanent badge awarded or revoked through the Admin Control Panel for official MAT event and tournament winners.",
+        "Added Secret Badge using the new blue artwork. Its requirement stays hidden until earned, and only the person who earned it can see the unlock explanation.",
+        "Added Conversation Champion for replying to 5,000 comments, with progress based only on comments that have a parent comment.",
+        "Added the upcoming VIP subscription badge preview in its own Subscription category."
+      ],
+      IMPROVED: [
+        "Replaced the broken Anime Completion Master artwork with the new green trophy artwork.",
+        "Updated automatic badge refresh logic to track genuine replies separately from top-level comments.",
+        "Organized manual, secret, subscription, and automatic badges so they appear in the correct areas."
+      ]
+    }
+  },
+  {
     version: "v4.4.0",
     date: "July 2026",
     announcementTitle: "Pioneer discoveries and tougher recruiting",

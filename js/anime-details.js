@@ -100,7 +100,7 @@ async function ownFranchiseMembership(franchiseKey) {
 }
 
 async function fetchAnimeDetails(anilistId){
-  const query=`query($id:Int){Media(id:$id,type:ANIME){id title{romaji english native} description(asHtml:true) bannerImage coverImage{extraLarge large} episodes duration format season seasonYear status genres studios(isMain:true){nodes{name}} trailer{id site thumbnail}}}`;
+  const query=`query($id:Int){Media(id:$id,type:ANIME){id title{romaji english native} description(asHtml:true) bannerImage coverImage{extraLarge large} episodes duration format season seasonYear status meanScore genres studios(isMain:true){nodes{name}} trailer{id site thumbnail}}}`;
   try {
     const response=await fetch(ANIME_DETAILS_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify({query,variables:{id:Number(anilistId)}})});
     if(!response.ok){const error=new Error("Anime information request failed.");error.matErrorType="source";throw error;}
@@ -352,6 +352,13 @@ function initializeEditor(record,media){
     DETAILS_RATING_FIELDS.forEach(({key})=>changes[key]=useAdvanced?Number(document.getElementById(`rating-${key}`).value):null);
     try{
       const updated=await updateRecord(record.id,changes);
+      if (Number.isFinite(Number(media?.meanScore))) {
+        const { error: secretBadgeError } = await supabaseClient.rpc("claim_perfect_match_badge", {
+          p_anilist_id: Number(media.id),
+          p_community_score: Number(media.meanScore)
+        });
+        if (secretBadgeError) console.warn("Secret badge check could not be completed.", secretBadgeError);
+      }
       closeModal(ratingModal);renderDetails(updated,media);
     }catch(error){document.getElementById("ratingMessage").textContent=error.message||"Could not save rating."}
   };

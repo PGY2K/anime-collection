@@ -28,7 +28,7 @@ function renderAdminShell() {
       <div class="admin-card-heading">
         <div>
           <h2>Badge Management</h2>
-          <p>Enter a user's permanent friend code to award or remove badges.</p>
+          <p>Enter a user's permanent friend code to award or remove any badge.</p>
         </div>
       </div>
 
