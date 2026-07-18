@@ -469,7 +469,6 @@ function fdOpenEntryRating(index) {
       await fdRefreshFranchiseOverall();
       if (fdFranchise.overall_rating !== null && fdFranchise.overall_rating !== undefined) {
         await fdAwardRecommendationProgress("rated", fdFranchise.overall_rating);
-        await fdAwardRecommendationProgress("exact_match", fdFranchise.overall_rating);
       }
       close();
       location.reload();

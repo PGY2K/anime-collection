@@ -1,5 +1,28 @@
 const MAT_RELEASES = [
   {
+    version: "v5.4.4",
+    date: "July 2026",
+    announcementTitle: "First-rating match rules and owner RP controls are now live",
+    announcement: "Exact Rating Match RP is now decided only when a follower submits their first rating, and later rating edits cannot trigger the +10 bonus. The MAT owner also has a private Admin Control Panel tool for adding or removing RP from a user by friend code. View the Changelog tab for the complete details.",
+    groups: {
+      NEW: [
+        "Added an owner-only Recommendation Points adjustment tool to the Admin Control Panel.",
+        "The owner can find a user by friend code, choose Add Points or Remove Points, enter an amount, and save the adjustment without replacing the user's balance.",
+        "Added a protected audit log for every manual RP adjustment, including the owner, target user, operation, amount, previous balance, new balance, and timestamp."
+      ],
+      FIXED: [
+        "Exact Rating Match is now evaluated only on the follower's first saved rating.",
+        "If the first rating does not match the recommender, changing it later to the matching score awards no +10 RP.",
+        "If the first rating matches, the recommender receives the +5 Rated reward and the +10 Exact Rating Match reward, subject to existing attribution, duplicate, and 24-hour protections.",
+        "Manual point removal can never reduce a user's RP balance below zero."
+      ],
+      SECURITY: [
+        "Both the Admin Control Panel and the RP adjustment database function verify the existing MAT owner permission; normal users cannot view or execute the tool."
+      ]
+    }
+  },
+
+  {
     version: "v5.4.3",
     date: "July 2026",
     announcementTitle: "Completion and rating RP rewards are now connected",

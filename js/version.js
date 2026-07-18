@@ -1,1 +1,1 @@
-window.MAT_VERSION = "v5.4.3";
+window.MAT_VERSION = "v5.4.4";

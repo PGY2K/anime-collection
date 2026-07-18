@@ -465,7 +465,6 @@ function initializeEditor(record,media){
     try{
       const updated=await updateRecord(record.id,changes);
       await detailsAwardRecommendationProgress("rated", media.id, changes.overall_rating);
-      await detailsAwardRecommendationProgress("exact_match", media.id, changes.overall_rating);
       if (Number.isFinite(Number(media?.meanScore))) {
         const { error: secretBadgeError } = await supabaseClient.rpc("claim_perfect_match_badge", {
           p_anilist_id: Number(media.id),
