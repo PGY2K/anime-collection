@@ -18,6 +18,25 @@ function fpEscape(value) {
 }
 
 
+
+function fpPositiveInteger(...values) {
+  for (const value of values) {
+    const number = Number(value);
+    if (Number.isInteger(number) && number > 0) return number;
+  }
+  return null;
+}
+
+function fpRecommendationAnimeId(recommendation, media = null) {
+  return fpPositiveInteger(
+    media?.anilistId,
+    recommendation?.anilist_id,
+    recommendation?.item_key,
+    recommendation?.media_id,
+    recommendation?.title_id
+  );
+}
+
 function fpJoinedLabel(value) {
   const date = value ? new Date(value) : null;
   if (!date || Number.isNaN(date.getTime())) return "Joined MAT";
@@ -138,14 +157,21 @@ async function fpResolveRecommendationMedia(recommendation) {
 
 function fpRecommendationHref(recommendation, profileUserId, media) {
   if (recommendation.item_type === "franchise") return `franchise.html?key=${encodeURIComponent(recommendation.franchise_key)}&rec_source=profile&recommender=${encodeURIComponent(profileUserId)}`;
-  return `anime.html?anilist_id=${encodeURIComponent(media.anilistId || recommendation.anilist_id)}&rec_source=profile&recommender=${encodeURIComponent(profileUserId)}`;
+  const query = new URLSearchParams({
+    rec_source: "profile",
+    recommender: String(profileUserId || ""),
+    rec_title: String(recommendation.title || "")
+  });
+  const anilistId = fpRecommendationAnimeId(recommendation, media);
+  if (anilistId) query.set("anilist_id", String(anilistId));
+  return `anime.html?${query.toString()}`;
 }
 
 async function fpAddRecommendationToQueue(recommendation, profileUserId, media, button) {
   button.disabled = true;
   button.textContent = "Adding…";
   try {
-    const itemKey = recommendation.item_type === "franchise" ? String(recommendation.franchise_key) : String(media.anilistId || recommendation.anilist_id);
+    const itemKey = recommendation.item_type === "franchise" ? String(recommendation.franchise_key) : String(fpRecommendationAnimeId(recommendation, media) || "");
     if (!itemKey || itemKey === "null" || itemKey === "undefined") throw new Error("This recommendation is missing its title ID.");
     const { error: attributionError } = await supabaseClient.rpc("set_recommendation_attribution", { p_item_type: recommendation.item_type, p_item_key: itemKey, p_source_mode: "profile", p_recommender_ids: [profileUserId] });
     if (attributionError) throw attributionError;
@@ -154,7 +180,7 @@ async function fpAddRecommendationToQueue(recommendation, profileUserId, media, 
       const { error } = await supabaseClient.from("user_franchises").insert({ user_id: friendProfileViewer.id, franchise_key: Number(recommendation.franchise_key), status: "Queued", updated_at: new Date().toISOString() });
       if (error) throw error;
     } else {
-      const anilistId = media.anilistId || Number(recommendation.anilist_id);
+      const anilistId = fpRecommendationAnimeId(recommendation, media);
       const { error } = await supabaseClient.from("anime").insert({ anilist_id: anilistId, title: recommendation.title, status: "Queued" });
       if (error) throw error;
       await window.matClaimPioneerBadge?.({ anilistId });
@@ -170,7 +196,7 @@ async function fpAddRecommendationToQueue(recommendation, profileUserId, media, 
 
 function fpRecommendationPosterId(recommendation) {
   if (!recommendation) return null;
-  if (recommendation.item_type === "anime") return Number(recommendation.anilist_id) || null;
+  if (recommendation.item_type === "anime") return fpRecommendationAnimeId(recommendation);
   const franchise = friendProfileFranchises.find((item) => Number(item.franchise_key) === Number(recommendation.franchise_key));
   return Number(franchise?.cover_anilist_id) || null;
 }

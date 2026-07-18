@@ -1,5 +1,20 @@
 const MAT_RELEASES = [
   {
+    version: "v5.3.7",
+    date: "July 2026",
+    announcementTitle: "Recommendation links now open the correct title page",
+    announcement: "Recommendation posters and titles on followed-user profiles and the dashboard now use a validated AniList ID with a title fallback, so followers can open the title page without the unexpected error while recommendation credit remains attached. View the Changelog tab for the complete details.",
+    groups: {
+      FIXED: [
+        "Fixed profile recommendation posters and titles opening an invalid anime route.",
+        "Fixed dashboard recommendation posters and titles showing the unexpected error after being clicked.",
+        "Recommendation links now validate stored IDs and fall back to resolving the title through AniList when an older recommendation record is missing its AniList ID.",
+        "Preserved profile and dashboard recommendation attribution when the title page is opened before Add to Queue is used."
+      ]
+    }
+  },
+
+  {
     version: "v5.3.6",
     date: "July 2026",
     announcementTitle: "Recommendation cards now keep artwork, links, and credit",

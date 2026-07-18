@@ -22,6 +22,25 @@ function dashboardNumber(value) {
   return Number.isFinite(number) ? number : null;
 }
 
+
+function dashboardPositiveInteger(...values) {
+  for (const value of values) {
+    const number = Number(value);
+    if (Number.isInteger(number) && number > 0) return number;
+  }
+  return null;
+}
+
+function dashboardRecommendationAnimeId(group, media = null) {
+  return dashboardPositiveInteger(
+    media?.anilistId,
+    group?.anilist_id,
+    group?.item_key,
+    group?.media_id,
+    group?.title_id
+  );
+}
+
 function dashboardAverage(item) {
   const scores = ["story","characters","animation","sound","world","pacing","emotion","originality","rewatch_value","enjoyment"]
     .map((field) => dashboardNumber(item[field]))
@@ -282,7 +301,7 @@ async function loadFriendRatings() {
 }
 async function dashboardResolveRecommendationMedia(groups) {
   const resolved = new Map();
-  const ids = [...new Set(groups.map((group) => Number(group.anilist_id)).filter(Number.isFinite))];
+  const ids = [...new Set(groups.map((group) => dashboardRecommendationAnimeId(group)).filter(Boolean))];
 
   if (ids.length) {
     const query = `query ($ids:[Int]){Page(page:1,perPage:50){media(id_in:$ids,type:ANIME){id isAdult coverImage{extraLarge large}}}}`;
@@ -297,7 +316,8 @@ async function dashboardResolveRecommendationMedia(groups) {
   }
 
   for (const group of groups) {
-    if (Number.isFinite(Number(group.anilist_id)) && resolved.has(Number(group.anilist_id))) continue;
+    const storedId = dashboardRecommendationAnimeId(group);
+    if (storedId && resolved.has(storedId)) continue;
     if (!group.title) continue;
     try {
       const query = `query ($search:String){Media(search:$search,type:ANIME){id isAdult coverImage{extraLarge large}}}`;
@@ -318,8 +338,9 @@ async function dashboardResolveRecommendationMedia(groups) {
 }
 
 function dashboardRecommendationMedia(group, mediaMap) {
-  return mediaMap.get(Number(group.anilist_id)) || mediaMap.get(`title:${group.title}`) || {
-    anilistId: Number(group.anilist_id) || null,
+  const storedId = dashboardRecommendationAnimeId(group);
+  return (storedId ? mediaMap.get(storedId) : null) || mediaMap.get(`title:${group.title}`) || {
+    anilistId: storedId,
     url: "",
     isAdult: false
   };
@@ -330,12 +351,18 @@ function dashboardRecommendationHref(group, media) {
   if (group.item_type === "franchise") {
     return `franchise.html?key=${encodeURIComponent(group.franchise_key)}&rec_source=dashboard&recommenders=${encodeURIComponent(recommenders)}`;
   }
-  const anilistId = media.anilistId || Number(group.anilist_id);
-  return `anime.html?anilist_id=${encodeURIComponent(anilistId)}&rec_source=dashboard&recommenders=${encodeURIComponent(recommenders)}`;
+  const anilistId = dashboardRecommendationAnimeId(group, media);
+  const query = new URLSearchParams({
+    rec_source: "dashboard",
+    recommenders,
+    rec_title: String(group.title || "")
+  });
+  if (anilistId) query.set("anilist_id", String(anilistId));
+  return `anime.html?${query.toString()}`;
 }
 
 async function dashboardRecommendationInCollection(anime, group, media) {
-  if (group.item_type === "anime") return dashboardInCollection(anime, media.anilistId || group.anilist_id);
+  if (group.item_type === "anime") return dashboardInCollection(anime, dashboardRecommendationAnimeId(group, media));
   const { data: authData } = await supabaseClient.auth.getUser();
   const userId = authData?.user?.id;
   if (!userId) return false;
@@ -347,7 +374,7 @@ async function addRecommendationToQueue(group, media, button, anime) {
   button.disabled = true;
   button.textContent = "Adding…";
   const recommenderIds = group.recommenders.map((item) => item.recommender_id).filter(Boolean);
-  const itemKey = group.item_type === "franchise" ? String(group.franchise_key) : String(media.anilistId || group.anilist_id);
+  const itemKey = group.item_type === "franchise" ? String(group.franchise_key) : String(dashboardRecommendationAnimeId(group, media) || "");
 
   try {
     const { error: attributionError } = await supabaseClient.rpc("set_recommendation_attribution", {
@@ -371,7 +398,7 @@ async function addRecommendationToQueue(group, media, button, anime) {
       });
       if (error) throw error;
     } else {
-      const anilistId = media.anilistId || Number(group.anilist_id);
+      const anilistId = dashboardRecommendationAnimeId(group, media);
       if (!anilistId) throw new Error("This recommendation is missing its title ID.");
       const { data, error } = await supabaseClient.from("anime").insert({
         anilist_id: anilistId,

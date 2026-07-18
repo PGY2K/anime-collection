@@ -34,6 +34,25 @@ function detailsAverage(record){
 function stripHtml(html){ const el=document.createElement("div"); el.innerHTML=html||""; return el.textContent||el.innerText||""; }
 function statusOptions(selectedStatus){ return ["Queued","In Progress","Waiting","Completed","Dropped"].map(s=>`<option value="${s}" ${s===selectedStatus?"selected":""}>${s}</option>`).join(""); }
 
+
+function detailsPositiveInteger(...values){
+  for(const value of values){
+    const number=Number(value);
+    if(Number.isInteger(number)&&number>0)return number;
+  }
+  return null;
+}
+
+async function resolveAnimeIdFromTitle(title){
+  const search=String(title||"").trim();
+  if(!search)return null;
+  const query=`query($search:String){Media(search:$search,type:ANIME){id}}`;
+  const response=await fetch(ANIME_DETAILS_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify({query,variables:{search}})});
+  if(!response.ok){const error=new Error("Anime information request failed.");error.matErrorType="source";throw error;}
+  const json=await response.json();
+  return detailsPositiveInteger(json?.data?.Media?.id);
+}
+
 async function fetchOwnRecordById(id){ const {data,error}=await supabaseClient.from("anime").select("*").eq("id",id).maybeSingle(); if(error)throw error; return data; }
 async function fetchOwnRecordByAnimeId(anilistId){ const {data,error}=await supabaseClient.from("anime").select("*").eq("anilist_id",Number(anilistId)).maybeSingle(); if(error)throw error; return data; }
 async function updateRecord(id,changes){ const {data,error}=await supabaseClient.from("anime").update({...changes,updated_at:new Date().toISOString()}).eq("id",id).select("*").single(); if(error)throw error; return data; }
@@ -412,16 +431,21 @@ async function initAnimeDetails() {
   const root = document.getElementById("detailsRoot");
   const params = new URLSearchParams(location.search);
   const recordId = params.get("id");
-  const anilistId = params.get("anilist_id");
-  if (!recordId && !anilistId) {
+  const requestedAnimeId = detailsPositiveInteger(params.get("anilist_id"));
+  const recommendationTitle = params.get("rec_title");
+  if (!recordId && !requestedAnimeId && !recommendationTitle) {
     root.innerHTML = '<div class="error">No anime was selected.</div>';
     return;
   }
 
   try {
-    const record = recordId ? await fetchOwnRecordById(recordId) : await fetchOwnRecordByAnimeId(anilistId);
-    const mediaId = Number(record?.anilist_id || anilistId);
+    let record = recordId ? await fetchOwnRecordById(recordId) : null;
+    let mediaId = detailsPositiveInteger(record?.anilist_id, requestedAnimeId);
+    if (!mediaId && recommendationTitle) mediaId = await resolveAnimeIdFromTitle(recommendationTitle);
+    if (!mediaId) throw new Error("This recommendation is missing a valid AniList title ID.");
+    if (!record) record = await fetchOwnRecordByAnimeId(mediaId);
     const media = await fetchAnimeDetails(mediaId);
+    if (!media) throw new Error("This anime could not be found.");
     const recSource=params.get("rec_source"), recIds=(params.get("recommenders")||params.get("recommender")||"").split(",").filter(Boolean);
     if(recSource&&recIds.length){try{await supabaseClient.rpc("set_recommendation_attribution",{p_item_type:"anime",p_item_key:String(mediaId),p_source_mode:recSource,p_recommender_ids:recIds});}catch(error){console.warn("Recommendation source could not be recorded.",error)}}
 
