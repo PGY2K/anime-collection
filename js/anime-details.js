@@ -75,6 +75,17 @@ async function detailsSaveRecommendationAttribution(source, mediaId) {
   if (error) throw error;
   sessionStorage.removeItem("matRecommendationSource");
 }
+
+async function detailsAwardRecommendationProgress(eventType, mediaId, rating = null) {
+  const { data, error } = await supabaseClient.rpc("award_recommendation_progress", {
+    p_item_type: "anime",
+    p_item_key: String(mediaId),
+    p_event_type: eventType,
+    p_rating: rating === null ? null : Number(rating)
+  });
+  if (error) throw error;
+  return data;
+}
 async function resolveAnimeIdFromTitle(title){
   const search=String(title||"").trim();
   if(!search)return null;
@@ -442,6 +453,7 @@ function initializeEditor(record,media){
         if(isActiveTitle) throw new Error("This title is your active recommendation. Remove or replace the recommendation before changing its status from Completed.");
       }
       const updated=await updateRecord(record.id,{status:nextStatus});
+      if(detailsNormalize(nextStatus)==="completed") await detailsAwardRecommendationProgress("completed", media.id);
       closeModal(statusModal);renderDetails(updated,media);
     }catch(error){document.getElementById("editMessage").textContent=error.message||"Could not save status."}
   };
@@ -452,6 +464,8 @@ function initializeEditor(record,media){
     DETAILS_RATING_FIELDS.forEach(({key})=>changes[key]=useAdvanced?Number(document.getElementById(`rating-${key}`).value):null);
     try{
       const updated=await updateRecord(record.id,changes);
+      await detailsAwardRecommendationProgress("rated", media.id, changes.overall_rating);
+      await detailsAwardRecommendationProgress("exact_match", media.id, changes.overall_rating);
       if (Number.isFinite(Number(media?.meanScore))) {
         const { error: secretBadgeError } = await supabaseClient.rpc("claim_perfect_match_badge", {
           p_anilist_id: Number(media.id),

@@ -1,5 +1,21 @@
 const MAT_RELEASES = [
   {
+    version: "v5.4.3",
+    date: "July 2026",
+    announcementTitle: "Completion and rating RP rewards are now connected",
+    announcement: "Recommendation attribution now remains active after a title is added, allowing recommenders to receive the Completed, Rated, and Exact Rating Match rewards when the follower updates that title later. Duplicate and 24-hour protections remain in place. View the Changelog tab for the complete details.",
+    groups: {
+      FIXED: [
+        "Connected anime and franchise status updates to the +3 Completed RP event.",
+        "Connected anime and franchise rating saves to the +5 Rated RP event.",
+        "Added the +10 Exact Rating Match check using the rating saved in the viewer’s collection.",
+        "Preserved profile-only attribution and dashboard splitting among the followed recommenders captured when the title was added.",
+        "Kept one-time event protection and the rolling 19 RP per viewer-to-recommender limit."
+      ]
+    }
+  },
+
+  {
     version: "v5.4.2",
     date: "July 2026",
     announcementTitle: "Recommendation collection status is now consistent",

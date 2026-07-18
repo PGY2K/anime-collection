@@ -283,6 +283,17 @@ function fdBindRecommendation() {
   };
 }
 
+async function fdAwardRecommendationProgress(eventType, rating = null) {
+  const { data, error } = await supabaseClient.rpc("award_recommendation_progress", {
+    p_item_type: "franchise",
+    p_item_key: String(fdFranchise.franchise_key),
+    p_event_type: eventType,
+    p_rating: rating === null ? null : Number(rating)
+  });
+  if (error) throw error;
+  return data;
+}
+
 async function fdAddRecommendedFranchiseToQueue(button) {
   if (fdHasUserFranchise) return;
   const messageText = button.textContent;
@@ -456,6 +467,10 @@ function fdOpenEntryRating(index) {
         if (syncError) throw syncError;
       }
       await fdRefreshFranchiseOverall();
+      if (fdFranchise.overall_rating !== null && fdFranchise.overall_rating !== undefined) {
+        await fdAwardRecommendationProgress("rated", fdFranchise.overall_rating);
+        await fdAwardRecommendationProgress("exact_match", fdFranchise.overall_rating);
+      }
       close();
       location.reload();
     } catch (error) {
@@ -536,6 +551,7 @@ function fdBind() {
         .eq("user_id", fdUser.id)
         .eq("franchise_key", fdFranchise.franchise_key);
       if (error) throw error;
+      if(fdNormalize(nextStatus)==="completed") await fdAwardRecommendationProgress("completed");
       close();
       location.reload();
     } catch (error) {
