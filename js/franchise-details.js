@@ -283,11 +283,71 @@ function fdBindRecommendation() {
   };
 }
 
+async function fdAddRecommendedFranchiseToQueue(button) {
+  if (fdHasUserFranchise) return;
+  const messageText = button.textContent;
+  button.disabled = true;
+  button.textContent = "Adding…";
+  try {
+    const key = Number(fdFranchise.franchise_key);
+    const recommenderIds = (fdRecommendationContext?.recommenderIds || []).filter(Boolean);
+    const sourceMode = fdRecommendationContext?.sourceMode || "recommendation";
+
+    // Record the recommendation source before inserting the collection row. The
+    // database attribution flow uses this record to award +1 RP for the add and
+    // to preserve credit for later completion/rating events.
+    if (recommenderIds.length) {
+      const { error: attributionError } = await supabaseClient.rpc("set_recommendation_attribution", {
+        p_item_type: "franchise",
+        p_item_key: String(key),
+        p_source_mode: sourceMode,
+        p_recommender_ids: recommenderIds
+      });
+      if (attributionError) throw attributionError;
+    }
+
+    const { data: existing, error: existingError } = await supabaseClient
+      .from("user_franchises")
+      .select("*")
+      .eq("user_id", fdUser.id)
+      .eq("franchise_key", key)
+      .maybeSingle();
+    if (existingError) throw existingError;
+
+    let saved = existing;
+    if (!saved) {
+      const { data, error } = await supabaseClient
+        .from("user_franchises")
+        .insert({
+          user_id: fdUser.id,
+          franchise_key: key,
+          status: "Queued",
+          updated_at: new Date().toISOString()
+        })
+        .select("*")
+        .single();
+      if (error) throw error;
+      saved = data;
+    }
+
+    fdHasUserFranchise = true;
+    fdViewingUser = fdUser.id;
+    fdFranchise = { ...fdFranchise, ...saved, status: saved?.status || "Queued" };
+    fdRender();
+  } catch (error) {
+    console.error("Recommended franchise could not be added to queue.", error);
+    button.disabled = false;
+    button.textContent = messageText;
+    alert(error.message || "Could not add this franchise to your queue.");
+  }
+}
+
 function fdRender() {
   const root = document.getElementById("franchiseRoot");
   const poster = fdHeroMedia?.coverImage?.extraLarge || fdHeroMedia?.coverImage?.large || "";
   const synopsis = fdStripHtml(fdHeroMedia?.description) || "No description is available yet.";
   const ownView = fdViewingUser === fdUser.id && fdHasUserFranchise;
+  const canAddRecommended = fdViewingUser === fdUser.id && !fdHasUserFranchise && Boolean(fdRecommendationContext);
   const rating = ownView ? fdCalculatedFranchiseRating() : fdAverage(fdFranchise);
 
   root.innerHTML = `
@@ -300,8 +360,9 @@ function fdRender() {
         <button class="community-count-btn" id="franchiseCollectionCount" type="button">📚 <span>${fdCollectionCount.toLocaleString()}</span></button>
         <details class="description-disclosure franchise-description"><summary>Description</summary><p>${fdEsc(synopsis)}</p></details>
         <div class="details-actions franchise-actions">
-          <span class="details-status status ${fdStatusClass(fdFranchise.status)}">${fdEsc(fdFranchise.status || "Queued")}</span>
+          ${fdHasUserFranchise ? `<span class="details-status status ${fdStatusClass(fdFranchise.status)}">${fdEsc(fdFranchise.status)}</span>` : ""}
           ${rating !== null ? `<span class="details-rating">⭐ ${rating.toFixed(1)}</span>` : ""}
+          ${canAddRecommended ? `<button class="recommend-anime-btn" id="addRecommendedFranchiseBtn" type="button">Add to Queue</button>` : ""}
           ${ownView ? `<button class="edit-anime-btn status-details-btn" id="changeFranchiseStatusBtn" type="button">Change Status</button><button class="recommend-anime-btn" id="recommendFranchiseBtn" type="button">Recommend</button>` : ""}
         </div>
       </div>
@@ -314,6 +375,7 @@ function fdRender() {
     <div id="entryRatingModalHost"></div>`;
 
   document.getElementById("franchiseCollectionCount")?.addEventListener("click", () => openFranchiseCollectionPopup());
+  document.getElementById("addRecommendedFranchiseBtn")?.addEventListener("click", (event) => fdAddRecommendedFranchiseToQueue(event.currentTarget));
   if (ownView) { fdBind(); fdBindRecommendation(); }
 }
 

@@ -1,5 +1,20 @@
 const MAT_RELEASES = [
   {
+    version: "v5.4.0",
+    date: "July 2026",
+    announcementTitle: "Recommended franchises can now be added correctly",
+    announcement: "Recommended franchise pages now distinguish an unowned title from a queued title. Followers see Add to Queue, and using it preserves recommendation attribution so the eligible recommender receives RP. View the Changelog tab for the complete details.",
+    groups: {
+      FIXED: [
+        "Removed the false Queued status shown when a follower opened a recommended franchise that was not in their collection.",
+        "Added a visible Add to Queue button for recommended franchises that the viewer does not own.",
+        "Add to Queue now creates the viewer's user_franchises record with Queued status instead of treating a missing row as already queued.",
+        "Recommendation attribution is recorded before the collection insert so the eligible profile recommender or followed dashboard recommender group receives the +1 RP add credit and remains eligible for later RP events."
+      ]
+    }
+  },
+
+  {
     version: "v5.3.9",
     date: "July 2026",
     announcementTitle: "Recommended franchises now open for followers",
