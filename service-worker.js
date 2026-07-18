@@ -1,9 +1,10 @@
-const CACHE_NAME = "mat-offline-fallback-v4";
+const CACHE_NAME = "mat-offline-fallback-v6";
 const OFFLINE_ASSETS = [
   "./offline.html",
   "./assets/icons/icon-192.png",
   "./assets/icons/icon-512.png",
   "./assets/icons/mat-logo.png",
+  "./assets/icons/rp-gem.png",
   "./js/pioneer-badge.js",
   "./assets/badges/pioneer.png",
   "./assets/badges/anime-completion-master.png",

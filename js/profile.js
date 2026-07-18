@@ -7,6 +7,8 @@ let profileBadges = [];
 let profileFranchises = [];
 let profileFranchiseEntryRatings = [];
 let profileFriendCount = 0;
+let profileFollowingCount = 0;
+let activeRecommendation = null;
 
 function profileJoinedLabel(value) {
   const date = value ? new Date(value) : null;
@@ -182,15 +184,12 @@ async function renderProfile() {
   const root = document.getElementById("profileRoot");
   root.innerHTML = `
     <section class="public-profile-card">
-      <div class="profile-corner-meta">
-        <span class="profile-corner-friends">👥 ${profileFriendCount.toLocaleString()} Friends</span>
-        <span class="profile-corner-joined">${escapeProfileHtml(profileJoinedLabel(currentProfileUser?.created_at || currentProfileData.created_at))}</span>
-      </div>
+      <button class="profile-rp-corner" type="button" onclick="matOpenRpModal()"><img src="assets/icons/rp-gem.png" alt="RP"><strong>${Math.round(Number(currentProfileData.recommendation_points)||0).toLocaleString()} RP</strong></button>
       <img class="profile-main-avatar" src="${profileAvatarPath(selectedAvatarId)}" alt="Your profile avatar" />
       <h2>${escapeProfileHtml(currentProfileData.username || "Anime Fan")}</h2>
       ${matBadgeRowHtml(profileBadges, { emptyText: "No badges awarded yet." })}
       <a class="secondary-btn profile-badges-page-btn" href="badges.html">🏅 Badges</a>
-      <p class="profile-private-note">Visible only to accepted friends.</p>
+      <p class="profile-social-meta"><a href="friends.html?tab=followers">${profileFriendCount.toLocaleString()} Followers</a><span>•</span><a href="friends.html?tab=following">${profileFollowingCount.toLocaleString()} Following</a><span>•</span><span>${escapeProfileHtml(profileJoinedLabel(currentProfileUser?.created_at || currentProfileData.created_at))}</span></p>
 
       <div class="profile-stat-grid">
         <div><strong>${statusCount("in progress")}</strong><span>Watching</span></div>
@@ -228,7 +227,7 @@ async function renderProfile() {
           <input class="search-box" id="profileUsername" maxlength="24" value="${escapeProfileHtml(currentProfileData.username || "")}" required />
           <label>Choose a profile picture</label>
           <div class="avatar-grid">${Array.from({length: PROFILE_AVATAR_COUNT}, (_,i)=>i+1).map((id)=>`<button class="avatar-choice ${id===selectedAvatarId?'selected':''}" type="button" data-avatar-id="${id}"><img src="${profileAvatarPath(id)}" alt="Avatar ${id}" /></button>`).join("")}</div>
-          <label>Your friend code</label>
+          <label>Your user code</label>
           <div class="friend-code-row"><code id="friendCode">${escapeProfileHtml(currentProfileData.friend_code)}</code><button class="secondary-btn" id="copyFriendCodeBtn" type="button">Copy</button></div>
           <div class="profile-setting-row">
             <div>
@@ -240,7 +239,8 @@ async function renderProfile() {
               <span></span>
             </label>
           </div>
-          <section class="franchise-settings"><h3>Franchise Options</h3><p>TV seasons and movies are grouped by default. Optional formats can be included when organizing franchises.</p><label class="profile-setting-row"><span><strong>Group TV Seasons</strong></span><input id="franchiseGroupTv" type="checkbox" ${currentProfileData.franchise_group_tv!==false?"checked":""}></label><label class="profile-setting-row"><span><strong>Group Movies</strong></span><input id="franchiseGroupMovies" type="checkbox" ${currentProfileData.franchise_group_movies!==false?"checked":""}></label><label class="profile-setting-row"><span><strong>Include OVAs</strong></span><input id="franchiseIncludeOva" type="checkbox" ${currentProfileData.franchise_include_ova?"checked":""}></label><label class="profile-setting-row"><span><strong>Include Specials</strong></span><input id="franchiseIncludeSpecials" type="checkbox" ${currentProfileData.franchise_include_specials?"checked":""}></label><label class="profile-setting-row"><span><strong>Include ONAs</strong></span><input id="franchiseIncludeOna" type="checkbox" ${currentProfileData.franchise_include_ona?"checked":""}></label><label class="profile-setting-row"><span><strong>Include Recaps</strong></span><input id="franchiseIncludeRecaps" type="checkbox" ${currentProfileData.franchise_include_recaps?"checked":""}></label></section><button class="primary-btn profile-save-btn" type="submit">Save Changes</button>
+          <section class="profile-recommendation-settings"><h3>Active Recommendation</h3><p>Choose one completed and rated anime. Saving a new recommendation replaces the previous one.</p><select class="sort-select" id="activeRecommendationSelect"><option value="">No active recommendation</option>${profileAnime.filter(item => profileNormalize(item.status)==="completed" && profileAverage(item)!==null).map(item=>`<option value="anime:${item.anilist_id}" ${activeRecommendation?.item_type==="anime" && Number(activeRecommendation?.anilist_id)===Number(item.anilist_id)?"selected":""}>${escapeProfileHtml(item.title)} • ${profileAverage(item).toFixed(1)}</option>`).join("")}</select><textarea class="search-box profile-recommendation-note" id="activeRecommendationNote" maxlength="500" placeholder="Optional recommendation note">${escapeProfileHtml(activeRecommendation?.note||"")}</textarea><div class="profile-recommendation-actions"><button class="secondary-btn" id="saveRecommendationBtn" type="button">Save Recommendation</button><button class="secondary-btn" id="clearRecommendationBtn" type="button">Clear</button></div><div class="profile-message" id="recommendationMessage"></div></section>
+          <div class="profile-setting-row"><div><strong>Private Profile</strong><small>Public profiles can be followed instantly. Private profiles approve follow requests.</small></div><label class="settings-switch"><input id="profilePrivateToggle" type="checkbox" ${currentProfileData.is_private ? "checked" : ""}><span></span></label></div><section class="franchise-settings"><h3>Franchise Options</h3><p>TV seasons and movies are grouped by default. Optional formats can be included when organizing franchises.</p><label class="profile-setting-row"><span><strong>Group TV Seasons</strong></span><input id="franchiseGroupTv" type="checkbox" ${currentProfileData.franchise_group_tv!==false?"checked":""}></label><label class="profile-setting-row"><span><strong>Group Movies</strong></span><input id="franchiseGroupMovies" type="checkbox" ${currentProfileData.franchise_group_movies!==false?"checked":""}></label><label class="profile-setting-row"><span><strong>Include OVAs</strong></span><input id="franchiseIncludeOva" type="checkbox" ${currentProfileData.franchise_include_ova?"checked":""}></label><label class="profile-setting-row"><span><strong>Include Specials</strong></span><input id="franchiseIncludeSpecials" type="checkbox" ${currentProfileData.franchise_include_specials?"checked":""}></label><label class="profile-setting-row"><span><strong>Include ONAs</strong></span><input id="franchiseIncludeOna" type="checkbox" ${currentProfileData.franchise_include_ona?"checked":""}></label><label class="profile-setting-row"><span><strong>Include Recaps</strong></span><input id="franchiseIncludeRecaps" type="checkbox" ${currentProfileData.franchise_include_recaps?"checked":""}></label></section><button class="primary-btn profile-save-btn" type="submit">Save Changes</button>
           <div class="profile-message" id="profileMessage"></div>
         </form>
       </section>
@@ -256,6 +256,15 @@ function bindProfileEvents() {
   document.getElementById("closeProfileSettings").addEventListener("click", close);
   modal.addEventListener("click", (event) => { if (event.target === modal) close(); });
   document.getElementById("profileSignOutBtn").addEventListener("click", signOutUser);
+  document.getElementById("saveRecommendationBtn").addEventListener("click", async () => {
+    const value=document.getElementById("activeRecommendationSelect").value;
+    const message=document.getElementById("recommendationMessage");
+    if(!value){message.textContent="Choose a completed and rated anime.";return;}
+    const [,id]=value.split(":"); const item=profileAnime.find(row=>Number(row.anilist_id)===Number(id));
+    const {error}=await supabaseClient.rpc("set_active_recommendation",{p_item_type:"anime",p_anilist_id:Number(id),p_franchise_key:null,p_title:item.title,p_rating:Number(profileAverage(item).toFixed(1)),p_note:document.getElementById("activeRecommendationNote").value});
+    message.textContent=error?error.message:"Recommendation saved."; message.className=`profile-message ${error?"profile-error":"profile-success"}`;
+  });
+  document.getElementById("clearRecommendationBtn").addEventListener("click", async () => {const {error}=await supabaseClient.rpc("clear_active_recommendation");const message=document.getElementById("recommendationMessage");message.textContent=error?error.message:"Recommendation cleared.";if(!error){document.getElementById("activeRecommendationSelect").value="";document.getElementById("activeRecommendationNote").value="";}});
   document.getElementById("show18PostersToggle").addEventListener("change", (event) => {
     matSetShow18Posters(event.target.checked);
     renderProfile();
@@ -276,9 +285,10 @@ async function saveProfile(event) {
   const message = document.getElementById("profileMessage");
   const username = document.getElementById("profileUsername").value.trim();
   if (username.length < 3) { message.textContent = "Username must be at least 3 characters."; message.className = "profile-message profile-error"; return; }
-  const { error } = await supabaseClient.from("profiles").update({ username, avatar_id: selectedAvatarId, franchise_group_tv: document.getElementById("franchiseGroupTv").checked, franchise_group_movies: document.getElementById("franchiseGroupMovies").checked, franchise_include_ova: document.getElementById("franchiseIncludeOva").checked, franchise_include_specials: document.getElementById("franchiseIncludeSpecials").checked, franchise_include_ona: document.getElementById("franchiseIncludeOna").checked, franchise_include_recaps: document.getElementById("franchiseIncludeRecaps").checked, updated_at: new Date().toISOString() }).eq("user_id", currentProfileUser.id);
+  const { error } = await supabaseClient.from("profiles").update({ username, avatar_id: selectedAvatarId, franchise_group_tv: document.getElementById("franchiseGroupTv").checked, franchise_group_movies: document.getElementById("franchiseGroupMovies").checked, franchise_include_ova: document.getElementById("franchiseIncludeOva").checked, franchise_include_specials: document.getElementById("franchiseIncludeSpecials").checked, franchise_include_ona: document.getElementById("franchiseIncludeOna").checked, franchise_include_recaps: document.getElementById("franchiseIncludeRecaps").checked,
+      is_private: document.getElementById("profilePrivateToggle").checked, updated_at: new Date().toISOString() }).eq("user_id", currentProfileUser.id);
   if (error) { message.textContent = error.code === "23505" ? "That username is already taken." : error.message; message.className = "profile-message profile-error"; return; }
-  currentProfileData.username = username; currentProfileData.avatar_id = selectedAvatarId; currentProfileData.franchise_group_tv=document.getElementById("franchiseGroupTv").checked; currentProfileData.franchise_group_movies=document.getElementById("franchiseGroupMovies").checked; currentProfileData.franchise_include_ova=document.getElementById("franchiseIncludeOva").checked; currentProfileData.franchise_include_specials=document.getElementById("franchiseIncludeSpecials").checked; currentProfileData.franchise_include_ona=document.getElementById("franchiseIncludeOna").checked; currentProfileData.franchise_include_recaps=document.getElementById("franchiseIncludeRecaps").checked;
+  currentProfileData.username = username; currentProfileData.avatar_id = selectedAvatarId; currentProfileData.franchise_group_tv=document.getElementById("franchiseGroupTv").checked; currentProfileData.franchise_group_movies=document.getElementById("franchiseGroupMovies").checked; currentProfileData.franchise_include_ova=document.getElementById("franchiseIncludeOva").checked; currentProfileData.franchise_include_specials=document.getElementById("franchiseIncludeSpecials").checked; currentProfileData.franchise_include_ona=document.getElementById("franchiseIncludeOna").checked; currentProfileData.franchise_include_recaps=document.getElementById("franchiseIncludeRecaps").checked; currentProfileData.is_private=document.getElementById("profilePrivateToggle").checked;
   document.getElementById("navProfileAvatar").src = profileAvatarPath(selectedAvatarId);
   message.textContent = "Profile saved."; message.className = "profile-message profile-success";
   setTimeout(renderProfile, 600);
@@ -286,13 +296,15 @@ async function saveProfile(event) {
 async function initProfile(user) {
   currentProfileUser = user;
   try {
-    [currentProfileData, profileAnime, profileBadges, profileFranchises, profileFranchiseEntryRatings, profileFriendCount] = await Promise.all([
+    [currentProfileData, profileAnime, profileBadges, profileFranchises, profileFranchiseEntryRatings, profileFriendCount, profileFollowingCount, activeRecommendation] = await Promise.all([
       getOrCreateProfile(user),
       loadProfileAnime(),
       matLoadUserBadges(user.id),
       matLoadOwnFranchises(),
       loadProfileFranchiseEntryRatings(),
-      supabaseClient.rpc("get_public_friend_count", { p_user_id: user.id }).then(({data,error}) => error ? 0 : Number(data) || 0)
+      supabaseClient.rpc("get_follower_count", { p_user_id: user.id }).then(({data,error}) => error ? 0 : Number(data) || 0),
+      supabaseClient.rpc("get_following_count", { p_user_id: user.id }).then(({data,error}) => error ? 0 : Number(data) || 0),
+      supabaseClient.from("recommendations").select("*").eq("recommender_id", user.id).eq("active", true).maybeSingle().then(({data,error}) => error ? null : data)
     ]);
     await renderProfile();
   } catch (error) {

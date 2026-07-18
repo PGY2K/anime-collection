@@ -47,20 +47,20 @@ function fpStatusClass(status) {
 }
 
 async function fetchFriendProfile(userId) {
-  const { data, error } = await supabaseClient.rpc("get_friend_profile", {
-    p_friend_user_id: userId
+  const { data, error } = await supabaseClient.rpc("get_public_user_profile", {
+    p_user_id: userId
   });
 
   if (error) throw error;
-  if (!data?.length) throw new Error("This profile is private or you are no longer friends.");
+  if (!data?.length) throw new Error("This profile could not be found.");
   return data[0];
 }
 
-async function fetchFriendFranchises(userId){ const {data,error}=await supabaseClient.rpc("get_friend_franchises",{p_friend_user_id:userId}); if(error)throw error; return data||[]; }
+async function fetchFriendFranchises(userId){ const {data,error}=await supabaseClient.rpc("get_public_user_franchises",{p_user_id:userId}); if(error)throw error; return data||[]; }
 
 async function fetchFriendAnime(userId) {
-  const { data, error } = await supabaseClient.rpc("get_friend_anime", {
-    p_friend_user_id: userId
+  const { data, error } = await supabaseClient.rpc("get_public_user_anime", {
+    p_user_id: userId
   });
 
   if (error) throw error;
@@ -69,8 +69,8 @@ async function fetchFriendAnime(userId) {
 
 
 async function fetchFriendTopFive(userId) {
-  const { data, error } = await supabaseClient.rpc("get_friend_top_five", {
-    p_friend_user_id: userId
+  const { data, error } = await supabaseClient.rpc("get_public_user_top_five", {
+    p_user_id: userId
   });
   if (error) throw error;
   return (data || []).map((item) => ({
@@ -122,17 +122,16 @@ async function renderFriendProfileShell(profile) {
   const count = (status) => friendProfileAnime.filter((item) => fpNormalize(item.status) === status).length;
 
   root.innerHTML = `
-    <a class="friend-profile-back standalone-back" href="friends.html">← Friends</a>
+    <a class="friend-profile-back standalone-back" href="friends.html">← Following</a>
     <section class="public-profile-card friend-public-profile">
-      <div class="profile-corner-meta">
-        <span class="profile-corner-friends">👥 ${friendProfileFriendCount.toLocaleString()} Friends</span>
-        <span class="profile-corner-joined">${fpEscape(fpJoinedLabel(profile.created_at))}</span>
-      </div>
+      <button class="profile-rp-corner" type="button" onclick="matOpenRpModal()"><img src="assets/icons/rp-gem.png" alt="RP"><strong>${Math.round(Number(profile.recommendation_points)||0).toLocaleString()} RP</strong></button>
       <img class="profile-main-avatar" src="${profileAvatarPath(profile.avatar_id || 1)}" alt="${fpEscape(profile.username)} avatar" />
       <h2>${fpEscape(profile.username || "Anime Fan")}</h2>
       ${matBadgeRowHtml(profileBadges, { emptyText: "No badges awarded yet." })}
       <a class="secondary-btn profile-badges-page-btn" href="badges.html?user=${encodeURIComponent(profile.user_id)}">🏅 Badges</a>
-      <p class="profile-private-note">Accepted friend</p>
+      <p class="profile-social-meta">${profile.is_private
+        ? `<span title="This user’s social lists are private">${friendProfileFriendCount.toLocaleString()} Followers</span><span>•</span><span title="This user’s social lists are private">${Number(profile.following_count||0).toLocaleString()} Following</span>`
+        : `<a href="friends.html?user=${encodeURIComponent(profile.user_id)}&tab=followers">${friendProfileFriendCount.toLocaleString()} Followers</a><span>•</span><a href="friends.html?user=${encodeURIComponent(profile.user_id)}&tab=following">${Number(profile.following_count||0).toLocaleString()} Following</a>`}<span>•</span><span>${fpEscape(fpJoinedLabel(profile.created_at))}</span></p>
       <div class="profile-stat-grid">
         <div><strong>${count("in progress")}</strong><span>Watching</span></div>
         <div><strong>${count("waiting")}</strong><span>Waiting</span></div>
@@ -232,7 +231,7 @@ async function initFriendProfile() {
       fetchFriendAnime(activeFriendUserId),
       fetchFriendFranchises(activeFriendUserId),
       fetchFriendTopFive(activeFriendUserId),
-      supabaseClient.rpc("get_public_friend_count", { p_user_id: activeFriendUserId }).then(({data,error}) => error ? 0 : Number(data) || 0)
+      supabaseClient.rpc("get_follower_count", { p_user_id: activeFriendUserId }).then(({data,error}) => error ? 0 : Number(data) || 0)
     ]);
 
     friendProfileFranchises = franchises;

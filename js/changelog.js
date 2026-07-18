@@ -1,5 +1,43 @@
 const MAT_RELEASES = [
   {
+    version: "v5.1.0",
+    date: "July 2026",
+    announcementTitle: "Follower and Following lists are now browsable",
+    announcement: "MAT now lets you open Followers and Following directly from profiles and manage both lists from the Following navigation tab. Private profiles keep these lists hidden from other users. View the Changelog tab for the complete details.",
+    groups: {
+      NEW: [
+        "Added clickable Followers and Following counts to your profile and every public user profile.",
+        "Added Following, Followers, and Requests tabs to the Following navigation page.",
+        "Added profile links, RP totals, and follow controls inside social lists."
+      ],
+      PRIVACY: [
+        "Kept your own lists accessible when your profile is private.",
+        "Blocked other users from opening the Followers or Following lists of private profiles."
+      ]
+    }
+  },
+
+  {
+    version: "v5.0.0",
+    date: "July 2026",
+    announcementTitle: "Following, recommendations, and RP are live",
+    announcement: "MAT now uses Following and Followers, supports public or private follow approval, adds one active recommendation per user, and introduces Recommendation Points with the new gem icon in the navigation bar and profile headers. View the Changelog tab for the complete details.",
+    groups: {
+      NEW: [
+        "Added public-by-default profiles with an optional private follow-approval setting.",
+        "Added one active anime or franchise recommendation with an optional note.",
+        "Added Recommendation Points for collection adds, completions, ratings, and exact rating matches.",
+        "Added the RP gem and clickable earning guide to the navigation bar and profile headers."
+      ],
+      IMPROVED: [
+        "Replaced Friends terminology with Following, Followers, Follow, and Unfollow throughout MAT.",
+        "Moved Followers, Following, and Joined into one profile information row.",
+        "Replaced Rated by Friends with Recommended by Users You Follow."
+      ]
+    }
+  },
+
+  {
     version: "v4.5.1",
     date: "July 2026",
     announcementTitle: "Full badge control for administrators",

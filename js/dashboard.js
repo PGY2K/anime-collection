@@ -275,226 +275,14 @@ function renderTrending(anime, media) {
   });
 }
 
-async function loadAcceptedFriendsForDashboard() {
-  const { data, error } = await supabaseClient.rpc("get_friends");
-
-  if (error) {
-    throw error;
-  }
-
+async function loadFriendRatings() {
+  const { data, error } = await supabaseClient.rpc("get_following_recommendations");
+  if (error) throw error;
   return data || [];
 }
-
-async function loadFriendRatings() {
-  const friends = await loadAcceptedFriendsForDashboard();
-
-  const friendCollections = await Promise.all(
-    friends.map(async (friend) => {
-      const { data, error } = await supabaseClient.rpc("get_friend_anime", {
-        p_friend_user_id: friend.friend_user_id
-      });
-
-      if (error) {
-        console.warn(`Could not load ratings from ${friend.username}`, error);
-        return [];
-      }
-
-      return (data || [])
-        .map((anime) => ({
-          ...anime,
-          friendUserId: friend.friend_user_id,
-          friendUsername: friend.username || "Anime Fan",
-          rating: dashboardAverage(anime)
-        }))
-        .filter((anime) => dashboardNormalize(anime.status) === "completed" && anime.rating !== null);
-    })
-  );
-
-  const grouped = new Map();
-
-  friendCollections.flat().forEach((item) => {
-    const key = String(item.anilist_id || dashboardNormalize(item.title));
-
-    if (!grouped.has(key)) {
-      grouped.set(key, {
-        anilistId: item.anilist_id,
-        title: item.title,
-        ratings: []
-      });
-    }
-
-    grouped.get(key).ratings.push({
-      friendUserId: item.friendUserId,
-      username: item.friendUsername,
-      rating: item.rating
-    });
-  });
-
-  return [...grouped.values()]
-    .map((group) => ({
-      ...group,
-      average:
-        group.ratings.reduce((sum, rating) => sum + rating.rating, 0) /
-        group.ratings.length
-    }))
-    .sort((a, b) =>
-      b.average - a.average ||
-      b.ratings.length - a.ratings.length ||
-      a.title.localeCompare(b.title)
-    )
-    .slice(0, 8);
-}
-
-async function loadFriendRatingPosters(groups) {
-  const ids = [...new Set(
-    groups.map((group) => Number(group.anilistId)).filter(Number.isFinite)
-  )];
-
-  if (!ids.length) {
-    return new Map();
-  }
-
-  const query = `
-    query ($ids: [Int]) {
-      Page(page: 1, perPage: 50) {
-        media(id_in: $ids, type: ANIME) {
-          id
-          isAdult
-          coverImage {
-            extraLarge
-            large
-          }
-        }
-      }
-    }
-  `;
-
-  const data = await dashboardAniListRequest(query, { ids });
-
-  return new Map(
-    (data?.Page?.media || []).map((media) => [
-      Number(media.id),
-      { url: media.coverImage?.extraLarge || media.coverImage?.large || "", isAdult: Boolean(media.isAdult) }
-    ])
-  );
-}
-
-async function addFriendRatedAnimeToQueue(group, button, anime) {
-  const sourceFriend = group.ratings[0];
-
-  button.disabled = true;
-  button.textContent = "Adding…";
-
-  const { data, error } = await supabaseClient.rpc("add_friend_anime_to_queue", {
-    p_friend_user_id: sourceFriend.friendUserId,
-    p_anilist_id: Number(group.anilistId),
-    p_title: group.title
-  });
-
-  if (error) {
-    if (error.message?.toLowerCase().includes("already")) {
-      button.textContent = "In Your Collection";
-      return;
-    }
-
-    button.disabled = false;
-    button.textContent = "+ Add to Queue";
-    alert(error.message);
-    return;
-  }
-
-  await matClaimPioneerBadge({ anilistId: group.anilistId });
-
-  anime.unshift({
-    id: data,
-    anilist_id: group.anilistId,
-    title: group.title,
-    status: "Queued",
-    story: null,
-    characters: null,
-    animation: null,
-    sound: null,
-    world: null,
-    pacing: null,
-    emotion: null,
-    originality: null,
-    rewatch_value: null,
-    enjoyment: null,
-    created_at: new Date().toISOString()
-  });
-
-  button.textContent = "In Your Collection";
-  renderTrending(anime, window.dashboardTrendingMedia || []);
-  renderRatedByFriends(anime, window.dashboardFriendRatingGroups || []);
-}
-
-async function renderRatedByFriends(anime, groups) {
-  const container = document.getElementById("friendRatedAnime");
-
-  if (!groups.length) {
-    container.innerHTML =
-      '<div class="empty-state">No accepted friends have rated anime yet.</div>';
-    return;
-  }
-
-  let posters = new Map();
-
-  try {
-    posters = await loadFriendRatingPosters(groups);
-  } catch (error) {
-    console.warn("Could not load friend-rating posters.", error);
-  }
-
-  container.innerHTML = groups.map((group) => {
-    const posterData = posters.get(Number(group.anilistId)) || { url: "", isAdult: false };
-    const poster = posterData.url;
-    const inCollection = dashboardInCollection(anime, group.anilistId);
-
-    return `
-      <article class="dashboard-media-card friend-rating-card">
-        <a class="dashboard-poster dashboard-poster-link${matAdultPosterClass(posterData.isAdult)}" href="anime.html?anilist_id=${group.anilistId}" aria-label="View ${dashboardEscapeHtml(group.title)} details">
-          ${poster
-            ? `<img src="${dashboardEscapeHtml(poster)}" alt="${dashboardEscapeHtml(group.title)} poster" loading="lazy" />`
-            : '<div class="poster-placeholder">🎌</div>'}
-          ${matAdultPosterOverlay(posterData.isAdult)}
-        </a>
-
-        <div class="dashboard-media-body">
-          <h3>${dashboardEscapeHtml(group.title)}</h3>
-          <div class="friend-rating-summary">
-            ${group.ratings.map((rating) => `
-              <div class="friend-rating-line">
-                <span>${dashboardEscapeHtml(rating.username)}</span>
-                <strong>⭐ ${rating.rating.toFixed(1)}</strong>
-              </div>
-            `).join("")}
-          </div>
-
-          <button
-            class="dashboard-queue-btn"
-            type="button"
-            data-friend-anilist-id="${group.anilistId}"
-            ${inCollection ? "disabled" : ""}
-          >
-            ${inCollection ? "In Your Collection" : "+ Add to Queue"}
-          </button>
-        </div>
-      </article>
-    `;
-  }).join("");
-
-  container.querySelectorAll("[data-friend-anilist-id]").forEach((button) => {
-    button.addEventListener("click", () => {
-      const group = groups.find(
-        (item) => String(item.anilistId) === button.dataset.friendAnilistId
-      );
-
-      if (group) {
-        addFriendRatedAnimeToQueue(group, button, anime);
-      }
-    });
-  });
-}
+async function loadFriendRatingPosters(groups){const ids=[...new Set(groups.map(g=>Number(g.anilist_id)).filter(Number.isFinite))];if(!ids.length)return new Map();const query=`query ($ids:[Int]){Page(page:1,perPage:50){media(id_in:$ids,type:ANIME){id isAdult coverImage{extraLarge large}}}}`;const data=await dashboardAniListRequest(query,{ids});return new Map((data?.Page?.media||[]).map(m=>[Number(m.id),{url:m.coverImage?.extraLarge||m.coverImage?.large||"",isAdult:Boolean(m.isAdult)}]))}
+async function addFriendRatedAnimeToQueue(group,button,anime){button.disabled=true;button.textContent="Adding…";const {data,error}=await supabaseClient.from("anime").insert({anilist_id:Number(group.anilist_id),title:group.title,status:"Queued"}).select("*").single();if(error){button.textContent=error.message?.toLowerCase().includes("duplicate")?"In Your Collection":"+ Add to Collection";button.disabled=button.textContent==="In Your Collection";if(!button.disabled)alert(error.message);return}await matClaimPioneerBadge({anilistId:group.anilist_id});anime.unshift(data);button.textContent="In Your Collection";renderTrending(anime,window.dashboardTrendingMedia||[])}
+async function renderRatedByFriends(anime,rows){const container=document.getElementById("friendRatedAnime");if(!rows.length){container.innerHTML='<div class="empty-state">No active recommendations from users you follow yet.</div>';return}const grouped=new Map();rows.forEach(r=>{const key=`${r.item_type}:${r.anilist_id||r.franchise_key}`;if(!grouped.has(key))grouped.set(key,{...r,recommenders:[]});grouped.get(key).recommenders.push(r)});const groups=[...grouped.values()];let posters=new Map();try{posters=await loadFriendRatingPosters(groups)}catch(e){console.warn(e)}container.innerHTML=groups.map(g=>{const pd=posters.get(Number(g.anilist_id))||{url:"",isAdult:false};const inCollection=dashboardInCollection(anime,g.anilist_id);return `<article class="dashboard-media-card friend-rating-card"><a class="dashboard-poster dashboard-poster-link${matAdultPosterClass(pd.isAdult)}" href="${g.item_type==='franchise'?`franchise.html?key=${g.franchise_key}`:`anime.html?anilist_id=${g.anilist_id}`}">${pd.url?`<img src="${dashboardEscapeHtml(pd.url)}" alt="${dashboardEscapeHtml(g.title)} poster">`:'<div class="poster-placeholder">🎌</div>'}${matAdultPosterOverlay(pd.isAdult)}</a><div class="dashboard-media-body"><h3>${dashboardEscapeHtml(g.title)}</h3><div class="friend-rating-summary">${g.recommenders.map(r=>`<div class="friend-rating-line"><span>${dashboardEscapeHtml(r.username)} • ${Math.round(Number(r.recommendation_points)||0).toLocaleString()} RP</span><strong>⭐ ${Number(r.rating).toFixed(1)}</strong>${r.note?`<small>${dashboardEscapeHtml(r.note)}</small>`:""}</div>`).join("")}</div>${g.item_type==='anime'?`<button class="dashboard-queue-btn" data-rec-id="${g.anilist_id}" ${inCollection?"disabled":""}>${inCollection?"In Your Collection":"+ Add to Collection"}</button>`:""}</div></article>`}).join("");container.querySelectorAll("[data-rec-id]").forEach(b=>b.onclick=()=>addFriendRatedAnimeToQueue(groups.find(g=>String(g.anilist_id)===b.dataset.recId),b,anime))}
 
 function renderDashboardError(error) {
   console.error(error);
@@ -527,13 +315,13 @@ async function initDashboard() {
     } else {
       console.error(friendRatingsResult.reason);
       document.getElementById("friendRatedAnime").innerHTML =
-        '<div class="error">Could not load friend ratings.</div>';
+        '<div class="error">Could not load recommendations.</div>';
     }
   } catch (error) {
     renderDashboardError(error);
     document.getElementById("trendingAnime").innerHTML =
       '<div class="error">Could not load trending anime.</div>';
     document.getElementById("friendRatedAnime").innerHTML =
-      '<div class="error">Could not load friend ratings.</div>';
+      '<div class="error">Could not load recommendations.</div>';
   }
 }

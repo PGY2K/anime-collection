@@ -1,40 +1,6 @@
-const PROFILE_AVATAR_COUNT = 8;
-
-function profileAvatarPath(avatarId) {
-  const safeId = Math.min(PROFILE_AVATAR_COUNT, Math.max(1, Number(avatarId) || 1));
-  return `assets/avatars/avatar-${safeId}.svg`;
-}
-
-async function loadNavigationProfile() {
-  const avatar = document.getElementById("navProfileAvatar");
-  if (!avatar || typeof supabaseClient === "undefined") return;
-
-  const { data: sessionData } = await supabaseClient.auth.getSession();
-  const user = sessionData?.session?.user;
-  if (!user) return;
-
-  const { data } = await supabaseClient
-    .from("profiles")
-    .select("avatar_id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  avatar.src = profileAvatarPath(data?.avatar_id || 1);
-
-  const referralCode = String(user.user_metadata?.referral_code || "").trim().toUpperCase();
-  if (data && referralCode) {
-    const { data: claimResult, error: referralError } = await supabaseClient.rpc("claim_referral", {
-      p_referral_code: referralCode
-    });
-    const claimFinished = claimResult?.claimed === true || claimResult?.reason === "already_claimed";
-    if (!referralError && claimFinished) {
-      await supabaseClient.auth.updateUser({
-        data: { ...user.user_metadata, referral_code: null }
-      });
-    } else if (referralError) {
-      console.warn("Referral could not be applied.", referralError);
-    }
-  }
-}
-
-document.addEventListener("DOMContentLoaded", loadNavigationProfile);
+const PROFILE_AVATAR_COUNT=8;
+function profileAvatarPath(avatarId){const safeId=Math.min(PROFILE_AVATAR_COUNT,Math.max(1,Number(avatarId)||1));return `assets/avatars/avatar-${safeId}.svg`}
+function matRpModalHtml(){return `<div class="rp-modal-backdrop" id="matRpModal" hidden><section class="rp-modal" role="dialog" aria-modal="true"><button class="rp-modal-close" type="button" aria-label="Close">×</button><div class="rp-modal-title"><img src="assets/icons/rp-gem.png" alt=""><div><h2>Recommendation Points</h2><p>Earn RP when users act on your active recommendation.</p></div></div><div class="rp-earn-grid"><span><b>+1</b> Added to Collection</span><span><b>+3</b> Completed</span><span><b>+5</b> Rated</span><span><b>+10</b> Exact Rating Match</span></div><p>Points are split evenly when several users recommend the same title. Exact-match points are split only among matching recommenders. One user can contribute no more than 19 RP to the same recommender in a rolling 24-hour period.</p></section></div>`}
+function matOpenRpModal(){let modal=document.getElementById("matRpModal");if(!modal){document.body.insertAdjacentHTML("beforeend",matRpModalHtml());modal=document.getElementById("matRpModal");modal.querySelector(".rp-modal-close").onclick=()=>{modal.hidden=true;document.body.classList.remove("modal-open")};modal.onclick=e=>{if(e.target===modal){modal.hidden=true;document.body.classList.remove("modal-open")}}}modal.hidden=false;document.body.classList.add("modal-open")}
+async function loadNavigationProfile(){const avatar=document.getElementById("navProfileAvatar");if(!avatar||typeof supabaseClient==="undefined")return;const {data:sessionData}=await supabaseClient.auth.getSession();const user=sessionData?.session?.user;if(!user)return;const {data}=await supabaseClient.from("profiles").select("avatar_id,recommendation_points").eq("user_id",user.id).maybeSingle();avatar.src=profileAvatarPath(data?.avatar_id||1);const links=avatar.closest(".nav-links");if(links&&!links.querySelector(".nav-rp-button")){const button=document.createElement("button");button.type="button";button.className="nav-rp-button";button.innerHTML=`<img src="assets/icons/rp-gem.png" alt="RP"><strong>${Math.round(Number(data?.recommendation_points)||0).toLocaleString()}</strong><span>RP</span>`;button.title="How to earn Recommendation Points";button.onclick=matOpenRpModal;links.insertBefore(button,avatar.closest("a"))}const referralCode=String(user.user_metadata?.referral_code||"").trim().toUpperCase();if(data&&referralCode){const {data:claimResult,error}=await supabaseClient.rpc("claim_referral",{p_referral_code:referralCode});if(!error&&(claimResult?.claimed===true||claimResult?.reason==="already_claimed"))await supabaseClient.auth.updateUser({data:{...user.user_metadata,referral_code:null}})}}
+document.addEventListener("DOMContentLoaded",loadNavigationProfile);

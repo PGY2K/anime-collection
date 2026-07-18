@@ -21,7 +21,7 @@
         <a class="active" href="index.html">Dashboard</a>
         <a href="collection.html">Collection</a>
         <a href="ratings.html">Ratings</a>
-        <a href="friends.html">Friends</a>
+        <a href="friends.html">Following</a>
         <a class="profile-nav-link" href="profile.html" aria-label="Open profile" title="Profile">
           <img id="navProfileAvatar" src="assets/avatars/avatar-1.svg" alt="Profile" />
         </a>
@@ -85,12 +85,12 @@
       <article class="panel dashboard-discovery-panel">
         <div class="panel-title">
           <div>
-            <h2>⭐ Rated by Friends</h2>
-            <p class="panel-subtitle">See what your accepted friends have rated.</p>
+            <h2>💎 Recommended by Users You Follow</h2>
+            <p class="panel-subtitle">Discover the active recommendations shared by users you follow.</p>
           </div>
         </div>
         <div class="dashboard-media-grid" id="friendRatedAnime">
-          <div class="loading">Loading friend ratings…</div>
+          <div class="loading">Loading recommendations…</div>
         </div>
       </article>
     </section>
@@ -133,7 +133,7 @@
       }
     });
   </script>
-  <script src="js/version.js?v=4.5.0"></script>
+  <script src="js/version.js?v=5.1.0"></script>
   <script>
     const changelogScript = document.createElement("script");
     changelogScript.src = `js/changelog.js?v=${Date.now()}`;

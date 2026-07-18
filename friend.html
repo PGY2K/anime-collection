@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Friend Profile • My Anime Tracker</title>
+  <title>User Profile • My Anime Tracker</title>
   <meta name="theme-color" content="#8b5cf6" />
   <meta name="application-name" content="My Anime Tracker" />
   <link rel="manifest" href="manifest.webmanifest" />
@@ -21,7 +21,7 @@
         <a href="index.html">Dashboard</a>
         <a href="collection.html">Collection</a>
         <a href="ratings.html">Ratings</a>
-        <a class="active" href="friends.html">Friends</a>
+        <a class="active" href="friends.html">Following</a>
         <a class="profile-nav-link" href="profile.html" aria-label="Open profile" title="Profile">
           <img id="navProfileAvatar" src="assets/avatars/avatar-1.svg" alt="Profile" />
         </a>
@@ -29,7 +29,7 @@
     </nav>
 
     <section id="friendProfileRoot">
-      <div class="loading">Loading friend profile…</div>
+      <div class="loading">Loading profile…</div>
     </section>
     <footer class="mat-footer"></footer>
   </main>
@@ -47,7 +47,7 @@
       if (user) initFriendProfile();
     });
   </script>
-  <script src="js/version.js?v=4.5.0"></script>
+  <script src="js/version.js?v=5.1.0"></script>
   <script src="js/pwa.js"></script>
 </body>
 </html>

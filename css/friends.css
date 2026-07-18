@@ -386,3 +386,8 @@
     width: 100%;
   }
 }
+
+
+/* v5.1.0 follower/following directory */
+.social-tabs{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}.social-tab{display:flex;align-items:center;gap:8px;padding:11px 16px;border:1px solid var(--border);border-radius:13px;color:var(--muted);background:rgba(255,255,255,.035);cursor:pointer;font-weight:900}.social-tab strong{min-width:24px;padding:2px 7px;border-radius:999px;color:#fff;background:rgba(155,92,255,.2);font-size:12px}.social-tab:hover,.social-tab.active{color:#fff;border-color:rgba(155,92,255,.6);background:rgba(155,92,255,.16)}.social-tab[hidden],#ownSocialActions[hidden],#ownSocialTools[hidden]{display:none!important}.friend-action-btn:disabled{opacity:.58;cursor:default}.profile-social-meta span[title]{cursor:not-allowed}
+@media(max-width:500px){.social-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.social-tab{justify-content:center}.social-tab:not([hidden]):last-child{grid-column:1/-1}}
