@@ -21,6 +21,8 @@ let fdExistingAnimeRatings = [];
 let fdProfile = null;
 let fdHeroMedia = null;
 let fdCollectionCount = 0;
+let fdHasUserFranchise = false;
+let fdRecommendationContext = null;
 
 function fdEsc(value) {
   return String(value ?? "")
@@ -92,12 +94,13 @@ function fdAdvancedSliders(row, prefix, dataAttribute) {
 
 async function fdLoad(key) {
   const viewingFriend = fdViewingUser && fdViewingUser !== fdUser.id;
+  const recommendationBrowse = Boolean(fdRecommendationContext);
   const [catalog, entries, userFranchise, profile] = await Promise.all([
     supabaseClient.from("franchise_catalog").select("*").eq("franchise_key", key).single(),
     matLoadFranchiseEntries(key),
     viewingFriend
       ? supabaseClient.rpc("get_friend_franchises", { p_friend_user_id: fdViewingUser })
-      : supabaseClient.from("user_franchises").select("*").eq("franchise_key", key).maybeSingle(),
+      : supabaseClient.from("user_franchises").select("*").eq("user_id", fdUser.id).eq("franchise_key", key).maybeSingle(),
     supabaseClient.from("profiles").select("*").eq("user_id", fdUser.id).single()
   ]);
   if (catalog.error) throw catalog.error;
@@ -107,9 +110,19 @@ async function fdLoad(key) {
   const franchiseRow = viewingFriend
     ? (userFranchise.data || []).find((row) => Number(row.franchise_key) === Number(key))
     : userFranchise.data;
-  if (!franchiseRow) throw new Error("This franchise is not available on that profile.");
+  fdHasUserFranchise = Boolean(franchiseRow);
+  if (!franchiseRow && !recommendationBrowse) throw new Error("This franchise is not available on that profile.");
 
-  fdFranchise = { ...franchiseRow, ...catalog.data };
+  // Recommendation links must be able to open the public franchise page even when
+  // the viewer has not added the franchise to their own collection yet.
+  const browseRow = franchiseRow || {
+    user_id: fdUser.id,
+    franchise_key: Number(key),
+    status: null,
+    overall_rating: null,
+    rating_mode: "simple"
+  };
+  fdFranchise = { ...browseRow, ...catalog.data };
   fdProfile = profile.data;
   fdEntries = (entries || []).filter((entry) => matEntryVisibleForPrefs(entry, matFranchisePrefs(fdProfile)));
   const media = await matFetchMediaBatch(fdEntries.map((entry) => entry.anilist_id));
@@ -151,7 +164,7 @@ function fdEntryCard(entry, index) {
   const episodes = media.episodes ? `${media.episodes} episodes` : "Episode count unavailable";
   const href = `anime.html?anilist_id=${encodeURIComponent(entry.anilist_id)}&franchise_key=${encodeURIComponent(fdFranchise.franchise_key)}`;
   const rating = fdAverage(fdEntryRatingFor(entry.anilist_id));
-  const ownView = fdViewingUser === fdUser.id;
+  const ownView = fdViewingUser === fdUser.id && fdHasUserFranchise;
   return `<article class="franchise-entry-card" data-entry-card="${index}">
     <a class="franchise-entry-main" href="${href}">
       <div class="franchise-entry-poster">
@@ -274,7 +287,7 @@ function fdRender() {
   const root = document.getElementById("franchiseRoot");
   const poster = fdHeroMedia?.coverImage?.extraLarge || fdHeroMedia?.coverImage?.large || "";
   const synopsis = fdStripHtml(fdHeroMedia?.description) || "No description is available yet.";
-  const ownView = fdViewingUser === fdUser.id;
+  const ownView = fdViewingUser === fdUser.id && fdHasUserFranchise;
   const rating = ownView ? fdCalculatedFranchiseRating() : fdAverage(fdFranchise);
 
   root.innerHTML = `
@@ -436,14 +449,28 @@ async function initFranchiseDetails(user) {
   const params = new URLSearchParams(location.search);
   const key = params.get("key");
   fdViewingUser = params.get("user") || user.id;
+  fdRecommendationContext = null;
+  if (params.get("rec_token") === "1") {
+    try {
+      const stored = JSON.parse(sessionStorage.getItem("matRecommendationSource") || "null");
+      const fresh = stored && Date.now() - Number(stored.createdAt || 0) < 30 * 60 * 1000;
+      const sameFranchise = stored?.itemType === "franchise" && String(stored.franchiseKey || stored.itemKey || "") === String(key || "");
+      if (fresh && sameFranchise) fdRecommendationContext = stored;
+      else fdRecommendationContext = { itemType: "franchise", franchiseKey: Number(key), itemKey: String(key), sourceMode: "recommendation", recommenderIds: [] };
+    } catch (error) {
+      console.warn("Recommendation handoff could not be read.", error);
+      fdRecommendationContext = { itemType: "franchise", franchiseKey: Number(key), itemKey: String(key), sourceMode: "recommendation", recommenderIds: [] };
+    }
+  }
   if (!key) {
     document.getElementById("franchiseRoot").innerHTML = `<div class="error">No franchise was selected.</div>`;
     return;
   }
   try {
     await fdLoad(key);
-    const recSource = params.get("rec_source");
-    const recIds = (params.get("recommenders") || params.get("recommender") || "").split(",").filter(Boolean);
+    const recSource = params.get("rec_source") || fdRecommendationContext?.sourceMode || null;
+    const urlRecIds = (params.get("recommenders") || params.get("recommender") || "").split(",").filter(Boolean);
+    const recIds = urlRecIds.length ? urlRecIds : (fdRecommendationContext?.recommenderIds || []).filter(Boolean);
     if (recSource && recIds.length) {
       const { error: attributionError } = await supabaseClient.rpc("set_recommendation_attribution", {
         p_item_type: "franchise",

@@ -1,5 +1,20 @@
 const MAT_RELEASES = [
   {
+    version: "v5.3.9",
+    date: "July 2026",
+    announcementTitle: "Recommended franchises now open for followers",
+    announcement: "Followers can now open a recommended franchise from a profile or dashboard even when it is not already in their own collection. Recommendation attribution remains attached while they browse the title. View the Changelog tab for the complete details.",
+    groups: {
+      FIXED: [
+        "Fixed the Unexpected Error shown when a follower opened a recommended franchise they had not added to their own collection.",
+        "Franchise recommendation links now load the public franchise catalog and entries without requiring a matching user_franchises row for the viewer.",
+        "Recommendation handoff data is restored from session storage so dashboard and profile attribution remains available on the franchise page.",
+        "Status and recommendation management controls remain hidden until the viewer actually has the franchise in their own collection."
+      ]
+    }
+  },
+
+  {
     version: "v5.3.8",
     date: "July 2026",
     announcementTitle: "Recommendation title links now use a verified handoff",
