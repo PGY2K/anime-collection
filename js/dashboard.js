@@ -280,9 +280,156 @@ async function loadFriendRatings() {
   if (error) throw error;
   return data || [];
 }
-async function loadFriendRatingPosters(groups){const ids=[...new Set(groups.map(g=>Number(g.anilist_id)).filter(Number.isFinite))];if(!ids.length)return new Map();const query=`query ($ids:[Int]){Page(page:1,perPage:50){media(id_in:$ids,type:ANIME){id isAdult coverImage{extraLarge large}}}}`;const data=await dashboardAniListRequest(query,{ids});return new Map((data?.Page?.media||[]).map(m=>[Number(m.id),{url:m.coverImage?.extraLarge||m.coverImage?.large||"",isAdult:Boolean(m.isAdult)}]))}
-async function addFriendRatedAnimeToQueue(group,button,anime){button.disabled=true;await supabaseClient.rpc("set_recommendation_attribution",{p_item_type:"anime",p_item_key:String(group.anilist_id),p_source_mode:"dashboard",p_recommender_ids:group.recommenders.map(r=>r.recommender_id)});button.textContent="Adding…";const {data,error}=await supabaseClient.from("anime").insert({anilist_id:Number(group.anilist_id),title:group.title,status:"Queued"}).select("*").single();if(error){button.textContent=error.message?.toLowerCase().includes("duplicate")?"In Your Collection":"+ Add to Collection";button.disabled=button.textContent==="In Your Collection";if(!button.disabled)alert(error.message);return}await matClaimPioneerBadge({anilistId:group.anilist_id});anime.unshift(data);button.textContent="In Your Collection";renderTrending(anime,window.dashboardTrendingMedia||[])}
-async function renderRatedByFriends(anime,rows){const container=document.getElementById("friendRatedAnime");if(!rows.length){container.innerHTML='<div class="empty-state">No active recommendations from users you follow yet.</div>';return}const grouped=new Map();rows.forEach(r=>{const key=`${r.item_type}:${r.anilist_id||r.franchise_key}`;if(!grouped.has(key))grouped.set(key,{...r,recommenders:[]});grouped.get(key).recommenders.push(r)});const groups=[...grouped.values()];let posters=new Map();try{posters=await loadFriendRatingPosters(groups)}catch(e){console.warn(e)}container.innerHTML=groups.map(g=>{const pd=posters.get(Number(g.anilist_id))||{url:"",isAdult:false};const inCollection=dashboardInCollection(anime,g.anilist_id);return `<article class="dashboard-media-card friend-rating-card"><a class="dashboard-poster dashboard-poster-link${matAdultPosterClass(pd.isAdult)}" href="${g.item_type==='franchise'?`franchise.html?key=${g.franchise_key}`:`anime.html?anilist_id=${g.anilist_id}&rec_source=dashboard&recommenders=${g.recommenders.map(r=>r.recommender_id).join(',')}`}">${pd.url?`<img src="${dashboardEscapeHtml(pd.url)}" alt="${dashboardEscapeHtml(g.title)} poster">`:'<div class="poster-placeholder">🎌</div>'}${matAdultPosterOverlay(pd.isAdult)}</a><div class="dashboard-media-body"><h3>${dashboardEscapeHtml(g.title)}</h3><div class="friend-rating-summary">${g.recommenders.map(r=>`<div class="friend-rating-line"><span>${dashboardEscapeHtml(r.username)} • ${Math.round(Number(r.recommendation_points)||0).toLocaleString()} RP</span><strong>⭐ ${Number(r.rating).toFixed(1)}</strong>${r.note?`<small>${dashboardEscapeHtml(r.note)}</small>`:""}</div>`).join("")}</div>${g.item_type==='anime'?`<button class="dashboard-queue-btn" data-rec-id="${g.anilist_id}" ${inCollection?"disabled":""}>${inCollection?"In Your Collection":"+ Add to Collection"}</button>`:""}</div></article>`}).join("");container.querySelectorAll("[data-rec-id]").forEach(b=>b.onclick=()=>addFriendRatedAnimeToQueue(groups.find(g=>String(g.anilist_id)===b.dataset.recId),b,anime))}
+async function dashboardResolveRecommendationMedia(groups) {
+  const resolved = new Map();
+  const ids = [...new Set(groups.map((group) => Number(group.anilist_id)).filter(Number.isFinite))];
+
+  if (ids.length) {
+    const query = `query ($ids:[Int]){Page(page:1,perPage:50){media(id_in:$ids,type:ANIME){id isAdult coverImage{extraLarge large}}}}`;
+    const data = await dashboardAniListRequest(query, { ids });
+    (data?.Page?.media || []).forEach((media) => {
+      resolved.set(Number(media.id), {
+        anilistId: Number(media.id),
+        url: media.coverImage?.extraLarge || media.coverImage?.large || "",
+        isAdult: Boolean(media.isAdult)
+      });
+    });
+  }
+
+  for (const group of groups) {
+    if (Number.isFinite(Number(group.anilist_id)) && resolved.has(Number(group.anilist_id))) continue;
+    if (!group.title) continue;
+    try {
+      const query = `query ($search:String){Media(search:$search,type:ANIME){id isAdult coverImage{extraLarge large}}}`;
+      const data = await dashboardAniListRequest(query, { search: group.title });
+      const media = data?.Media;
+      if (media?.id) {
+        resolved.set(`title:${group.title}`, {
+          anilistId: Number(media.id),
+          url: media.coverImage?.extraLarge || media.coverImage?.large || "",
+          isAdult: Boolean(media.isAdult)
+        });
+      }
+    } catch (error) {
+      console.warn("Recommendation artwork fallback failed.", error);
+    }
+  }
+  return resolved;
+}
+
+function dashboardRecommendationMedia(group, mediaMap) {
+  return mediaMap.get(Number(group.anilist_id)) || mediaMap.get(`title:${group.title}`) || {
+    anilistId: Number(group.anilist_id) || null,
+    url: "",
+    isAdult: false
+  };
+}
+
+function dashboardRecommendationHref(group, media) {
+  const recommenders = group.recommenders.map((item) => item.recommender_id).filter(Boolean).join(",");
+  if (group.item_type === "franchise") {
+    return `franchise.html?key=${encodeURIComponent(group.franchise_key)}&rec_source=dashboard&recommenders=${encodeURIComponent(recommenders)}`;
+  }
+  const anilistId = media.anilistId || Number(group.anilist_id);
+  return `anime.html?anilist_id=${encodeURIComponent(anilistId)}&rec_source=dashboard&recommenders=${encodeURIComponent(recommenders)}`;
+}
+
+async function dashboardRecommendationInCollection(anime, group, media) {
+  if (group.item_type === "anime") return dashboardInCollection(anime, media.anilistId || group.anilist_id);
+  const { data: authData } = await supabaseClient.auth.getUser();
+  const userId = authData?.user?.id;
+  if (!userId) return false;
+  const { data } = await supabaseClient.from("user_franchises").select("franchise_key").eq("user_id", userId).eq("franchise_key", Number(group.franchise_key)).maybeSingle();
+  return Boolean(data);
+}
+
+async function addRecommendationToQueue(group, media, button, anime) {
+  button.disabled = true;
+  button.textContent = "Adding…";
+  const recommenderIds = group.recommenders.map((item) => item.recommender_id).filter(Boolean);
+  const itemKey = group.item_type === "franchise" ? String(group.franchise_key) : String(media.anilistId || group.anilist_id);
+
+  try {
+    const { error: attributionError } = await supabaseClient.rpc("set_recommendation_attribution", {
+      p_item_type: group.item_type,
+      p_item_key: itemKey,
+      p_source_mode: "dashboard",
+      p_recommender_ids: recommenderIds
+    });
+    if (attributionError) throw attributionError;
+
+    if (group.item_type === "franchise") {
+      const { data: authData, error: authError } = await supabaseClient.auth.getUser();
+      if (authError) throw authError;
+      const userId = authData?.user?.id;
+      if (!userId) throw new Error("You must be signed in.");
+      const { error } = await supabaseClient.from("user_franchises").insert({
+        user_id: userId,
+        franchise_key: Number(group.franchise_key),
+        status: "Queued",
+        updated_at: new Date().toISOString()
+      });
+      if (error) throw error;
+    } else {
+      const anilistId = media.anilistId || Number(group.anilist_id);
+      if (!anilistId) throw new Error("This recommendation is missing its title ID.");
+      const { data, error } = await supabaseClient.from("anime").insert({
+        anilist_id: anilistId,
+        title: group.title,
+        status: "Queued"
+      }).select("*").single();
+      if (error) throw error;
+      await matClaimPioneerBadge({ anilistId });
+      anime.unshift(data);
+    }
+
+    button.textContent = "In Your Collection";
+  } catch (error) {
+    const duplicate = error?.code === "23505" || /duplicate|already exists/i.test(error?.message || "");
+    button.textContent = duplicate ? "In Your Collection" : "Add to Queue";
+    button.disabled = duplicate;
+    if (!duplicate) alert(error.message || "Could not add this recommendation to your queue.");
+  }
+}
+
+async function renderRatedByFriends(anime, rows) {
+  const container = document.getElementById("friendRatedAnime");
+  if (!rows.length) {
+    container.innerHTML = '<div class="empty-state">No active recommendations from users you follow yet.</div>';
+    return;
+  }
+
+  const grouped = new Map();
+  rows.forEach((row) => {
+    const key = `${row.item_type}:${row.anilist_id || row.franchise_key || row.title}`;
+    if (!grouped.has(key)) grouped.set(key, { ...row, recommenders: [] });
+    grouped.get(key).recommenders.push(row);
+  });
+  const groups = [...grouped.values()];
+  const mediaMap = await dashboardResolveRecommendationMedia(groups);
+  const states = await Promise.all(groups.map(async (group) => {
+    const media = dashboardRecommendationMedia(group, mediaMap);
+    return { group, media, inCollection: await dashboardRecommendationInCollection(anime, group, media) };
+  }));
+
+  container.innerHTML = states.map(({ group, media, inCollection }, index) => `
+    <article class="dashboard-media-card friend-rating-card" data-recommendation-index="${index}">
+      <a class="dashboard-poster dashboard-poster-link${matAdultPosterClass(media.isAdult)}" href="${dashboardRecommendationHref(group, media)}" aria-label="View ${dashboardEscapeHtml(group.title)} details">
+        ${media.url ? `<img src="${dashboardEscapeHtml(media.url)}" alt="${dashboardEscapeHtml(group.title)} poster" loading="lazy">` : '<div class="poster-placeholder">🎌</div>'}
+        ${matAdultPosterOverlay(media.isAdult)}
+      </a>
+      <div class="dashboard-media-body">
+        <a class="recommendation-title-link" href="${dashboardRecommendationHref(group, media)}"><h3>${dashboardEscapeHtml(group.title)}</h3></a>
+        <div class="friend-rating-summary">${group.recommenders.map((item) => `<div class="friend-rating-line"><span>${dashboardEscapeHtml(item.username)} • ${Math.round(Number(item.recommendation_points) || 0).toLocaleString()} RP</span><strong>⭐ ${Number(item.rating).toFixed(1)}</strong>${item.note ? `<small>${dashboardEscapeHtml(item.note)}</small>` : ""}</div>`).join("")}</div>
+        <button class="dashboard-queue-btn" type="button" data-recommendation-queue="${index}" ${inCollection ? "disabled" : ""}>${inCollection ? "In Your Collection" : "Add to Queue"}</button>
+      </div>
+    </article>`).join("");
+
+  container.querySelectorAll("[data-recommendation-queue]").forEach((button) => {
+    const state = states[Number(button.dataset.recommendationQueue)];
+    button.addEventListener("click", () => addRecommendationToQueue(state.group, state.media, button, anime));
+  });
+}
 
 function renderDashboardError(error) {
   console.error(error);

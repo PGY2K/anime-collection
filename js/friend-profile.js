@@ -6,6 +6,7 @@ let friendProfileFranchises = [];
 let friendProfileTopFive = [];
 let friendProfileFriendCount = 0;
 let friendActiveRecommendation = null;
+let friendProfileViewer = null;
 
 function fpEscape(value) {
   return String(value ?? "")
@@ -115,6 +116,58 @@ async function fetchFriendPosters(ids) {
   ]));
 }
 
+async function fpResolveRecommendationMedia(recommendation) {
+  const posterId = fpRecommendationPosterId(recommendation);
+  if (posterId) {
+    const posters = await fetchFriendPosters([posterId]);
+    const found = posters.get(Number(posterId));
+    if (found) return { ...found, anilistId: Number(posterId) };
+  }
+  if (!recommendation?.title) return { url: "", isAdult: false, anilistId: null };
+  try {
+    const query = `query ($search:String){Media(search:$search,type:ANIME){id isAdult coverImage{extraLarge large}}}`;
+    const response = await fetch(FRIEND_ANILIST_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ query, variables: { search: recommendation.title } }) });
+    const json = response.ok ? await response.json() : null;
+    const media = json?.data?.Media;
+    return { url: media?.coverImage?.extraLarge || media?.coverImage?.large || "", isAdult: Boolean(media?.isAdult), anilistId: Number(media?.id) || null };
+  } catch (error) {
+    console.warn("Recommendation artwork fallback failed.", error);
+    return { url: "", isAdult: false, anilistId: null };
+  }
+}
+
+function fpRecommendationHref(recommendation, profileUserId, media) {
+  if (recommendation.item_type === "franchise") return `franchise.html?key=${encodeURIComponent(recommendation.franchise_key)}&rec_source=profile&recommender=${encodeURIComponent(profileUserId)}`;
+  return `anime.html?anilist_id=${encodeURIComponent(media.anilistId || recommendation.anilist_id)}&rec_source=profile&recommender=${encodeURIComponent(profileUserId)}`;
+}
+
+async function fpAddRecommendationToQueue(recommendation, profileUserId, media, button) {
+  button.disabled = true;
+  button.textContent = "Adding…";
+  try {
+    const itemKey = recommendation.item_type === "franchise" ? String(recommendation.franchise_key) : String(media.anilistId || recommendation.anilist_id);
+    if (!itemKey || itemKey === "null" || itemKey === "undefined") throw new Error("This recommendation is missing its title ID.");
+    const { error: attributionError } = await supabaseClient.rpc("set_recommendation_attribution", { p_item_type: recommendation.item_type, p_item_key: itemKey, p_source_mode: "profile", p_recommender_ids: [profileUserId] });
+    if (attributionError) throw attributionError;
+
+    if (recommendation.item_type === "franchise") {
+      const { error } = await supabaseClient.from("user_franchises").insert({ user_id: friendProfileViewer.id, franchise_key: Number(recommendation.franchise_key), status: "Queued", updated_at: new Date().toISOString() });
+      if (error) throw error;
+    } else {
+      const anilistId = media.anilistId || Number(recommendation.anilist_id);
+      const { error } = await supabaseClient.from("anime").insert({ anilist_id: anilistId, title: recommendation.title, status: "Queued" });
+      if (error) throw error;
+      await window.matClaimPioneerBadge?.({ anilistId });
+    }
+    button.textContent = "In Your Collection";
+  } catch (error) {
+    const duplicate = error?.code === "23505" || /duplicate|already exists/i.test(error?.message || "");
+    button.textContent = duplicate ? "In Your Collection" : "Add to Queue";
+    button.disabled = duplicate;
+    if (!duplicate) alert(error.message || "Could not add this recommendation to your queue.");
+  }
+}
+
 function fpRecommendationPosterId(recommendation) {
   if (!recommendation) return null;
   if (recommendation.item_type === "anime") return Number(recommendation.anilist_id) || null;
@@ -128,6 +181,7 @@ async function renderFriendProfileShell(profile) {
   const topFive = friendProfileTopFive;
   const recommendationPosterId=fpRecommendationPosterId(friendActiveRecommendation);
   const recPosterIds=topFive.map((item)=>item.anilist_id);if(recommendationPosterId)recPosterIds.push(recommendationPosterId);const topPosters = await fetchFriendPosters(recPosterIds);
+  const recommendationMedia = friendActiveRecommendation ? await fpResolveRecommendationMedia(friendActiveRecommendation) : null;
   const count = (status) => friendProfileAnime.filter((item) => fpNormalize(item.status) === status).length;
 
   root.innerHTML = `
@@ -141,7 +195,7 @@ async function renderFriendProfileShell(profile) {
       <p class="profile-social-meta">${profile.is_private
         ? `<span title="This user’s social lists are private">${friendProfileFriendCount.toLocaleString()} Followers</span><span>•</span><span title="This user’s social lists are private">${Number(profile.following_count||0).toLocaleString()} Following</span>`
         : `<a href="friends.html?user=${encodeURIComponent(profile.user_id)}&tab=followers">${friendProfileFriendCount.toLocaleString()} Followers</a><span>•</span><a href="friends.html?user=${encodeURIComponent(profile.user_id)}&tab=following">${Number(profile.following_count||0).toLocaleString()} Following</a>`}<span>•</span><span>${fpEscape(fpJoinedLabel(profile.created_at))}</span></p>
-      ${friendActiveRecommendation?`<section class="profile-active-recommendation"><div class="profile-section-heading"><h3>💎 Recommendation</h3><span>Featured by ${fpEscape(profile.username)}</span></div><a class="dashboard-media-card friend-rating-card profile-rec-card" href="${friendActiveRecommendation.item_type==='franchise'?`franchise.html?key=${friendActiveRecommendation.franchise_key}&rec_source=profile&recommender=${profile.user_id}`:`anime.html?anilist_id=${friendActiveRecommendation.anilist_id}&rec_source=profile&recommender=${profile.user_id}`}">${topPosters.get(Number(recommendationPosterId))?.url?`<img class="profile-rec-poster" src="${fpEscape(topPosters.get(Number(recommendationPosterId)).url)}" alt="${fpEscape(friendActiveRecommendation.title)} poster">`:'<div class="profile-rec-poster poster-placeholder">🎌</div>'}<div class="dashboard-media-body"><h3>${fpEscape(friendActiveRecommendation.title)}</h3><strong>⭐ ${Number(friendActiveRecommendation.rating).toFixed(1)}</strong>${friendActiveRecommendation.note?`<small>${fpEscape(friendActiveRecommendation.note)}</small>`:""}</div></a></section>`:""}
+      ${friendActiveRecommendation?`<section class="profile-active-recommendation"><div class="profile-section-heading"><h3>💎 Recommendation</h3><span>Featured by ${fpEscape(profile.username)}</span></div><article class="dashboard-media-card friend-rating-card profile-rec-card"><a class="profile-rec-poster-link${matAdultPosterClass(recommendationMedia?.isAdult)}" href="${fpRecommendationHref(friendActiveRecommendation,profile.user_id,recommendationMedia)}">${recommendationMedia?.url?`<img class="profile-rec-poster" src="${fpEscape(recommendationMedia.url)}" alt="${fpEscape(friendActiveRecommendation.title)} poster" loading="lazy">`:'<div class="profile-rec-poster poster-placeholder">🎌</div>'}${matAdultPosterOverlay(recommendationMedia?.isAdult)}</a><div class="dashboard-media-body"><a class="recommendation-title-link" href="${fpRecommendationHref(friendActiveRecommendation,profile.user_id,recommendationMedia)}"><h3>${fpEscape(friendActiveRecommendation.title)}</h3></a><strong>⭐ ${Number(friendActiveRecommendation.rating).toFixed(1)}</strong>${friendActiveRecommendation.note?`<small>${fpEscape(friendActiveRecommendation.note)}</small>`:""}<button class="dashboard-queue-btn" id="profileRecommendationQueueBtn" type="button">Add to Queue</button></div></article></section>`:""}
       <div class="profile-stat-grid">
         <div><strong>${count("in progress")}</strong><span>Watching</span></div>
         <div><strong>${count("waiting")}</strong><span>Waiting</span></div>
@@ -176,6 +230,7 @@ async function renderFriendProfileShell(profile) {
     </section>`;
 
   matBindBadgeButtons(root);
+  document.getElementById("profileRecommendationQueueBtn")?.addEventListener("click", (event) => fpAddRecommendationToQueue(friendActiveRecommendation, profile.user_id, recommendationMedia, event.currentTarget));
 
   document.querySelectorAll("[data-friend-filter]").forEach((button) => button.addEventListener("click", () => {
     matBindBadgeButtons(root);
@@ -225,7 +280,8 @@ async function renderFriendAnime() {
     : '<div class="empty-state">No anime in this section.</div>';
 }
 
-async function initFriendProfile() {
+async function initFriendProfile(user) {
+  friendProfileViewer = user;
   const params = new URLSearchParams(window.location.search);
   activeFriendUserId = params.get("user");
   const root = document.getElementById("friendProfileRoot");

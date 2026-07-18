@@ -285,3 +285,7 @@
 
 /* v5.3.0 featured profile recommendation */
 .profile-active-recommendation{width:min(760px,100%);margin:22px auto 8px;text-align:left}.profile-rec-card{display:grid;grid-template-columns:92px 1fr;gap:14px;align-items:stretch;text-decoration:none;color:inherit;padding:12px}.profile-rec-poster{width:92px;height:132px;object-fit:cover;border-radius:11px}.profile-rec-card .dashboard-media-body{display:flex;flex-direction:column;justify-content:center;gap:8px}.profile-rec-card small{color:var(--muted);line-height:1.45}@media(max-width:560px){.profile-rec-card{grid-template-columns:72px 1fr}.profile-rec-poster{width:72px;height:104px}}
+
+
+/* v5.3.6 recommendation cards and queue action */
+.profile-rec-card{position:relative}.profile-rec-poster-link{display:block;align-self:stretch;text-decoration:none;color:inherit}.profile-rec-card .recommendation-title-link,.recommendation-title-link{text-decoration:none;color:inherit}.profile-rec-card .recommendation-title-link:hover h3,.recommendation-title-link:hover h3{color:#f6d36b}.profile-rec-card .dashboard-queue-btn{margin-top:auto;width:fit-content;min-width:132px}

@@ -125,6 +125,25 @@ async function loadProfilePosters(items) {
 }
 function statusCount(status) { return profileAnime.filter((item) => profileNormalize(item.status) === status).length; }
 
+async function resolveOwnRecommendationMedia(recommendation) {
+  const posterId = profileRecommendationPosterId(recommendation);
+  if (posterId) {
+    const posters = await loadProfilePosters([{ anilist_id: posterId }]);
+    const found = posters.get(Number(posterId));
+    if (found) return { ...found, anilistId: Number(posterId) };
+  }
+  if (!recommendation?.title) return { url: "", isAdult: false, anilistId: null };
+  try {
+    const query = `query ($search:String){Media(search:$search,type:ANIME){id isAdult coverImage{extraLarge large}}}`;
+    const response = await fetch(PROFILE_ANILIST_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ query, variables: { search: recommendation.title } }) });
+    const json = response.ok ? await response.json() : null;
+    const media = json?.data?.Media;
+    return { url: media?.coverImage?.extraLarge || media?.coverImage?.large || "", isAdult: Boolean(media?.isAdult), anilistId: Number(media?.id) || null };
+  } catch (error) {
+    return { url: "", isAdult: false, anilistId: null };
+  }
+}
+
 function profileRecommendationPosterId(recommendation) {
   if (!recommendation) return null;
   if (recommendation.item_type === "anime") return Number(recommendation.anilist_id) || null;
@@ -188,6 +207,7 @@ async function renderProfile() {
   const topFive = profileTopItems();
   const recommendationPosterId=profileRecommendationPosterId(activeRecommendation);
   const posterItems=topFive.map(item=>({anilist_id:item.posterId}));if(recommendationPosterId)posterItems.push({anilist_id:recommendationPosterId});const posters = await loadProfilePosters(posterItems);
+  const recommendationMedia = activeRecommendation ? await resolveOwnRecommendationMedia(activeRecommendation) : null;
   const root = document.getElementById("profileRoot");
   root.innerHTML = `
     <section class="public-profile-card">
@@ -197,7 +217,7 @@ async function renderProfile() {
       ${matBadgeRowHtml(profileBadges, { emptyText: "No badges awarded yet." })}
       <a class="secondary-btn profile-badges-page-btn" href="badges.html">🏅 Badges</a>
       <p class="profile-social-meta"><a href="friends.html?tab=followers">${profileFriendCount.toLocaleString()} Followers</a><span>•</span><a href="friends.html?tab=following">${profileFollowingCount.toLocaleString()} Following</a><span>•</span><span>${escapeProfileHtml(profileJoinedLabel(currentProfileUser?.created_at || currentProfileData.created_at))}</span></p>
-      ${activeRecommendation?`<section class="profile-active-recommendation"><div class="profile-section-heading"><h3>💎 My Recommendation</h3><span>Featured title</span></div><a class="dashboard-media-card friend-rating-card profile-rec-card" href="${activeRecommendation.item_type==='franchise'?`franchise.html?key=${activeRecommendation.franchise_key}&rec_source=profile&recommender=${currentProfileUser.id}`:`anime.html?anilist_id=${activeRecommendation.anilist_id}&rec_source=profile&recommender=${currentProfileUser.id}`}">${posters.get(Number(recommendationPosterId))?.url?`<img class="profile-rec-poster" src="${escapeProfileHtml(posters.get(Number(recommendationPosterId)).url)}" alt="${escapeProfileHtml(activeRecommendation.title)} poster">`:'<div class="profile-rec-poster poster-placeholder">🎌</div>'}<div class="dashboard-media-body"><h3>${escapeProfileHtml(activeRecommendation.title)}</h3><strong>⭐ ${Number(activeRecommendation.rating).toFixed(1)}</strong>${activeRecommendation.note?`<small>${escapeProfileHtml(activeRecommendation.note)}</small>`:""}</div></a></section>`:""}
+      ${activeRecommendation?`<section class="profile-active-recommendation"><div class="profile-section-heading"><h3>💎 My Recommendation</h3><span>Featured title</span></div><a class="dashboard-media-card friend-rating-card profile-rec-card" href="${activeRecommendation.item_type==='franchise'?`franchise.html?key=${activeRecommendation.franchise_key}&rec_source=profile&recommender=${currentProfileUser.id}`:`anime.html?anilist_id=${recommendationMedia?.anilistId||activeRecommendation.anilist_id}&rec_source=profile&recommender=${currentProfileUser.id}`}">${recommendationMedia?.url?`<img class="profile-rec-poster" src="${escapeProfileHtml(recommendationMedia.url)}" alt="${escapeProfileHtml(activeRecommendation.title)} poster">`:'<div class="profile-rec-poster poster-placeholder">🎌</div>'}<div class="dashboard-media-body"><h3>${escapeProfileHtml(activeRecommendation.title)}</h3><strong>⭐ ${Number(activeRecommendation.rating).toFixed(1)}</strong>${activeRecommendation.note?`<small>${escapeProfileHtml(activeRecommendation.note)}</small>`:""}</div></a></section>`:""}
 
       <div class="profile-stat-grid">
         <div><strong>${statusCount("in progress")}</strong><span>Watching</span></div>

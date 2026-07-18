@@ -1,5 +1,23 @@
 const MAT_RELEASES = [
   {
+    version: "v5.3.6",
+    date: "July 2026",
+    announcementTitle: "Recommendation cards now keep artwork, links, and credit",
+    announcement: "Recommendation cards on profiles and the dashboard now resolve their poster artwork, open the correct title page, and include Add to Queue attribution so recommenders keep credit. View the Changelog tab for the complete details.",
+    groups: {
+      NEW: [
+        "Added an Add to Queue button to recommendation cards on followed-user profiles and the dashboard.",
+        "Recommendation source information now travels with title links so adding from the title page still credits the correct recommender or followed recommender group."
+      ],
+      FIXED: [
+        "Fixed missing recommendation poster artwork by resolving media from the stored AniList ID with a title-search fallback.",
+        "Fixed recommendation cards opening an invalid title route and showing an unexpected error.",
+        "Dashboard attribution remains limited to recommenders the viewing user follows; profile attribution credits only the profile owner."
+      ]
+    }
+  },
+
+  {
     version: "v5.3.5",
     date: "July 2026",
     announcementTitle: "Active recommendations are now protected and removable",

@@ -800,3 +800,7 @@ body.modal-open { overflow: hidden; }
 .nav-links .nav-rp-button{flex:0 0 auto;min-height:42px;white-space:nowrap}
 .nav-links .nav-rp-button img{display:block;width:24px!important;height:24px!important;max-width:24px!important;max-height:24px!important;flex:0 0 24px}
 @media(max-width:520px){.nav-links .nav-rp-button{flex:0 0 auto!important;min-width:74px;justify-content:center}.nav-links .nav-rp-button strong{font-size:13px}}
+
+
+/* v5.3.6 recommendation attribution controls */
+.recommendation-title-link{text-decoration:none;color:inherit}.recommendation-title-link:hover h3{color:#f6d36b}.friend-rating-card .dashboard-queue-btn{margin-top:auto}

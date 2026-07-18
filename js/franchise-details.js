@@ -442,6 +442,17 @@ async function initFranchiseDetails(user) {
   }
   try {
     await fdLoad(key);
+    const recSource = params.get("rec_source");
+    const recIds = (params.get("recommenders") || params.get("recommender") || "").split(",").filter(Boolean);
+    if (recSource && recIds.length) {
+      const { error: attributionError } = await supabaseClient.rpc("set_recommendation_attribution", {
+        p_item_type: "franchise",
+        p_item_key: String(key),
+        p_source_mode: recSource,
+        p_recommender_ids: recIds
+      });
+      if (attributionError) console.warn("Recommendation source could not be recorded.", attributionError);
+    }
     fdRender();
   } catch (error) {
     console.error(error);
