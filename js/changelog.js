@@ -1,5 +1,28 @@
 const MAT_RELEASES = [
   {
+    version: "v5.4.5",
+    date: "July 2026",
+    announcementTitle: "Franchise options are easier to reach and emergency notices are now available",
+    announcement: "Franchise Options now appear directly above the Entries list on franchise pages, and the MAT owner can publish a scrolling Emergency Banner across every screen. View the Changelog tab for the complete details.",
+    groups: {
+      NEW: [
+        "Added Franchise Options directly to the top of the Entries section on franchise pages.",
+        "Added an owner-only Emergency Banner control with Save Banner and Clear Banner actions.",
+        "Emergency messages display as a one-line, continuously scrolling ticker across the top of every MAT screen for all users.",
+        "The global banner stays active until the owner clears it and disappears completely when no message is saved."
+      ],
+      IMPROVED: [
+        "Franchise-page options use the same saved profile preferences as Settings, keeping both locations synchronized.",
+        "Saving Franchise Options immediately reloads the Entries list so the selected formats are shown without a manual refresh.",
+        "Emergency Banner updates are delivered live to open MAT sessions when Supabase Realtime is available."
+      ],
+      SECURITY: [
+        "Only the existing MAT owner account can save or clear the Emergency Banner; all users have read-only access to the displayed message."
+      ]
+    }
+  },
+
+  {
     version: "v5.4.4",
     date: "July 2026",
     announcementTitle: "First-rating match rules and owner RP controls are now live",

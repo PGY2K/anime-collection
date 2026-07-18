@@ -24,6 +24,24 @@ async function verifyBadgeManager(user) {
 function renderAdminShell() {
   const root = document.getElementById("adminRoot");
   root.innerHTML = `
+    <section class="admin-card admin-emergency-card">
+      <div class="admin-card-heading">
+        <div>
+          <h2>Emergency Banner</h2>
+          <p>Post a one-line message that scrolls across the top of every MAT screen until you clear it.</p>
+        </div>
+      </div>
+      <form id="adminEmergencyBannerForm" class="admin-emergency-form">
+        <label for="adminEmergencyBannerMessage">Banner Message</label>
+        <input class="search-box" id="adminEmergencyBannerMessage" type="text" maxlength="300" placeholder="Example: MAT will be unavailable tonight from 11 PM to midnight." autocomplete="off" />
+        <div class="admin-emergency-actions">
+          <button class="primary-btn" id="adminSaveEmergencyBannerBtn" type="submit">Save Banner</button>
+          <button class="secondary-btn" id="adminClearEmergencyBannerBtn" type="button">Clear Banner</button>
+        </div>
+      </form>
+      <div class="admin-message" id="adminEmergencyBannerMessageState"></div>
+    </section>
+
     <section class="admin-card">
       <div class="admin-card-heading">
         <div>
@@ -76,11 +94,48 @@ function renderAdminShell() {
       </section>
     </section>`;
 
+  document.getElementById("adminEmergencyBannerForm").addEventListener("submit", saveEmergencyBanner);
+  document.getElementById("adminClearEmergencyBannerBtn").addEventListener("click", clearEmergencyBanner);
   document.getElementById("adminFriendCodeForm").addEventListener("submit", findUserByFriendCode);
   document.getElementById("adminPointsForm").addEventListener("submit", savePointAdjustment);
   document.getElementById("adminFriendCode").addEventListener("input", (event) => {
     event.target.value = event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
   });
+}
+
+async function loadEmergencyBannerAdmin() {
+  const input = document.getElementById("adminEmergencyBannerMessage");
+  const state = document.getElementById("adminEmergencyBannerMessageState");
+  if (!input || !state) return;
+  const { data, error } = await supabaseClient.from("app_emergency_banner").select("message").eq("id", 1).maybeSingle();
+  if (error) { state.className = "admin-message error"; state.textContent = error.message; return; }
+  input.value = data?.message || "";
+  state.textContent = data?.message ? "A banner is currently active." : "No emergency banner is active.";
+}
+
+async function saveEmergencyBanner(event) {
+  event.preventDefault();
+  const input = document.getElementById("adminEmergencyBannerMessage");
+  const state = document.getElementById("adminEmergencyBannerMessageState");
+  const button = document.getElementById("adminSaveEmergencyBannerBtn");
+  const message = input.value.trim();
+  if (!message) { state.className = "admin-message error"; state.textContent = "Enter a message or use Clear Banner."; return; }
+  button.disabled = true; button.textContent = "Saving…";
+  const { error } = await supabaseClient.rpc("admin_set_emergency_banner", { p_message: message });
+  button.disabled = false; button.textContent = "Save Banner";
+  if (error) { state.className = "admin-message error"; state.textContent = error.message; return; }
+  state.className = "admin-message success"; state.textContent = "Emergency banner saved for all users.";
+}
+
+async function clearEmergencyBanner() {
+  const state = document.getElementById("adminEmergencyBannerMessageState");
+  const button = document.getElementById("adminClearEmergencyBannerBtn");
+  button.disabled = true; button.textContent = "Clearing…";
+  const { error } = await supabaseClient.rpc("admin_set_emergency_banner", { p_message: null });
+  button.disabled = false; button.textContent = "Clear Banner";
+  if (error) { state.className = "admin-message error"; state.textContent = error.message; return; }
+  document.getElementById("adminEmergencyBannerMessage").value = "";
+  state.className = "admin-message success"; state.textContent = "Emergency banner cleared and hidden.";
 }
 
 async function findUserByFriendCode(event) {
@@ -240,6 +295,7 @@ async function initAdminPanel(user) {
     }
     adminBadgeCatalog = await matLoadBadgeCatalog();
     renderAdminShell();
+    await loadEmergencyBannerAdmin();
   } catch (error) {
     console.error(error);
     root.innerHTML = `<div class="error">${adminEscape(error.message || "Could not load the Admin Control Panel.")}</div>`;

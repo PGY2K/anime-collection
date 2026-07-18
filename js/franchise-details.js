@@ -156,6 +156,68 @@ async function fdLoad(key) {
   }
 }
 
+
+function fdFranchiseOptionsMarkup() {
+  const prefs = matFranchisePrefs(fdProfile || {});
+  return `<section class="franchise-page-options" aria-labelledby="franchiseOptionsHeading">
+    <div class="franchise-options-heading">
+      <div>
+        <h3 id="franchiseOptionsHeading">Franchise Options</h3>
+        <p>Choose which formats appear in this franchise's Entries list. These are the same options saved in Settings.</p>
+      </div>
+    </div>
+    <form id="franchisePageOptionsForm" class="franchise-options-form">
+      <label><span>Group TV Seasons</span><input id="fdFranchiseGroupTv" type="checkbox" ${prefs.tv ? "checked" : ""}></label>
+      <label><span>Group Movies</span><input id="fdFranchiseGroupMovies" type="checkbox" ${prefs.movie ? "checked" : ""}></label>
+      <label><span>Include OVAs</span><input id="fdFranchiseIncludeOva" type="checkbox" ${prefs.ova ? "checked" : ""}></label>
+      <label><span>Include Specials</span><input id="fdFranchiseIncludeSpecials" type="checkbox" ${prefs.special ? "checked" : ""}></label>
+      <label><span>Include ONAs</span><input id="fdFranchiseIncludeOna" type="checkbox" ${prefs.ona ? "checked" : ""}></label>
+      <label><span>Include Recaps</span><input id="fdFranchiseIncludeRecaps" type="checkbox" ${prefs.recaps ? "checked" : ""}></label>
+      <div class="franchise-options-actions">
+        <button class="primary-btn" id="saveFranchisePageOptionsBtn" type="submit">Save Options</button>
+        <span class="franchise-options-message" id="franchisePageOptionsMessage" role="status"></span>
+      </div>
+    </form>
+  </section>`;
+}
+
+async function fdSaveFranchisePageOptions(event) {
+  event.preventDefault();
+  const button = document.getElementById("saveFranchisePageOptionsBtn");
+  const message = document.getElementById("franchisePageOptionsMessage");
+  if (!button || !message) return;
+
+  button.disabled = true;
+  button.textContent = "Saving…";
+  message.className = "franchise-options-message";
+  message.textContent = "";
+
+  const changes = {
+    franchise_group_tv: document.getElementById("fdFranchiseGroupTv").checked,
+    franchise_group_movies: document.getElementById("fdFranchiseGroupMovies").checked,
+    franchise_include_ova: document.getElementById("fdFranchiseIncludeOva").checked,
+    franchise_include_specials: document.getElementById("fdFranchiseIncludeSpecials").checked,
+    franchise_include_ona: document.getElementById("fdFranchiseIncludeOna").checked,
+    franchise_include_recaps: document.getElementById("fdFranchiseIncludeRecaps").checked
+  };
+
+  try {
+    const { error } = await supabaseClient.from("profiles").update(changes).eq("user_id", fdUser.id);
+    if (error) throw error;
+    fdProfile = { ...fdProfile, ...changes };
+    message.className = "franchise-options-message success";
+    message.textContent = "Saved. Refreshing entries…";
+    await fdLoad(fdFranchise.franchise_key);
+    fdRender();
+  } catch (error) {
+    console.error(error);
+    button.disabled = false;
+    button.textContent = "Save Options";
+    message.className = "franchise-options-message error";
+    message.textContent = error.message || "Could not save franchise options.";
+  }
+}
+
 function fdEntryCard(entry, index) {
   const media = entry.media || {};
   const poster = media.coverImage?.large || media.coverImage?.extraLarge || "";
@@ -376,12 +438,14 @@ function fdRender() {
     </section>
     <section class="franchise-entries-section">
       <div class="profile-section-heading"><h2>Entries</h2></div>
-      <div class="franchise-entry-list">${fdEntryMedia.map(fdEntryCard).join("")}</div>
+      ${fdFranchiseOptionsMarkup()}
+      <div class="franchise-entry-list">${fdEntryMedia.length ? fdEntryMedia.map(fdEntryCard).join("") : '<div class="franchise-empty-entries">No entries match your current Franchise Options.</div>'}</div>
     </section>
     ${ownView ? fdStatusModalMarkup() + fdRecommendationModalMarkup() + `<div class="remove-modal-backdrop hidden" id="removeFranchiseModal" aria-hidden="true"><section class="remove-modal-card" role="dialog" aria-modal="true"><h2>Remove from Collection?</h2><p>Remove <strong>${fdEsc(fdFranchise.title)}</strong> from your collection? Franchise ratings and progress for this franchise will also be removed.</p><div class="remove-modal-actions"><button class="secondary-action-btn" id="cancelRemoveFranchiseBtn" type="button">Cancel</button><button class="confirm-remove-btn" id="confirmRemoveFranchiseBtn" type="button">Remove</button></div><div class="edit-message" id="removeFranchiseMessage"></div></section></div>` : ""}
     <div id="entryRatingModalHost"></div>`;
 
   document.getElementById("franchiseCollectionCount")?.addEventListener("click", () => openFranchiseCollectionPopup());
+  document.getElementById("franchisePageOptionsForm")?.addEventListener("submit", fdSaveFranchisePageOptions);
   document.getElementById("addRecommendedFranchiseBtn")?.addEventListener("click", (event) => fdAddRecommendedFranchiseToQueue(event.currentTarget));
   if (ownView) { fdBind(); fdBindRecommendation(); }
 }
