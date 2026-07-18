@@ -225,6 +225,51 @@ function fdStatusModalMarkup() {
 
 function openFranchiseCollectionPopup(){ document.getElementById("franchiseCountModal")?.remove(); document.body.insertAdjacentHTML("beforeend", `<div class="mat-popup-backdrop" id="franchiseCountModal"><section class="mat-popup-card"><button class="mat-popup-close" id="franchiseCountClose" type="button">×</button><h2>Collection Count</h2><p><strong>${fdCollectionCount.toLocaleString()}</strong> users have this franchise in their collection.</p><div class="mat-popup-actions"><button class="secondary-btn" id="franchiseCountDismiss" type="button">Close</button></div></section></div>`); const close=()=>document.getElementById("franchiseCountModal")?.remove(); document.getElementById("franchiseCountClose").onclick=close; document.getElementById("franchiseCountDismiss").onclick=close; }
 
+
+function fdRecommendationModalMarkup() {
+  const currentRating = fdCalculatedFranchiseRating() ?? fdAverage(fdFranchise) ?? 8;
+  return `<div class="recommend-modal-backdrop hidden" id="recommendFranchiseModal" aria-hidden="true"><section class="recommend-modal-card" role="dialog" aria-modal="true" aria-labelledby="recommendFranchiseTitle"><button class="recommend-modal-close" id="closeRecommendFranchiseBtn" type="button" aria-label="Close">×</button><div class="recommend-modal-heading"><img src="assets/icons/rp-gem.png" alt=""><div><h2 id="recommendFranchiseTitle">Recommend this Franchise</h2><p>Complete and rate this franchise, then share it with your followers.</p></div></div><div class="recommend-guidelines"><h3>Recommendation Guidelines</h3><ul><li>You may have only <strong>one active recommendation</strong>.</li><li>Status must be <strong>Completed</strong>.</li><li>A personal rating is required.</li><li>A new recommendation replaces your current one.</li><li>Notes are optional and limited to 250 characters.</li></ul></div><label class="recommend-note-label" for="recommendFranchiseStatus">Status <span>(required)</span></label><select id="recommendFranchiseStatus" class="recommend-field"><option value="Completed" selected>Completed</option></select><label class="recommend-note-label" for="recommendFranchiseRating">Your Rating <span>(required)</span></label><div class="recommend-rating-row"><input id="recommendFranchiseRating" type="range" min="0.5" max="10" step="0.5" value="${Number(currentRating).toFixed(1)}"><output id="recommendFranchiseRatingOutput">${Number(currentRating).toFixed(1)}</output><span>/10</span></div><label class="recommend-note-label" for="recommendFranchiseNote">Notes <span>(optional)</span></label><textarea id="recommendFranchiseNote" maxlength="250" placeholder="Why are you recommending this franchise?"></textarea><div class="recommend-rp-summary"><strong>How you earn RP</strong><span>+1 Added • +3 Completed • +5 Rated • +10 Exact Match</span></div><div class="recommend-message" id="recommendFranchiseMessage"></div><div class="recommend-modal-actions"><button class="remove-recommendation-btn hidden" id="removeFranchiseRecommendationBtn" type="button">Remove Recommendation</button><button class="secondary-action-btn" id="cancelRecommendFranchiseBtn" type="button">Cancel</button><button class="recommend-confirm-btn" id="confirmRecommendFranchiseBtn" type="button">Recommend Franchise</button></div></section></div>`;
+}
+
+function fdBindRecommendation() {
+  const button=document.getElementById("recommendFranchiseBtn"), modal=document.getElementById("recommendFranchiseModal");
+  if(!button||!modal) return;
+  const setRecommendedState=(active)=>{
+    const same=active?.item_type==="franchise"&&Number(active.franchise_key)===Number(fdFranchise.franchise_key);
+    button.classList.toggle("is-recommended",same);
+    button.setAttribute("aria-pressed",same?"true":"false");
+    button.textContent=same?"✓ Recommended":"Recommend";
+    document.getElementById("activeFranchiseRecommendationLabel")?.remove();
+    return same;
+  };
+  supabaseClient.from("recommendations").select("*").eq("recommender_id",fdUser.id).eq("active",true).maybeSingle().then(({data,error})=>{if(error)console.warn("Active recommendation state could not be loaded.",error);else setRecommendedState(data)});
+  const rating=document.getElementById("recommendFranchiseRating"), output=document.getElementById("recommendFranchiseRatingOutput");
+  rating.addEventListener("input",()=>output.textContent=Number(rating.value).toFixed(1));
+  const close=()=>{modal.classList.add("hidden");modal.setAttribute("aria-hidden","true");document.body.classList.remove("modal-open")};
+  button.addEventListener("click",async()=>{modal.classList.remove("hidden");modal.setAttribute("aria-hidden","false");document.body.classList.add("modal-open");const removeButton=document.getElementById("removeFranchiseRecommendationBtn"),saveButton=document.getElementById("confirmRecommendFranchiseBtn");removeButton.classList.add("hidden");saveButton.textContent="Recommend Franchise";try{const {data,error}=await supabaseClient.from("recommendations").select("*").eq("recommender_id",fdUser.id).eq("active",true).maybeSingle();if(error)throw error;const same=setRecommendedState(data);removeButton.classList.toggle("hidden",!same);saveButton.textContent=same?"Update Recommendation":data?"Replace Recommendation":"Recommend Franchise";if(same){document.getElementById("recommendFranchiseNote").value=data.note||"";rating.value=Number(data.rating)||rating.value;output.textContent=Number(rating.value).toFixed(1)}}catch(error){console.warn("Active recommendation state could not be loaded.",error)}});
+  document.getElementById("closeRecommendFranchiseBtn").onclick=close;
+  document.getElementById("cancelRecommendFranchiseBtn").onclick=close;
+  modal.addEventListener("click",e=>{if(e.target===modal)close()});
+  document.getElementById("removeFranchiseRecommendationBtn").onclick=async()=>{const removeButton=document.getElementById("removeFranchiseRecommendationBtn"),message=document.getElementById("recommendFranchiseMessage");removeButton.disabled=true;removeButton.textContent="Removing…";message.textContent="";try{const {error}=await supabaseClient.from("recommendations").update({active:false}).eq("recommender_id",fdUser.id).eq("active",true);if(error)throw error;message.textContent="Recommendation removed.";message.className="recommend-message is-success";setRecommendedState(null);setTimeout(()=>location.reload(),400)}catch(error){message.textContent=error.message||"Could not remove recommendation.";removeButton.disabled=false;removeButton.textContent="Remove Recommendation"}};
+  document.getElementById("confirmRecommendFranchiseBtn").onclick=async()=>{
+    const save=document.getElementById("confirmRecommendFranchiseBtn"), message=document.getElementById("recommendFranchiseMessage"), value=Number(rating.value);
+    save.disabled=true; save.textContent="Saving…"; message.textContent="";
+    try {
+      const {error:updateError}=await supabaseClient
+        .from("user_franchises")
+        .update({status:"Completed",overall_rating:value,rating_mode:"simple",updated_at:new Date().toISOString()})
+        .eq("user_id",fdUser.id)
+        .eq("franchise_key",Number(fdFranchise.franchise_key));
+      if(updateError) throw updateError;
+      fdFranchise={...fdFranchise,status:"Completed",overall_rating:value,rating_mode:"simple"};
+      const {error}=await supabaseClient.rpc("set_active_recommendation",{p_item_type:"franchise",p_anilist_id:null,p_franchise_key:fdFranchise.franchise_key,p_title:fdFranchise.title,p_rating:value,p_note:document.getElementById("recommendFranchiseNote").value.trim()});
+      if(error) throw error;
+      message.textContent="Recommendation saved."; message.className="recommend-message is-success";
+      setTimeout(()=>location.reload(),500);
+    } catch(error) { message.textContent=error.message||"Could not save recommendation."; save.disabled=false; save.textContent="Recommend Franchise"; }
+  };
+}
+
 function fdRender() {
   const root = document.getElementById("franchiseRoot");
   const poster = fdHeroMedia?.coverImage?.extraLarge || fdHeroMedia?.coverImage?.large || "";
@@ -244,7 +289,7 @@ function fdRender() {
         <div class="details-actions franchise-actions">
           <span class="details-status status ${fdStatusClass(fdFranchise.status)}">${fdEsc(fdFranchise.status || "Queued")}</span>
           ${rating !== null ? `<span class="details-rating">⭐ ${rating.toFixed(1)}</span>` : ""}
-          ${ownView ? `<button class="edit-anime-btn status-details-btn" id="changeFranchiseStatusBtn" type="button">Change Status</button>` : ""}
+          ${ownView ? `<button class="edit-anime-btn status-details-btn" id="changeFranchiseStatusBtn" type="button">Change Status</button><button class="recommend-anime-btn" id="recommendFranchiseBtn" type="button">Recommend</button>` : ""}
         </div>
       </div>
     </section>
@@ -252,11 +297,11 @@ function fdRender() {
       <div class="profile-section-heading"><h2>Entries</h2></div>
       <div class="franchise-entry-list">${fdEntryMedia.map(fdEntryCard).join("")}</div>
     </section>
-    ${ownView ? fdStatusModalMarkup() : ""}
+    ${ownView ? fdStatusModalMarkup() + fdRecommendationModalMarkup() : ""}
     <div id="entryRatingModalHost"></div>`;
 
   document.getElementById("franchiseCollectionCount")?.addEventListener("click", () => openFranchiseCollectionPopup());
-  if (ownView) fdBind();
+  if (ownView) { fdBind(); fdBindRecommendation(); }
 }
 
 async function fdRefreshFranchiseOverall() {
@@ -364,9 +409,16 @@ function fdBind() {
     const message = document.getElementById("franchiseStatusMessage");
     message.textContent = "Saving…";
     try {
+      const nextStatus=document.getElementById("franchiseStatusSelect").value;
+      if(fdNormalize(nextStatus)!=="completed"){
+        const {data:active,error:activeError}=await supabaseClient.from("recommendations").select("item_type,franchise_key").eq("recommender_id",fdUser.id).eq("active",true).maybeSingle();
+        if(activeError) throw activeError;
+        const isActiveFranchise=active?.item_type==="franchise"&&Number(active.franchise_key)===Number(fdFranchise.franchise_key);
+        if(isActiveFranchise) throw new Error("This franchise is your active recommendation. Remove or replace the recommendation before changing its status from Completed.");
+      }
       const { error } = await supabaseClient
         .from("user_franchises")
-        .update({ status: document.getElementById("franchiseStatusSelect").value, updated_at: new Date().toISOString() })
+        .update({ status: nextStatus, updated_at: new Date().toISOString() })
         .eq("user_id", fdUser.id)
         .eq("franchise_key", fdFranchise.franchise_key);
       if (error) throw error;

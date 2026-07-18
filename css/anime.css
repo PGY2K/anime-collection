@@ -1092,3 +1092,38 @@
   font-weight: 800;
   line-height: 1;
 }
+
+
+/* v5.2.0 recommendation control */
+.recommend-anime-btn{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:8px 16px;border:1px solid #f6d36b;border-radius:999px;color:#201500;background:linear-gradient(135deg,#f7d66d,#d7a928);box-shadow:0 6px 18px rgba(215,169,40,.25);font-weight:900;cursor:pointer}
+.recommend-anime-btn:hover{background:linear-gradient(135deg,#ffe58a,#e2b536);transform:translateY(-1px);box-shadow:0 8px 22px rgba(215,169,40,.35)}
+.recommend-anime-btn:active{transform:translateY(0);background:linear-gradient(135deg,#e9c24f,#c99418)}
+.recommend-modal-backdrop{position:fixed;inset:0;z-index:1500;display:grid;place-items:center;padding:18px;background:rgba(4,4,12,.82);backdrop-filter:blur(12px)}
+.recommend-modal-backdrop.hidden{display:none}
+.recommend-modal-card{position:relative;width:min(620px,100%);max-height:min(88vh,760px);overflow:auto;padding:26px;border:1px solid var(--border);border-radius:22px;background:linear-gradient(145deg,#21143c,#111126);box-shadow:0 28px 90px rgba(0,0,0,.58)}
+.recommend-modal-close{position:absolute;right:14px;top:12px;border:0;background:transparent;color:#fff;font-size:28px;cursor:pointer}
+.recommend-modal-heading{display:flex;align-items:center;gap:13px;padding-right:34px}.recommend-modal-heading img{width:46px;height:46px;object-fit:contain}.recommend-modal-heading h2,.recommend-modal-heading p{margin:0}.recommend-modal-heading p{margin-top:4px;color:var(--muted);line-height:1.45}
+.recommend-guidelines{margin:18px 0;padding:16px;border:1px solid rgba(255,255,255,.08);border-radius:15px;background:rgba(255,255,255,.035)}.recommend-guidelines h3{margin:0 0 9px;font-size:15px}.recommend-guidelines ul{margin:0;padding-left:20px;color:#d9d6e3;line-height:1.65}
+.recommend-eligibility{margin:12px 0;padding:12px 14px;border-radius:12px;font-size:13px;line-height:1.45}.recommend-eligibility.is-ready{border:1px solid rgba(70,215,125,.35);background:rgba(70,215,125,.1);color:#baf5cf}.recommend-eligibility.is-locked{border:1px solid rgba(255,107,118,.35);background:rgba(255,107,118,.1);color:#ffc2c7}
+.recommend-note-label{display:block;margin:14px 0 7px;font-weight:800}.recommend-note-label span{color:var(--muted);font-weight:500}.recommend-modal-card textarea{width:100%;min-height:105px;padding:13px 14px;border:1px solid rgba(255,255,255,.1);border-radius:12px;color:#fff;background:rgba(255,255,255,.05);resize:vertical}.recommend-modal-card textarea:disabled{opacity:.5;cursor:not-allowed}
+.recommend-rp-summary,.recommend-current{display:grid;gap:4px;margin-top:12px;padding:12px 14px;border:1px solid rgba(255,255,255,.07);border-radius:12px;background:rgba(255,255,255,.025);color:var(--muted);font-size:13px}.recommend-rp-summary strong{color:#fff}.recommend-current strong{color:#fff}.recommend-message{min-height:20px;margin-top:10px;color:#ffb5bb;font-size:13px}.recommend-message.is-success{color:#9ef0bd}.recommend-modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:14px}.recommend-confirm-btn{padding:11px 15px;border:0;border-radius:11px;color:#fff;background:linear-gradient(135deg,#8f61ff,#6f35d8);font-weight:900;cursor:pointer}.recommend-confirm-btn:disabled{opacity:.5;cursor:not-allowed}
+@media(max-width:560px){.recommend-modal-card{padding:21px}.recommend-modal-heading img{width:38px;height:38px}.recommend-modal-actions{flex-direction:column-reverse}.recommend-modal-actions button{width:100%}}
+
+/* v5.3.0 recommendation form fields */
+.recommend-field{width:100%;padding:12px 14px;border:1px solid rgba(255,255,255,.1);border-radius:12px;background:#171329;color:#fff}.recommend-rating-row{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:9px;padding:10px 0}.recommend-rating-row output{min-width:34px;font-weight:900;color:#fff}
+
+/* v5.3.2: keep status and recommendation controls together */
+.details-actions .status-details-btn + .recommend-anime-btn{margin-left:2px}
+@media(max-width:560px){.details-actions .status-details-btn,.details-actions .recommend-anime-btn{width:100%;justify-content:center}}
+
+/* v5.3.4 active recommendation state */
+.recommend-anime-btn.is-recommended{border-color:#fff0a6;background:linear-gradient(135deg,#ffe889,#c99914);box-shadow:0 0 0 3px rgba(246,211,107,.2),0 8px 24px rgba(215,169,40,.38)}
+.active-recommendation-label{display:inline-flex;align-items:center;min-height:30px;padding:5px 10px;border:1px solid rgba(246,211,107,.42);border-radius:999px;background:rgba(246,211,107,.1);color:#ffe89a;font-size:12px;font-weight:900;white-space:nowrap}
+@media(max-width:560px){.active-recommendation-label{width:100%;justify-content:center}}
+
+/* v5.3.5 recommendation management */
+.remove-recommendation-btn{padding:11px 15px;border:1px solid rgba(255,105,115,.55);border-radius:11px;color:#ffd7da;background:rgba(190,35,50,.2);font-weight:900;cursor:pointer;margin-right:auto}
+.remove-recommendation-btn:hover{background:rgba(210,42,58,.32);border-color:#ff7c86}
+.remove-recommendation-btn:disabled{opacity:.55;cursor:not-allowed}
+.remove-recommendation-btn.hidden{display:none}
+@media(max-width:560px){.remove-recommendation-btn{margin-right:0}}

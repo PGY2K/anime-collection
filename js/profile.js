@@ -125,6 +125,12 @@ async function loadProfilePosters(items) {
 }
 function statusCount(status) { return profileAnime.filter((item) => profileNormalize(item.status) === status).length; }
 
+function profileRecommendationPosterId(recommendation) {
+  if (!recommendation) return null;
+  if (recommendation.item_type === "anime") return Number(recommendation.anilist_id) || null;
+  const franchise = profileFranchises.find((item) => Number(item.franchise_key) === Number(recommendation.franchise_key));
+  return Number(franchise?.cover_anilist_id) || null;
+}
 
 function profileTopItems() {
   const franchiseItems = profileFranchises.map((franchise) => {
@@ -180,7 +186,8 @@ function profileTopItems() {
 async function renderProfile() {
   selectedAvatarId = Number(currentProfileData.avatar_id) || 1;
   const topFive = profileTopItems();
-  const posters = await loadProfilePosters(topFive.map(item=>({anilist_id:item.posterId})));
+  const recommendationPosterId=profileRecommendationPosterId(activeRecommendation);
+  const posterItems=topFive.map(item=>({anilist_id:item.posterId}));if(recommendationPosterId)posterItems.push({anilist_id:recommendationPosterId});const posters = await loadProfilePosters(posterItems);
   const root = document.getElementById("profileRoot");
   root.innerHTML = `
     <section class="public-profile-card">
@@ -190,6 +197,7 @@ async function renderProfile() {
       ${matBadgeRowHtml(profileBadges, { emptyText: "No badges awarded yet." })}
       <a class="secondary-btn profile-badges-page-btn" href="badges.html">🏅 Badges</a>
       <p class="profile-social-meta"><a href="friends.html?tab=followers">${profileFriendCount.toLocaleString()} Followers</a><span>•</span><a href="friends.html?tab=following">${profileFollowingCount.toLocaleString()} Following</a><span>•</span><span>${escapeProfileHtml(profileJoinedLabel(currentProfileUser?.created_at || currentProfileData.created_at))}</span></p>
+      ${activeRecommendation?`<section class="profile-active-recommendation"><div class="profile-section-heading"><h3>💎 My Recommendation</h3><span>Featured title</span></div><a class="dashboard-media-card friend-rating-card profile-rec-card" href="${activeRecommendation.item_type==='franchise'?`franchise.html?key=${activeRecommendation.franchise_key}&rec_source=profile&recommender=${currentProfileUser.id}`:`anime.html?anilist_id=${activeRecommendation.anilist_id}&rec_source=profile&recommender=${currentProfileUser.id}`}">${posters.get(Number(recommendationPosterId))?.url?`<img class="profile-rec-poster" src="${escapeProfileHtml(posters.get(Number(recommendationPosterId)).url)}" alt="${escapeProfileHtml(activeRecommendation.title)} poster">`:'<div class="profile-rec-poster poster-placeholder">🎌</div>'}<div class="dashboard-media-body"><h3>${escapeProfileHtml(activeRecommendation.title)}</h3><strong>⭐ ${Number(activeRecommendation.rating).toFixed(1)}</strong>${activeRecommendation.note?`<small>${escapeProfileHtml(activeRecommendation.note)}</small>`:""}</div></a></section>`:""}
 
       <div class="profile-stat-grid">
         <div><strong>${statusCount("in progress")}</strong><span>Watching</span></div>
@@ -239,7 +247,6 @@ async function renderProfile() {
               <span></span>
             </label>
           </div>
-          <section class="profile-recommendation-settings"><h3>Active Recommendation</h3><p>Choose one completed and rated anime. Saving a new recommendation replaces the previous one.</p><select class="sort-select" id="activeRecommendationSelect"><option value="">No active recommendation</option>${profileAnime.filter(item => profileNormalize(item.status)==="completed" && profileAverage(item)!==null).map(item=>`<option value="anime:${item.anilist_id}" ${activeRecommendation?.item_type==="anime" && Number(activeRecommendation?.anilist_id)===Number(item.anilist_id)?"selected":""}>${escapeProfileHtml(item.title)} • ${profileAverage(item).toFixed(1)}</option>`).join("")}</select><textarea class="search-box profile-recommendation-note" id="activeRecommendationNote" maxlength="500" placeholder="Optional recommendation note">${escapeProfileHtml(activeRecommendation?.note||"")}</textarea><div class="profile-recommendation-actions"><button class="secondary-btn" id="saveRecommendationBtn" type="button">Save Recommendation</button><button class="secondary-btn" id="clearRecommendationBtn" type="button">Clear</button></div><div class="profile-message" id="recommendationMessage"></div></section>
           <div class="profile-setting-row"><div><strong>Private Profile</strong><small>Public profiles can be followed instantly. Private profiles approve follow requests.</small></div><label class="settings-switch"><input id="profilePrivateToggle" type="checkbox" ${currentProfileData.is_private ? "checked" : ""}><span></span></label></div><section class="franchise-settings"><h3>Franchise Options</h3><p>TV seasons and movies are grouped by default. Optional formats can be included when organizing franchises.</p><label class="profile-setting-row"><span><strong>Group TV Seasons</strong></span><input id="franchiseGroupTv" type="checkbox" ${currentProfileData.franchise_group_tv!==false?"checked":""}></label><label class="profile-setting-row"><span><strong>Group Movies</strong></span><input id="franchiseGroupMovies" type="checkbox" ${currentProfileData.franchise_group_movies!==false?"checked":""}></label><label class="profile-setting-row"><span><strong>Include OVAs</strong></span><input id="franchiseIncludeOva" type="checkbox" ${currentProfileData.franchise_include_ova?"checked":""}></label><label class="profile-setting-row"><span><strong>Include Specials</strong></span><input id="franchiseIncludeSpecials" type="checkbox" ${currentProfileData.franchise_include_specials?"checked":""}></label><label class="profile-setting-row"><span><strong>Include ONAs</strong></span><input id="franchiseIncludeOna" type="checkbox" ${currentProfileData.franchise_include_ona?"checked":""}></label><label class="profile-setting-row"><span><strong>Include Recaps</strong></span><input id="franchiseIncludeRecaps" type="checkbox" ${currentProfileData.franchise_include_recaps?"checked":""}></label></section><button class="primary-btn profile-save-btn" type="submit">Save Changes</button>
           <div class="profile-message" id="profileMessage"></div>
         </form>
@@ -256,15 +263,6 @@ function bindProfileEvents() {
   document.getElementById("closeProfileSettings").addEventListener("click", close);
   modal.addEventListener("click", (event) => { if (event.target === modal) close(); });
   document.getElementById("profileSignOutBtn").addEventListener("click", signOutUser);
-  document.getElementById("saveRecommendationBtn").addEventListener("click", async () => {
-    const value=document.getElementById("activeRecommendationSelect").value;
-    const message=document.getElementById("recommendationMessage");
-    if(!value){message.textContent="Choose a completed and rated anime.";return;}
-    const [,id]=value.split(":"); const item=profileAnime.find(row=>Number(row.anilist_id)===Number(id));
-    const {error}=await supabaseClient.rpc("set_active_recommendation",{p_item_type:"anime",p_anilist_id:Number(id),p_franchise_key:null,p_title:item.title,p_rating:Number(profileAverage(item).toFixed(1)),p_note:document.getElementById("activeRecommendationNote").value});
-    message.textContent=error?error.message:"Recommendation saved."; message.className=`profile-message ${error?"profile-error":"profile-success"}`;
-  });
-  document.getElementById("clearRecommendationBtn").addEventListener("click", async () => {const {error}=await supabaseClient.rpc("clear_active_recommendation");const message=document.getElementById("recommendationMessage");message.textContent=error?error.message:"Recommendation cleared.";if(!error){document.getElementById("activeRecommendationSelect").value="";document.getElementById("activeRecommendationNote").value="";}});
   document.getElementById("show18PostersToggle").addEventListener("change", (event) => {
     matSetShow18Posters(event.target.checked);
     renderProfile();

@@ -137,6 +137,42 @@ function trailerMarkup(media){
   return `<a class="trailer-external-link" href="${detailsEscapeHtml(trailer.id)}" target="_blank" rel="noopener">Watch trailer</a>`;
 }
 
+
+function recommendationEligibility(record){
+  const completed=detailsNormalize(record?.status)==="completed";
+  const rating=detailsAverage(record);
+  return {eligible:completed&&rating!==null,completed,rating};
+}
+async function fetchActiveRecommendation(){
+  const {data:authData}=await supabaseClient.auth.getUser();
+  const userId=authData?.user?.id;if(!userId)return null;
+  const {data,error}=await supabaseClient.from("recommendations").select("*").eq("recommender_id",userId).eq("active",true).maybeSingle();
+  if(error)throw error;return data;
+}
+function recommendationModalMarkup(record,title){
+  const eligibility=recommendationEligibility(record);
+  return `<div class="recommend-modal-backdrop hidden" id="recommendAnimeModal" aria-hidden="true"><section class="recommend-modal-card" role="dialog" aria-modal="true" aria-labelledby="recommendAnimeTitle"><button class="recommend-modal-close" id="closeRecommendBtn" type="button" aria-label="Close">×</button><div class="recommend-modal-heading"><img src="assets/icons/rp-gem.png" alt=""><div><h2 id="recommendAnimeTitle">Recommend this Anime</h2><p>Complete and rate this title here, then share it with your followers.</p></div></div><div class="recommend-guidelines"><h3>Recommendation Guidelines</h3><ul><li>You may have only <strong>one active recommendation</strong>.</li><li>This title must be marked <strong>Completed</strong>.</li><li>A personal rating is required.</li><li>A new recommendation replaces your current one.</li><li>Notes are optional and limited to 250 characters.</li></ul></div><label class="recommend-note-label" for="recommendStatus">Status <span>(required)</span></label><select id="recommendStatus" class="recommend-field"><option value="Completed" selected>Completed</option></select><label class="recommend-note-label" for="recommendRating">Your Rating <span>(required)</span></label><div class="recommend-rating-row"><input id="recommendRating" type="range" min="0.5" max="10" step="0.5" value="${eligibility.rating??8}"><output id="recommendRatingOutput">${Number(eligibility.rating??8).toFixed(1)}</output><span>/10</span></div><label class="recommend-note-label" for="recommendationNote">Notes <span>(optional)</span></label><textarea id="recommendationNote" maxlength="250" placeholder="Why are you recommending this title?"></textarea><div class="recommend-rp-summary"><strong>How you earn RP</strong><span>+1 Added • +3 Completed • +5 Rated • +10 Exact Match</span></div><div class="recommend-current" id="recommendCurrentState">Checking your current recommendation…</div><div class="recommend-message" id="recommendMessage"></div><div class="recommend-modal-actions"><button class="remove-recommendation-btn hidden" id="removeRecommendationBtn" type="button">Remove Recommendation</button><button class="secondary-action-btn" id="cancelRecommendBtn" type="button">Cancel</button><button class="recommend-confirm-btn" id="confirmRecommendBtn" type="button">Recommend Anime</button></div></section></div>`;
+}
+async function initializeRecommendationControl(record,title,media){
+  const button=document.getElementById("recommendAnimeBtn"),modal=document.getElementById("recommendAnimeModal");if(!button||!modal)return;
+  const setRecommendedState=(active)=>{
+    const same=active?.item_type==="anime"&&Number(active.anilist_id)===Number(media.id);
+    button.classList.toggle("is-recommended",same);
+    button.setAttribute("aria-pressed",same?"true":"false");
+    button.textContent=same?"✓ Recommended":"Recommend";
+    document.getElementById("activeRecommendationLabel")?.remove();
+    return same;
+  };
+  try{setRecommendedState(await fetchActiveRecommendation())}catch(error){console.warn("Active recommendation state could not be loaded.",error)}
+  const ratingInput=document.getElementById("recommendRating"),ratingOutput=document.getElementById("recommendRatingOutput");
+  ratingInput.oninput=()=>ratingOutput.textContent=Number(ratingInput.value).toFixed(1);
+  const close=()=>{modal.classList.add("hidden");modal.setAttribute("aria-hidden","true");document.body.classList.remove("modal-open")};
+  const open=async()=>{modal.classList.remove("hidden");modal.setAttribute("aria-hidden","false");document.body.classList.add("modal-open");const state=document.getElementById("recommendCurrentState"),removeButton=document.getElementById("removeRecommendationBtn"),confirmButton=document.getElementById("confirmRecommendBtn");removeButton.classList.add("hidden");confirmButton.classList.remove("hidden");try{const active=await fetchActiveRecommendation();const same=setRecommendedState(active);if(active){state.innerHTML=same?`You are currently recommending <strong>${detailsEscapeHtml(active.title||title)}</strong>. You can update it or remove the recommendation.`:`You are currently recommending <strong>${detailsEscapeHtml(active.title||"another title")}</strong>. Recommending <strong>${detailsEscapeHtml(title)}</strong> will replace it.`;confirmButton.textContent=same?"Update Recommendation":"Replace Recommendation";removeButton.classList.toggle("hidden",!same);if(same){document.getElementById("recommendationNote").value=active.note||"";ratingInput.value=Number(active.rating)||ratingInput.value;ratingOutput.textContent=Number(ratingInput.value).toFixed(1)}}else{state.textContent="You do not currently have an active recommendation.";confirmButton.textContent="Recommend Anime"}}catch(e){state.textContent="Your current recommendation could not be checked, but you can still continue."}};
+  button.onclick=open;document.getElementById("closeRecommendBtn").onclick=close;document.getElementById("cancelRecommendBtn").onclick=close;modal.onclick=e=>{if(e.target===modal)close()};
+  document.getElementById("removeRecommendationBtn").onclick=async()=>{const removeButton=document.getElementById("removeRecommendationBtn"),message=document.getElementById("recommendMessage");removeButton.disabled=true;removeButton.textContent="Removing…";message.textContent="";try{const {data:authData}=await supabaseClient.auth.getUser();const userId=authData?.user?.id;if(!userId)throw new Error("You must be signed in.");const {error}=await supabaseClient.from("recommendations").update({active:false}).eq("recommender_id",userId).eq("active",true);if(error)throw error;message.textContent="Recommendation removed.";message.className="recommend-message is-success";setRecommendedState(null);setTimeout(()=>location.reload(),400)}catch(error){message.textContent=error.message||"Could not remove recommendation.";removeButton.disabled=false;removeButton.textContent="Remove Recommendation"}};
+  document.getElementById("confirmRecommendBtn").onclick=async()=>{const confirm=document.getElementById("confirmRecommendBtn"),message=document.getElementById("recommendMessage");confirm.disabled=true;confirm.textContent="Saving…";message.textContent="";try{let saved=record;const rating=Number(ratingInput.value);if(saved){saved=await updateRecord(saved.id,{status:"Completed",rating_mode:"simple",overall_rating:rating});}else{const {data,error}=await supabaseClient.from("anime").insert({anilist_id:Number(media.id),title,status:"Completed",rating_mode:"simple",overall_rating:rating}).select("*").single();if(error)throw error;saved=data;await matClaimPioneerBadge({anilistId:media.id});}const {error}=await supabaseClient.rpc("set_active_recommendation",{p_item_type:"anime",p_anilist_id:Number(media.id),p_franchise_key:null,p_title:title,p_rating:rating,p_note:document.getElementById("recommendationNote").value.trim()});if(error)throw error;message.textContent="Recommendation saved.";message.className="recommend-message is-success";setTimeout(()=>location.href=`anime.html?id=${encodeURIComponent(saved.id)}`,500)}catch(error){message.textContent=error.message||"Could not save recommendation.";confirm.disabled=false;confirm.textContent="Recommend Anime"}};
+}
+
 function renderDetails(record,media,options={}){
   const root=document.getElementById("detailsRoot");
   const title=media?.title?.english||media?.title?.romaji||record?.title||"Anime";
@@ -170,12 +206,12 @@ function renderDetails(record,media,options={}){
             ${owned&&!informationalOnly&&rating!==null?`<span class="details-rating-badge">⭐ ${rating.toFixed(1)}</span>`:""}
             ${owned&&!informationalOnly&&record.favorite?'<span class="favorite-badge">♥ Favorite</span>':""}
             ${owned && !informationalOnly
-              ? `<span class="collection-membership-message">This anime is already in your collection.</span><button class="edit-anime-btn status-details-btn" id="editAnimeBtn" type="button">Change Status</button><button class="remove-anime-btn" id="removeAnimeBtn" type="button">Remove from Collection</button>`
+              ? `<span class="collection-membership-message">This anime is already in your collection.</span><button class="edit-anime-btn status-details-btn" id="editAnimeBtn" type="button">Change Status</button><button class="recommend-anime-btn" id="recommendAnimeBtn" type="button">Recommend</button><button class="remove-anime-btn" id="removeAnimeBtn" type="button">Remove from Collection</button>`
               : informationalOnly
                 ? (franchiseOwned
                     ? '<span class="collection-membership-message">This anime is already in your collection.</span>'
                     : '<button class="edit-anime-btn" id="addToCollectionBtn" type="button">+ Add to Collection</button>')
-                : '<button class="edit-anime-btn" id="addToCollectionBtn" type="button">+ Add to Collection</button>'}
+                : '<button class="edit-anime-btn" id="addToCollectionBtn" type="button">+ Add to Collection</button><button class="recommend-anime-btn" id="recommendAnimeBtn" type="button">Recommend</button>'}
           </div>
         </div>
       </div>
@@ -255,12 +291,15 @@ function renderDetails(record,media,options={}){
       </section>
     </div>
 
+    ${!informationalOnly?recommendationModalMarkup(record,title):""}
     ${owned&&!informationalOnly?editorMarkup(record,title):""}
   `;
 
   if (owned && !informationalOnly) {
     initializeEditor(record, media);
+    initializeRecommendationControl(record, title, media);
   } else {
+    if(!informationalOnly) initializeRecommendationControl(record,title,media);
     document.getElementById("addToCollectionBtn")?.addEventListener("click", async (event) => {
       const button = event.currentTarget;
       button.disabled = true;
@@ -341,7 +380,13 @@ function initializeEditor(record,media){
   document.getElementById("editAnimeForm").onsubmit=async(event)=>{
     event.preventDefault();
     try{
-      const updated=await updateRecord(record.id,{status:document.getElementById("editStatus").value});
+      const nextStatus=document.getElementById("editStatus").value;
+      if(detailsNormalize(nextStatus)!=="completed"){
+        const active=await fetchActiveRecommendation();
+        const isActiveTitle=active?.item_type==="anime"&&Number(active.anilist_id)===Number(media.id);
+        if(isActiveTitle) throw new Error("This title is your active recommendation. Remove or replace the recommendation before changing its status from Completed.");
+      }
+      const updated=await updateRecord(record.id,{status:nextStatus});
       closeModal(statusModal);renderDetails(updated,media);
     }catch(error){document.getElementById("editMessage").textContent=error.message||"Could not save status."}
   };
@@ -377,6 +422,8 @@ async function initAnimeDetails() {
     const record = recordId ? await fetchOwnRecordById(recordId) : await fetchOwnRecordByAnimeId(anilistId);
     const mediaId = Number(record?.anilist_id || anilistId);
     const media = await fetchAnimeDetails(mediaId);
+    const recSource=params.get("rec_source"), recIds=(params.get("recommenders")||params.get("recommender")||"").split(",").filter(Boolean);
+    if(recSource&&recIds.length){try{await supabaseClient.rpc("set_recommendation_attribution",{p_item_type:"anime",p_item_key:String(mediaId),p_source_mode:recSource,p_recommender_ids:recIds});}catch(error){console.warn("Recommendation source could not be recorded.",error)}}
 
     let franchiseKey = params.get("franchise_key") || record?.franchise_key || null;
     let franchise = null;

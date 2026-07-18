@@ -1,5 +1,84 @@
 const MAT_RELEASES = [
   {
+    version: "v5.3.5",
+    date: "July 2026",
+    announcementTitle: "Active recommendations are now protected and removable",
+    announcement: "MAT now prevents active recommendations from being changed away from Completed and adds a Remove Recommendation option directly inside the Recommended menu. View the Changelog tab for the complete details.",
+    groups: {
+      NEW: [
+        "Added a Remove Recommendation button when opening the active Recommended menu on anime and franchise pages."
+      ],
+      IMPROVED: [
+        "Active recommended titles and franchises must remain Completed until the recommendation is removed or replaced.",
+        "Removed the extra Your active recommendation label; the ✓ Recommended button now provides the full visual state."
+      ]
+    }
+  },
+
+  {
+    version: "v5.3.4",
+    date: "July 2026",
+    announcementTitle: "Recommendations now show their artwork and active state",
+    announcement: "MAT now displays poster artwork for active recommendations on profiles and clearly marks the title you are currently recommending. View the Changelog tab for the complete details.",
+    groups: {
+      FIXED: [
+        "Fixed missing poster artwork on profile recommendation cards, including franchise recommendations.",
+        "Updated poster lookup to use the franchise cover anime when the active recommendation is a franchise."
+      ],
+      IMPROVED: [
+        "The gold Recommend button now changes to ✓ Recommended for your active recommendation.",
+        "Added a Your active recommendation label beside the button so the selected title is immediately recognizable."
+      ]
+    }
+  },
+
+  {
+    version: "v5.3.3",
+    date: "July 2026",
+    announcementTitle: "Recommendation saving now completes the title correctly",
+    announcement: "MAT now saves franchise recommendations using the correct collection key and confirms the title is marked Completed with the selected rating before the recommendation is created. View the Changelog tab for the complete details.",
+    groups: {
+      FIXED: [
+        "Fixed the user_franchises.id does not exist error when recommending a franchise.",
+        "Updated franchise collection records using user_id and franchise_key, which are the actual membership keys.",
+        "Confirmed anime and franchise recommendation submissions mark the collection status as Completed and save the selected personal rating before creating the recommendation."
+      ]
+    }
+  },
+
+  {
+    version: "v5.3.2",
+    date: "July 2026",
+    announcementTitle: "Recommend is now visible beside Change Status",
+    announcement: "The gold Recommend button now appears directly beside Change Status on anime and franchise detail pages. Updated asset versions force browsers to load the new control instead of an older cached page. View the Changelog tab for the complete details.",
+    groups: {
+      FIXED: [
+        "Added the gold Recommend button directly beside Change Status on owned anime detail pages.",
+        "Added the same recommendation control to franchise detail pages.",
+        "Added cache-busting versions to the detail-page scripts and styles so the button appears after deployment."
+      ]
+    }
+  },
+
+  {
+    version: "v5.2.0",
+    date: "July 2026",
+    announcementTitle: "Recommendations are easier to find and use",
+    announcement: "MAT now keeps RP visible in the navigation bar, uses a compact RP badge on profiles, adds a clear Recommend control with built-in guidelines, and places recommendations above Trending on the dashboard. View the Changelog tab for the complete details.",
+    groups: {
+      NEW: [
+        "Added a visible Recommend button to eligible anime detail pages.",
+        "Added a recommendation guide explaining eligibility, the one-active-recommendation rule, replacement behavior, optional notes, and RP rewards."
+      ],
+      IMPROVED: [
+        "Made the RP gem and total reliably visible in the navigation bar.",
+        "Reduced the RP gem to a compact badge size on profile pages.",
+        "Moved Recommended by Users You Follow above Trending on the dashboard."
+      ]
+    }
+  },
+
+  {
     version: "v5.1.0",
     date: "July 2026",
     announcementTitle: "Follower and Following lists are now browsable",

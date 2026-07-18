@@ -22,6 +22,7 @@
         <a href="collection.html">Collection</a>
         <a href="ratings.html">Ratings</a>
         <a href="friends.html">Following</a>
+        <button class="nav-rp-button" type="button" aria-label="Recommendation Points. Open earning guide."><img src="assets/icons/rp-gem.png" alt="RP"><strong data-rp-total>0</strong><span>RP</span></button>
         <a class="profile-nav-link" href="profile.html" aria-label="Open profile" title="Profile">
           <img id="navProfileAvatar" src="assets/avatars/avatar-1.svg" alt="Profile" />
         </a>
@@ -73,24 +74,24 @@
       <article class="panel dashboard-discovery-panel">
         <div class="panel-title">
           <div>
-            <h2>🔥 Trending</h2>
-            <p class="panel-subtitle">Anime trending right now.</p>
-          </div>
-        </div>
-        <div class="dashboard-media-grid" id="trendingAnime">
-          <div class="loading">Loading trending anime…</div>
-        </div>
-      </article>
-
-      <article class="panel dashboard-discovery-panel">
-        <div class="panel-title">
-          <div>
             <h2>💎 Recommended by Users You Follow</h2>
             <p class="panel-subtitle">Discover the active recommendations shared by users you follow.</p>
           </div>
         </div>
         <div class="dashboard-media-grid" id="friendRatedAnime">
           <div class="loading">Loading recommendations…</div>
+        </div>
+      </article>
+
+      <article class="panel dashboard-discovery-panel">
+        <div class="panel-title">
+          <div>
+            <h2>🔥 Trending</h2>
+            <p class="panel-subtitle">Anime trending right now.</p>
+          </div>
+        </div>
+        <div class="dashboard-media-grid" id="trendingAnime">
+          <div class="loading">Loading trending anime…</div>
         </div>
       </article>
     </section>
@@ -122,7 +123,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-client.js"></script>
-  <script src="js/profile-nav.js"></script>
+  <script src="js/profile-nav.js?v=5.2.0"></script>
   <script src="js/content-preferences.js"></script>
   <script src="js/pioneer-badge.js"></script>
   <script src="js/dashboard.js"></script>
@@ -133,7 +134,7 @@
       }
     });
   </script>
-  <script src="js/version.js?v=5.1.0"></script>
+  <script src="js/version.js?v=5.3.5"></script>
   <script>
     const changelogScript = document.createElement("script");
     changelogScript.src = `js/changelog.js?v=${Date.now()}`;

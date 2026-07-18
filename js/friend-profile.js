@@ -5,6 +5,7 @@ let activeFriendUserId = null;
 let friendProfileFranchises = [];
 let friendProfileTopFive = [];
 let friendProfileFriendCount = 0;
+let friendActiveRecommendation = null;
 
 function fpEscape(value) {
   return String(value ?? "")
@@ -114,11 +115,19 @@ async function fetchFriendPosters(ids) {
   ]));
 }
 
+function fpRecommendationPosterId(recommendation) {
+  if (!recommendation) return null;
+  if (recommendation.item_type === "anime") return Number(recommendation.anilist_id) || null;
+  const franchise = friendProfileFranchises.find((item) => Number(item.franchise_key) === Number(recommendation.franchise_key));
+  return Number(franchise?.cover_anilist_id) || null;
+}
+
 async function renderFriendProfileShell(profile) {
   const profileBadges = await matLoadUserBadges(profile.user_id);
   const root = document.getElementById("friendProfileRoot");
   const topFive = friendProfileTopFive;
-  const topPosters = await fetchFriendPosters(topFive.map((item) => item.anilist_id));
+  const recommendationPosterId=fpRecommendationPosterId(friendActiveRecommendation);
+  const recPosterIds=topFive.map((item)=>item.anilist_id);if(recommendationPosterId)recPosterIds.push(recommendationPosterId);const topPosters = await fetchFriendPosters(recPosterIds);
   const count = (status) => friendProfileAnime.filter((item) => fpNormalize(item.status) === status).length;
 
   root.innerHTML = `
@@ -132,6 +141,7 @@ async function renderFriendProfileShell(profile) {
       <p class="profile-social-meta">${profile.is_private
         ? `<span title="This user’s social lists are private">${friendProfileFriendCount.toLocaleString()} Followers</span><span>•</span><span title="This user’s social lists are private">${Number(profile.following_count||0).toLocaleString()} Following</span>`
         : `<a href="friends.html?user=${encodeURIComponent(profile.user_id)}&tab=followers">${friendProfileFriendCount.toLocaleString()} Followers</a><span>•</span><a href="friends.html?user=${encodeURIComponent(profile.user_id)}&tab=following">${Number(profile.following_count||0).toLocaleString()} Following</a>`}<span>•</span><span>${fpEscape(fpJoinedLabel(profile.created_at))}</span></p>
+      ${friendActiveRecommendation?`<section class="profile-active-recommendation"><div class="profile-section-heading"><h3>💎 Recommendation</h3><span>Featured by ${fpEscape(profile.username)}</span></div><a class="dashboard-media-card friend-rating-card profile-rec-card" href="${friendActiveRecommendation.item_type==='franchise'?`franchise.html?key=${friendActiveRecommendation.franchise_key}&rec_source=profile&recommender=${profile.user_id}`:`anime.html?anilist_id=${friendActiveRecommendation.anilist_id}&rec_source=profile&recommender=${profile.user_id}`}">${topPosters.get(Number(recommendationPosterId))?.url?`<img class="profile-rec-poster" src="${fpEscape(topPosters.get(Number(recommendationPosterId)).url)}" alt="${fpEscape(friendActiveRecommendation.title)} poster">`:'<div class="profile-rec-poster poster-placeholder">🎌</div>'}<div class="dashboard-media-body"><h3>${fpEscape(friendActiveRecommendation.title)}</h3><strong>⭐ ${Number(friendActiveRecommendation.rating).toFixed(1)}</strong>${friendActiveRecommendation.note?`<small>${fpEscape(friendActiveRecommendation.note)}</small>`:""}</div></a></section>`:""}
       <div class="profile-stat-grid">
         <div><strong>${count("in progress")}</strong><span>Watching</span></div>
         <div><strong>${count("waiting")}</strong><span>Waiting</span></div>
@@ -226,17 +236,19 @@ async function initFriendProfile() {
   }
 
   try {
-    const [profile, anime, franchises, topFive, friendCount] = await Promise.all([
+    const [profile, anime, franchises, topFive, friendCount, recommendation] = await Promise.all([
       fetchFriendProfile(activeFriendUserId),
       fetchFriendAnime(activeFriendUserId),
       fetchFriendFranchises(activeFriendUserId),
       fetchFriendTopFive(activeFriendUserId),
-      supabaseClient.rpc("get_follower_count", { p_user_id: activeFriendUserId }).then(({data,error}) => error ? 0 : Number(data) || 0)
+      supabaseClient.rpc("get_follower_count", { p_user_id: activeFriendUserId }).then(({data,error}) => error ? 0 : Number(data) || 0),
+      supabaseClient.from("recommendations").select("*").eq("recommender_id",activeFriendUserId).eq("active",true).maybeSingle().then(({data,error})=>error?null:data)
     ]);
 
     friendProfileFranchises = franchises;
     friendProfileTopFive = topFive;
     friendProfileFriendCount = friendCount;
+    friendActiveRecommendation = recommendation;
     friendProfileAnime = anime;
     await renderFriendProfileShell(profile);
     await renderFriendAnime();
