@@ -187,12 +187,26 @@ function fpRecommendationHref(recommendation, profileUserId, media) {
   return anilistId ? `anime.html?anilist_id=${encodeURIComponent(anilistId)}&rec_token=1` : "#";
 }
 
+function fpRecommendationItemKey(recommendation, media) {
+  return recommendation?.item_type === "franchise"
+    ? Number(recommendation?.franchise_key) || null
+    : fpRecommendationAnimeId(recommendation, media);
+}
+
+async function fpRecommendationInViewerCollection(recommendation, media) {
+  const itemKey = fpRecommendationItemKey(recommendation, media);
+  if (!itemKey) return false;
+  return window.matRecommendationCollectionState
+    ? window.matRecommendationCollectionState.isInCollection(recommendation.item_type, itemKey)
+    : false;
+}
+
 async function fpAddRecommendationToQueue(recommendation, profileUserId, media, button) {
   button.disabled = true;
   button.textContent = "Adding…";
   try {
     fpStoreRecommendationSource(recommendation, profileUserId, media);
-    const itemKey = recommendation.item_type === "franchise" ? String(recommendation.franchise_key) : String(fpRecommendationAnimeId(recommendation, media) || "");
+    const itemKey = String(fpRecommendationItemKey(recommendation, media) || "");
     if (!itemKey || itemKey === "null" || itemKey === "undefined") throw new Error("This recommendation is missing its title ID.");
     const { error: attributionError } = await supabaseClient.rpc("set_recommendation_attribution", { p_item_type: recommendation.item_type, p_item_key: itemKey, p_source_mode: "profile", p_recommender_ids: [profileUserId] });
     if (attributionError) throw attributionError;
@@ -213,7 +227,7 @@ async function fpAddRecommendationToQueue(recommendation, profileUserId, media, 
       const anilistId = fpRecommendationAnimeId(recommendation, media);
       await window.matClaimPioneerBadge?.({ anilistId });
     }
-    button.textContent = "In Your Collection";
+    window.matRecommendationCollectionState?.applyButtonState(button, true);
   } catch (error) {
     const duplicate = error?.code === "23505" || /duplicate|already exists/i.test(error?.message || "");
     button.textContent = duplicate ? "In Your Collection" : "Add to Queue";
@@ -236,6 +250,9 @@ async function renderFriendProfileShell(profile) {
   const recommendationPosterId=fpRecommendationPosterId(friendActiveRecommendation);
   const recPosterIds=topFive.map((item)=>item.anilist_id);if(recommendationPosterId)recPosterIds.push(recommendationPosterId);const topPosters = await fetchFriendPosters(recPosterIds);
   const recommendationMedia = friendActiveRecommendation ? await fpResolveRecommendationMedia(friendActiveRecommendation) : null;
+  const recommendationInViewerCollection = friendActiveRecommendation
+    ? await fpRecommendationInViewerCollection(friendActiveRecommendation, recommendationMedia)
+    : false;
   const count = (status) => friendProfileAnime.filter((item) => fpNormalize(item.status) === status).length;
 
   root.innerHTML = `
@@ -249,7 +266,7 @@ async function renderFriendProfileShell(profile) {
       <p class="profile-social-meta">${profile.is_private
         ? `<span title="This user’s social lists are private">${friendProfileFriendCount.toLocaleString()} Followers</span><span>•</span><span title="This user’s social lists are private">${Number(profile.following_count||0).toLocaleString()} Following</span>`
         : `<a href="friends.html?user=${encodeURIComponent(profile.user_id)}&tab=followers">${friendProfileFriendCount.toLocaleString()} Followers</a><span>•</span><a href="friends.html?user=${encodeURIComponent(profile.user_id)}&tab=following">${Number(profile.following_count||0).toLocaleString()} Following</a>`}<span>•</span><span>${fpEscape(fpJoinedLabel(profile.created_at))}</span></p>
-      ${friendActiveRecommendation?`<section class="profile-active-recommendation"><div class="profile-section-heading"><h3>💎 Recommendation</h3><span>Featured by ${fpEscape(profile.username)}</span></div><article class="dashboard-media-card friend-rating-card profile-rec-card"><a class="profile-rec-poster-link${matAdultPosterClass(recommendationMedia?.isAdult)}" href="${fpRecommendationHref(friendActiveRecommendation,profile.user_id,recommendationMedia)}">${recommendationMedia?.url?`<img class="profile-rec-poster" src="${fpEscape(recommendationMedia.url)}" alt="${fpEscape(friendActiveRecommendation.title)} poster" loading="lazy">`:'<div class="profile-rec-poster poster-placeholder">🎌</div>'}${matAdultPosterOverlay(recommendationMedia?.isAdult)}</a><div class="dashboard-media-body"><a class="recommendation-title-link" href="${fpRecommendationHref(friendActiveRecommendation,profile.user_id,recommendationMedia)}" data-profile-recommendation-open><h3>${fpEscape(friendActiveRecommendation.title)}</h3></a><strong>⭐ ${Number(friendActiveRecommendation.rating).toFixed(1)}</strong>${friendActiveRecommendation.note?`<small>${fpEscape(friendActiveRecommendation.note)}</small>`:""}<button class="dashboard-queue-btn" id="profileRecommendationQueueBtn" type="button">Add to Queue</button></div></article></section>`:""}
+      ${friendActiveRecommendation?`<section class="profile-active-recommendation"><div class="profile-section-heading"><h3>💎 Recommendation</h3><span>Featured by ${fpEscape(profile.username)}</span></div><article class="dashboard-media-card friend-rating-card profile-rec-card"><a class="profile-rec-poster-link${matAdultPosterClass(recommendationMedia?.isAdult)}" href="${fpRecommendationHref(friendActiveRecommendation,profile.user_id,recommendationMedia)}" data-profile-recommendation-open>${recommendationMedia?.url?`<img class="profile-rec-poster" src="${fpEscape(recommendationMedia.url)}" alt="${fpEscape(friendActiveRecommendation.title)} poster" loading="lazy">`:'<div class="profile-rec-poster poster-placeholder">🎌</div>'}${matAdultPosterOverlay(recommendationMedia?.isAdult)}</a><div class="dashboard-media-body"><a class="recommendation-title-link" href="${fpRecommendationHref(friendActiveRecommendation,profile.user_id,recommendationMedia)}" data-profile-recommendation-open><h3>${fpEscape(friendActiveRecommendation.title)}</h3></a><strong>⭐ ${Number(friendActiveRecommendation.rating).toFixed(1)}</strong>${friendActiveRecommendation.note?`<small>${fpEscape(friendActiveRecommendation.note)}</small>`:""}<button class="dashboard-queue-btn" id="profileRecommendationQueueBtn" type="button" ${recommendationInViewerCollection ? "disabled" : ""}>${recommendationInViewerCollection ? "In Your Collection" : "Add to Queue"}</button></div></article></section>`:""}
       <div class="profile-stat-grid">
         <div><strong>${count("in progress")}</strong><span>Watching</span></div>
         <div><strong>${count("waiting")}</strong><span>Waiting</span></div>

@@ -1,5 +1,20 @@
 const MAT_RELEASES = [
   {
+    version: "v5.4.2",
+    date: "July 2026",
+    announcementTitle: "Recommendation collection status is now consistent",
+    announcement: "Recommendation cards now check the current viewer’s collection every time the dashboard or a followed user’s profile loads. Titles already added show In Your Collection everywhere, while duplicate RP protection remains unchanged. View the Changelog tab for the complete details.",
+    groups: {
+      FIXED: [
+        "Fixed followed-user profile recommendation cards showing Add to Queue after the viewer had already added the title from the dashboard or title page.",
+        "Dashboard and profile recommendation cards now use the same live collection-state check for anime and franchises.",
+        "Recommendation buttons immediately switch to In Your Collection after a successful add and remain non-clickable on future page loads.",
+        "Preserved the existing database duplicate protection so revisiting an outdated page or repeating an add attempt cannot award another +1 RP."
+      ]
+    }
+  },
+
+  {
     version: "v5.4.1",
     date: "July 2026",
     announcementTitle: "Recommendation RP credit and collection removal are fixed",

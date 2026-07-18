@@ -380,12 +380,14 @@ function dashboardRecommendationHref(group, media) {
 }
 
 async function dashboardRecommendationInCollection(anime, group, media) {
-  if (group.item_type === "anime") return dashboardInCollection(anime, dashboardRecommendationAnimeId(group, media));
-  const { data: authData } = await supabaseClient.auth.getUser();
-  const userId = authData?.user?.id;
-  if (!userId) return false;
-  const { data } = await supabaseClient.from("user_franchises").select("franchise_key").eq("user_id", userId).eq("franchise_key", Number(group.franchise_key)).maybeSingle();
-  return Boolean(data);
+  const itemKey = group.item_type === "franchise"
+    ? Number(group.franchise_key) || null
+    : dashboardRecommendationAnimeId(group, media);
+  if (!itemKey) return false;
+  if (window.matRecommendationCollectionState) {
+    return window.matRecommendationCollectionState.isInCollection(group.item_type, itemKey);
+  }
+  return group.item_type === "anime" ? dashboardInCollection(anime, itemKey) : false;
 }
 
 async function addRecommendationToQueue(group, media, button, anime) {
@@ -423,7 +425,7 @@ async function addRecommendationToQueue(group, media, button, anime) {
       await matClaimPioneerBadge({ anilistId });
     }
 
-    button.textContent = "In Your Collection";
+    window.matRecommendationCollectionState?.applyButtonState(button, true);
   } catch (error) {
     const duplicate = error?.code === "23505" || /duplicate|already exists/i.test(error?.message || "");
     button.textContent = duplicate ? "In Your Collection" : "Add to Queue";
