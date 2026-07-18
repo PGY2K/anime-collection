@@ -1,5 +1,20 @@
 const MAT_RELEASES = [
   {
+    version: "v5.3.8",
+    date: "July 2026",
+    announcementTitle: "Recommendation title links now use a verified handoff",
+    announcement: "Recommendation cards now store their verified title and attribution data before opening the title page. The title page can recover from an invalid stored ID, and credit is saved when the follower actually adds the title. View the Changelog tab for the complete details.",
+    groups: {
+      FIXED: [
+        "Rebuilt profile and dashboard recommendation clicks to use a verified AniList ID instead of relying on a fragile generated route.",
+        "Added a session handoff containing the recommendation title, source, and eligible recommender IDs before navigation.",
+        "Added title-based recovery on the anime page when an older recommendation contains an invalid or missing AniList ID.",
+        "Recommendation attribution is now written when Add to Collection is completed, while opening the title page preserves the source without prematurely awarding credit."
+      ]
+    }
+  },
+
+  {
     version: "v5.3.7",
     date: "July 2026",
     announcementTitle: "Recommendation links now open the correct title page",

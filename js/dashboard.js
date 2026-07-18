@@ -346,19 +346,37 @@ function dashboardRecommendationMedia(group, mediaMap) {
   };
 }
 
-function dashboardRecommendationHref(group, media) {
-  const recommenders = group.recommenders.map((item) => item.recommender_id).filter(Boolean).join(",");
+
+function dashboardStoreRecommendationSource(group, media) {
+  const recommenderIds = (group.recommenders || []).map((item) => item.recommender_id).filter(Boolean);
+  const payload = {
+    itemType: group.item_type,
+    itemKey: group.item_type === "franchise" ? String(group.franchise_key || "") : String(dashboardRecommendationAnimeId(group, media) || ""),
+    anilistId: group.item_type === "anime" ? dashboardRecommendationAnimeId(group, media) : null,
+    franchiseKey: group.item_type === "franchise" ? Number(group.franchise_key) || null : null,
+    title: String(group.title || ""),
+    sourceMode: "dashboard",
+    recommenderIds,
+    createdAt: Date.now()
+  };
+  sessionStorage.setItem("matRecommendationSource", JSON.stringify(payload));
+  return payload;
+}
+
+function dashboardOpenRecommendation(group, media) {
+  const payload = dashboardStoreRecommendationSource(group, media);
   if (group.item_type === "franchise") {
-    return `franchise.html?key=${encodeURIComponent(group.franchise_key)}&rec_source=dashboard&recommenders=${encodeURIComponent(recommenders)}`;
+    if (!payload.franchiseKey) throw new Error("This recommendation is missing its franchise key.");
+    location.href = `franchise.html?key=${encodeURIComponent(payload.franchiseKey)}&rec_token=1`;
+    return;
   }
+  if (!payload.anilistId) throw new Error("This recommendation is missing its AniList ID.");
+  location.href = `anime.html?anilist_id=${encodeURIComponent(payload.anilistId)}&rec_token=1`;
+}
+function dashboardRecommendationHref(group, media) {
+  if (group.item_type === "franchise") return `franchise.html?key=${encodeURIComponent(group.franchise_key)}&rec_token=1`;
   const anilistId = dashboardRecommendationAnimeId(group, media);
-  const query = new URLSearchParams({
-    rec_source: "dashboard",
-    recommenders,
-    rec_title: String(group.title || "")
-  });
-  if (anilistId) query.set("anilist_id", String(anilistId));
-  return `anime.html?${query.toString()}`;
+  return anilistId ? `anime.html?anilist_id=${encodeURIComponent(anilistId)}&rec_token=1` : "#";
 }
 
 async function dashboardRecommendationInCollection(anime, group, media) {
@@ -377,6 +395,7 @@ async function addRecommendationToQueue(group, media, button, anime) {
   const itemKey = group.item_type === "franchise" ? String(group.franchise_key) : String(dashboardRecommendationAnimeId(group, media) || "");
 
   try {
+    dashboardStoreRecommendationSource(group, media);
     const { error: attributionError } = await supabaseClient.rpc("set_recommendation_attribution", {
       p_item_type: group.item_type,
       p_item_key: itemKey,
@@ -441,16 +460,25 @@ async function renderRatedByFriends(anime, rows) {
 
   container.innerHTML = states.map(({ group, media, inCollection }, index) => `
     <article class="dashboard-media-card friend-rating-card" data-recommendation-index="${index}">
-      <a class="dashboard-poster dashboard-poster-link${matAdultPosterClass(media.isAdult)}" href="${dashboardRecommendationHref(group, media)}" aria-label="View ${dashboardEscapeHtml(group.title)} details">
+      <a class="dashboard-poster dashboard-poster-link${matAdultPosterClass(media.isAdult)}" href="${dashboardRecommendationHref(group, media)}" data-recommendation-open="${index}" aria-label="View ${dashboardEscapeHtml(group.title)} details">
         ${media.url ? `<img src="${dashboardEscapeHtml(media.url)}" alt="${dashboardEscapeHtml(group.title)} poster" loading="lazy">` : '<div class="poster-placeholder">🎌</div>'}
         ${matAdultPosterOverlay(media.isAdult)}
       </a>
       <div class="dashboard-media-body">
-        <a class="recommendation-title-link" href="${dashboardRecommendationHref(group, media)}"><h3>${dashboardEscapeHtml(group.title)}</h3></a>
+        <a class="recommendation-title-link" href="${dashboardRecommendationHref(group, media)}" data-recommendation-open="${index}"><h3>${dashboardEscapeHtml(group.title)}</h3></a>
         <div class="friend-rating-summary">${group.recommenders.map((item) => `<div class="friend-rating-line"><span>${dashboardEscapeHtml(item.username)} • ${Math.round(Number(item.recommendation_points) || 0).toLocaleString()} RP</span><strong>⭐ ${Number(item.rating).toFixed(1)}</strong>${item.note ? `<small>${dashboardEscapeHtml(item.note)}</small>` : ""}</div>`).join("")}</div>
         <button class="dashboard-queue-btn" type="button" data-recommendation-queue="${index}" ${inCollection ? "disabled" : ""}>${inCollection ? "In Your Collection" : "Add to Queue"}</button>
       </div>
     </article>`).join("");
+
+  container.querySelectorAll("[data-recommendation-open]").forEach((link) => {
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+      const state = states[Number(link.dataset.recommendationOpen)];
+      try { dashboardOpenRecommendation(state.group, state.media); }
+      catch (error) { alert(error.message || "Could not open this recommendation."); }
+    });
+  });
 
   container.querySelectorAll("[data-recommendation-queue]").forEach((button) => {
     const state = states[Number(button.dataset.recommendationQueue)];

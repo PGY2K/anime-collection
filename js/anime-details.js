@@ -43,6 +43,38 @@ function detailsPositiveInteger(...values){
   return null;
 }
 
+
+function detailsReadRecommendationSource(params) {
+  let stored = null;
+  try {
+    stored = JSON.parse(sessionStorage.getItem("matRecommendationSource") || "null");
+  } catch (_) { stored = null; }
+  if (stored && Date.now() - Number(stored.createdAt || 0) > 30 * 60 * 1000) {
+    sessionStorage.removeItem("matRecommendationSource");
+    stored = null;
+  }
+  const urlIds = (params.get("recommenders") || params.get("recommender") || "").split(",").filter(Boolean);
+  return {
+    sourceMode: params.get("rec_source") || stored?.sourceMode || null,
+    recommenderIds: urlIds.length ? urlIds : (Array.isArray(stored?.recommenderIds) ? stored.recommenderIds : []),
+    anilistId: detailsPositiveInteger(params.get("anilist_id"), stored?.anilistId),
+    title: params.get("rec_title") || stored?.title || "",
+    itemType: stored?.itemType || "anime",
+    itemKey: stored?.itemKey || null
+  };
+}
+
+async function detailsSaveRecommendationAttribution(source, mediaId) {
+  if (!source?.sourceMode || !source?.recommenderIds?.length) return;
+  const { error } = await supabaseClient.rpc("set_recommendation_attribution", {
+    p_item_type: "anime",
+    p_item_key: String(mediaId),
+    p_source_mode: source.sourceMode,
+    p_recommender_ids: source.recommenderIds
+  });
+  if (error) throw error;
+  sessionStorage.removeItem("matRecommendationSource");
+}
 async function resolveAnimeIdFromTitle(title){
   const search=String(title||"").trim();
   if(!search)return null;
@@ -123,7 +155,9 @@ async function fetchAnimeDetails(anilistId){
   try {
     const response=await fetch(ANIME_DETAILS_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify({query,variables:{id:Number(anilistId)}})});
     if(!response.ok){const error=new Error("Anime information request failed.");error.matErrorType="source";throw error;}
-    const json=await response.json(); return json?.data?.Media??null;
+    const json=await response.json();
+    if(json?.errors?.length){const error=new Error(json.errors[0]?.message||"Anime information request failed.");error.matErrorType="source";throw error;}
+    return json?.data?.Media??null;
   } catch(error) {
     if(!error.matErrorType) error.matErrorType = navigator.onLine === false ? "offline" : "source";
     throw error;
@@ -326,9 +360,11 @@ function renderDetails(record,media,options={}){
       try {
         if (franchise) {
           await addFranchiseToCollection(franchise, media);
+          await detailsSaveRecommendationAttribution(window.matPendingRecommendationSource, media.id);
           window.location.href = `franchise.html?key=${encodeURIComponent(franchise.franchiseKey)}`;
         } else {
           const newRecord = await addStandaloneToCollection(media);
+          await detailsSaveRecommendationAttribution(window.matPendingRecommendationSource, media.id);
           window.location.href = `anime.html?id=${encodeURIComponent(newRecord.id)}`;
         }
       } catch (error) {
@@ -431,8 +467,10 @@ async function initAnimeDetails() {
   const root = document.getElementById("detailsRoot");
   const params = new URLSearchParams(location.search);
   const recordId = params.get("id");
-  const requestedAnimeId = detailsPositiveInteger(params.get("anilist_id"));
-  const recommendationTitle = params.get("rec_title");
+  const recommendationSource = detailsReadRecommendationSource(params);
+  window.matPendingRecommendationSource = recommendationSource;
+  const requestedAnimeId = detailsPositiveInteger(params.get("anilist_id"), recommendationSource.anilistId);
+  const recommendationTitle = params.get("rec_title") || recommendationSource.title;
   if (!recordId && !requestedAnimeId && !recommendationTitle) {
     root.innerHTML = '<div class="error">No anime was selected.</div>';
     return;
@@ -443,11 +481,22 @@ async function initAnimeDetails() {
     let mediaId = detailsPositiveInteger(record?.anilist_id, requestedAnimeId);
     if (!mediaId && recommendationTitle) mediaId = await resolveAnimeIdFromTitle(recommendationTitle);
     if (!mediaId) throw new Error("This recommendation is missing a valid AniList title ID.");
-    if (!record) record = await fetchOwnRecordByAnimeId(mediaId);
-    const media = await fetchAnimeDetails(mediaId);
+
+    let media = null;
+    try { media = await fetchAnimeDetails(mediaId); }
+    catch (error) {
+      if (!recommendationTitle) throw error;
+      const recoveredId = await resolveAnimeIdFromTitle(recommendationTitle);
+      if (!recoveredId || recoveredId === mediaId) throw error;
+      mediaId = recoveredId;
+      media = await fetchAnimeDetails(mediaId);
+    }
+    if (!media && recommendationTitle) {
+      const recoveredId = await resolveAnimeIdFromTitle(recommendationTitle);
+      if (recoveredId && recoveredId !== mediaId) { mediaId = recoveredId; media = await fetchAnimeDetails(mediaId); }
+    }
     if (!media) throw new Error("This anime could not be found.");
-    const recSource=params.get("rec_source"), recIds=(params.get("recommenders")||params.get("recommender")||"").split(",").filter(Boolean);
-    if(recSource&&recIds.length){try{await supabaseClient.rpc("set_recommendation_attribution",{p_item_type:"anime",p_item_key:String(mediaId),p_source_mode:recSource,p_recommender_ids:recIds});}catch(error){console.warn("Recommendation source could not be recorded.",error)}}
+    if (!record) record = await fetchOwnRecordByAnimeId(mediaId);
 
     let franchiseKey = params.get("franchise_key") || record?.franchise_key || null;
     let franchise = null;
