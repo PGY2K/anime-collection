@@ -805,11 +805,12 @@ body.modal-open { overflow: hidden; }
 /* v5.3.6 recommendation attribution controls */
 .recommendation-title-link{text-decoration:none;color:inherit}.recommendation-title-link:hover h3{color:#f6d36b}.friend-rating-card .dashboard-queue-btn{margin-top:auto}
 
-/* v5.4.5 global emergency ticker */
-.mat-emergency-banner{position:relative;z-index:2000;width:100%;height:40px;overflow:hidden;border-bottom:1px solid rgba(255,130,144,.58);background:linear-gradient(90deg,#9f1239,#be123c,#9f1239);color:#fff;box-shadow:0 6px 22px rgba(0,0,0,.28)}
-.mat-emergency-banner[hidden]{display:none!important}.mat-emergency-track{display:flex;width:max-content;min-width:200%;height:100%;align-items:center;white-space:nowrap;animation:matEmergencyTicker 24s linear infinite;will-change:transform}
-.mat-emergency-message{display:inline-block;min-width:100vw;padding-right:5rem;font-size:.86rem;font-weight:900;letter-spacing:.075em;text-transform:uppercase}
-@keyframes matEmergencyTicker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-@media(prefers-reduced-motion:reduce){.mat-emergency-track{animation-duration:45s}}
+/* v5.4.6 theme-matched emergency ticker */
+.mat-emergency-banner{position:relative;z-index:2000;width:100%;height:40px;overflow:hidden;border-bottom:1px solid var(--border);background:linear-gradient(90deg,rgba(18,18,38,.98),rgba(45,25,82,.98),rgba(18,18,38,.98));color:var(--text);box-shadow:0 6px 22px rgba(0,0,0,.28)}
+.mat-emergency-banner[hidden]{display:none!important}
+.mat-emergency-track{display:flex;width:max-content;height:100%;align-items:center;white-space:nowrap;will-change:transform;animation:matEmergencyTicker 24s linear infinite}
+.mat-emergency-message{display:inline-block;padding:0 1rem;font-size:.86rem;font-weight:850;letter-spacing:.045em;color:#fff}
+@keyframes matEmergencyTicker{from{transform:translateX(100vw)}to{transform:translateX(-100%)}}
+@media(prefers-reduced-motion:reduce){.mat-emergency-track{animation-duration:42s}}
 @media(max-width:600px){.mat-emergency-banner{height:36px}.mat-emergency-message{font-size:.76rem}}
 .mat-footer-version{color:var(--muted);font-weight:800}

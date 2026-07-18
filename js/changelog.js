@@ -1,5 +1,21 @@
 const MAT_RELEASES = [
   {
+    version: "v5.4.6",
+    date: "July 2026",
+    announcementTitle: "Emergency banners are easier to read",
+    announcement: "Important MAT messages now match the site theme and scroll with a clear break before repeating.",
+    groups: {
+      IMPROVED: [
+        "Changed the global emergency banner from red styling to MAT's dark purple theme.",
+        "Removed the automatic Emergency Message prefix and ensured an unused banner starts completely blank.",
+        "Rebuilt the ticker animation so one message fully leaves the screen before the next loop begins.",
+        "Removed the duplicate ticker copy that caused the end and beginning of a message to run together.",
+        "Established a simpler, user-friendly announcement format for What's New while keeping technical detail in the Changelog."
+      ]
+    }
+  },
+
+  {
     version: "v5.4.5",
     date: "July 2026",
     announcementTitle: "Franchise options are easier to reach and emergency notices are now available",

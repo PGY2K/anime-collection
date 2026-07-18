@@ -1,4 +1,4 @@
-window.MAT_VERSION = "v5.4.5";
+window.MAT_VERSION = "v5.4.6";
 
 (function initMatSharedChrome() {
   const bannerId = "matEmergencyBanner";
@@ -33,17 +33,17 @@ window.MAT_VERSION = "v5.4.5";
     banner.hidden = true;
     banner.setAttribute("role", "status");
     banner.setAttribute("aria-live", "polite");
-    banner.innerHTML = '<div class="mat-emergency-track"><span class="mat-emergency-message"></span><span class="mat-emergency-message" aria-hidden="true"></span></div>';
+    banner.innerHTML = '<div class="mat-emergency-track"><span class="mat-emergency-message"></span></div>';
     document.body.prepend(banner);
     return banner;
   }
 
   function showBanner(message) {
     const banner = ensureBannerElement();
-    const clean = String(message || "").trim();
-    banner.querySelectorAll(".mat-emergency-message").forEach((node) => {
-      node.textContent = clean ? `EMERGENCY MESSAGE  •  ${clean}  •  ` : "";
-    });
+    let clean = String(message || "").trim();
+    if (clean.toLowerCase() === "emergency message") clean = "";
+    const messageNode = banner.querySelector(".mat-emergency-message");
+    if (messageNode) messageNode.textContent = clean;
     banner.hidden = !clean;
     document.body.classList.toggle("mat-has-emergency-banner", Boolean(clean));
   }

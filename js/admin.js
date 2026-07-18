@@ -33,7 +33,7 @@ function renderAdminShell() {
       </div>
       <form id="adminEmergencyBannerForm" class="admin-emergency-form">
         <label for="adminEmergencyBannerMessage">Banner Message</label>
-        <input class="search-box" id="adminEmergencyBannerMessage" type="text" maxlength="300" placeholder="Example: MAT will be unavailable tonight from 11 PM to midnight." autocomplete="off" />
+        <input class="search-box" id="adminEmergencyBannerMessage" type="text" maxlength="300" autocomplete="off" />
         <div class="admin-emergency-actions">
           <button class="primary-btn" id="adminSaveEmergencyBannerBtn" type="submit">Save Banner</button>
           <button class="secondary-btn" id="adminClearEmergencyBannerBtn" type="button">Clear Banner</button>
@@ -109,8 +109,10 @@ async function loadEmergencyBannerAdmin() {
   if (!input || !state) return;
   const { data, error } = await supabaseClient.from("app_emergency_banner").select("message").eq("id", 1).maybeSingle();
   if (error) { state.className = "admin-message error"; state.textContent = error.message; return; }
-  input.value = data?.message || "";
-  state.textContent = data?.message ? "A banner is currently active." : "No emergency banner is active.";
+  const savedMessage = String(data?.message || "").trim();
+  const cleanMessage = savedMessage.toLowerCase() === "emergency message" ? "" : savedMessage;
+  input.value = cleanMessage;
+  state.textContent = cleanMessage ? "A banner is currently active." : "No emergency banner is active.";
 }
 
 async function saveEmergencyBanner(event) {
