@@ -306,29 +306,25 @@ async function fdAddRecommendedFranchiseToQueue(button) {
       if (attributionError) throw attributionError;
     }
 
-    const { data: existing, error: existingError } = await supabaseClient
+    const { data: queueResult, error: queueError } = await supabaseClient.rpc("add_recommended_item_to_queue", {
+      p_item_type: "franchise",
+      p_item_key: String(key),
+      p_title: fdFranchise.title,
+      p_source_mode: sourceMode,
+      p_recommender_ids: recommenderIds
+    });
+    if (queueError) throw queueError;
+    if (!queueResult?.added && queueResult?.reason !== "already_in_collection") {
+      throw new Error(queueResult?.message || "The recommendation could not be added or credited.");
+    }
+
+    const { data: saved, error: savedError } = await supabaseClient
       .from("user_franchises")
       .select("*")
       .eq("user_id", fdUser.id)
       .eq("franchise_key", key)
       .maybeSingle();
-    if (existingError) throw existingError;
-
-    let saved = existing;
-    if (!saved) {
-      const { data, error } = await supabaseClient
-        .from("user_franchises")
-        .insert({
-          user_id: fdUser.id,
-          franchise_key: key,
-          status: "Queued",
-          updated_at: new Date().toISOString()
-        })
-        .select("*")
-        .single();
-      if (error) throw error;
-      saved = data;
-    }
+    if (savedError) throw savedError;
 
     fdHasUserFranchise = true;
     fdViewingUser = fdUser.id;
@@ -363,7 +359,7 @@ function fdRender() {
           ${fdHasUserFranchise ? `<span class="details-status status ${fdStatusClass(fdFranchise.status)}">${fdEsc(fdFranchise.status)}</span>` : ""}
           ${rating !== null ? `<span class="details-rating">⭐ ${rating.toFixed(1)}</span>` : ""}
           ${canAddRecommended ? `<button class="recommend-anime-btn" id="addRecommendedFranchiseBtn" type="button">Add to Queue</button>` : ""}
-          ${ownView ? `<button class="edit-anime-btn status-details-btn" id="changeFranchiseStatusBtn" type="button">Change Status</button><button class="recommend-anime-btn" id="recommendFranchiseBtn" type="button">Recommend</button>` : ""}
+          ${ownView ? `<button class="edit-anime-btn status-details-btn" id="changeFranchiseStatusBtn" type="button">Change Status</button><button class="recommend-anime-btn" id="recommendFranchiseBtn" type="button">Recommend</button><button class="remove-anime-btn" id="removeFranchiseBtn" type="button">Remove from Collection</button>` : ""}
         </div>
       </div>
     </section>
@@ -371,7 +367,7 @@ function fdRender() {
       <div class="profile-section-heading"><h2>Entries</h2></div>
       <div class="franchise-entry-list">${fdEntryMedia.map(fdEntryCard).join("")}</div>
     </section>
-    ${ownView ? fdStatusModalMarkup() + fdRecommendationModalMarkup() : ""}
+    ${ownView ? fdStatusModalMarkup() + fdRecommendationModalMarkup() + `<div class="remove-modal-backdrop hidden" id="removeFranchiseModal" aria-hidden="true"><section class="remove-modal-card" role="dialog" aria-modal="true"><h2>Remove from Collection?</h2><p>Remove <strong>${fdEsc(fdFranchise.title)}</strong> from your collection? Franchise ratings and progress for this franchise will also be removed.</p><div class="remove-modal-actions"><button class="secondary-action-btn" id="cancelRemoveFranchiseBtn" type="button">Cancel</button><button class="confirm-remove-btn" id="confirmRemoveFranchiseBtn" type="button">Remove</button></div><div class="edit-message" id="removeFranchiseMessage"></div></section></div>` : ""}
     <div id="entryRatingModalHost"></div>`;
 
   document.getElementById("franchiseCollectionCount")?.addEventListener("click", () => openFranchiseCollectionPopup());
@@ -476,6 +472,49 @@ function fdBind() {
   document.getElementById("changeFranchiseStatusBtn").onclick = open;
   document.getElementById("closeFranchiseStatusBtn").onclick = close;
   document.getElementById("cancelFranchiseStatusBtn").onclick = close;
+
+  const removeModal = document.getElementById("removeFranchiseModal");
+  const openRemove = () => { removeModal.classList.remove("hidden"); document.body.classList.add("modal-open"); };
+  const closeRemove = () => { removeModal.classList.add("hidden"); document.body.classList.remove("modal-open"); };
+  document.getElementById("removeFranchiseBtn").onclick = openRemove;
+  document.getElementById("cancelRemoveFranchiseBtn").onclick = closeRemove;
+  document.getElementById("confirmRemoveFranchiseBtn").onclick = async () => {
+    const message = document.getElementById("removeFranchiseMessage");
+    const confirmButton = document.getElementById("confirmRemoveFranchiseBtn");
+    confirmButton.disabled = true;
+    message.textContent = "Removing…";
+    try {
+      const { data: active, error: activeError } = await supabaseClient
+        .from("recommendations")
+        .select("item_type,franchise_key")
+        .eq("recommender_id", fdUser.id)
+        .eq("active", true)
+        .maybeSingle();
+      if (activeError) throw activeError;
+      if (active?.item_type === "franchise" && Number(active.franchise_key) === Number(fdFranchise.franchise_key)) {
+        throw new Error("This franchise is your active recommendation. Remove or replace the recommendation before removing it from your collection.");
+      }
+
+      const { error: ratingsError } = await supabaseClient
+        .from("user_franchise_entry_ratings")
+        .delete()
+        .eq("user_id", fdUser.id)
+        .eq("franchise_key", Number(fdFranchise.franchise_key));
+      if (ratingsError && ratingsError.code !== "42P01") throw ratingsError;
+
+      const { error: removeError } = await supabaseClient
+        .from("user_franchises")
+        .delete()
+        .eq("user_id", fdUser.id)
+        .eq("franchise_key", Number(fdFranchise.franchise_key));
+      if (removeError) throw removeError;
+      location.href = "collection.html";
+    } catch (error) {
+      console.error(error);
+      message.textContent = error.message || "Could not remove this franchise.";
+      confirmButton.disabled = false;
+    }
+  };
   document.querySelectorAll("[data-rate-entry]").forEach((button) => {
     button.addEventListener("click", () => fdOpenEntryRating(Number(button.dataset.rateEntry)));
   });

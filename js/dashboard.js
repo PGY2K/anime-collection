@@ -404,29 +404,23 @@ async function addRecommendationToQueue(group, media, button, anime) {
     });
     if (attributionError) throw attributionError;
 
-    if (group.item_type === "franchise") {
-      const { data: authData, error: authError } = await supabaseClient.auth.getUser();
-      if (authError) throw authError;
-      const userId = authData?.user?.id;
-      if (!userId) throw new Error("You must be signed in.");
-      const { error } = await supabaseClient.from("user_franchises").insert({
-        user_id: userId,
-        franchise_key: Number(group.franchise_key),
-        status: "Queued",
-        updated_at: new Date().toISOString()
-      });
-      if (error) throw error;
-    } else {
+    const { data: queueResult, error: queueError } = await supabaseClient.rpc("add_recommended_item_to_queue", {
+      p_item_type: group.item_type,
+      p_item_key: itemKey,
+      p_title: group.title,
+      p_source_mode: "dashboard",
+      p_recommender_ids: recommenderIds
+    });
+    if (queueError) throw queueError;
+    if (!queueResult?.added && queueResult?.reason !== "already_in_collection") {
+      throw new Error(queueResult?.message || "The recommendation could not be added or credited.");
+    }
+
+    if (group.item_type === "anime" && queueResult?.added) {
       const anilistId = dashboardRecommendationAnimeId(group, media);
-      if (!anilistId) throw new Error("This recommendation is missing its title ID.");
-      const { data, error } = await supabaseClient.from("anime").insert({
-        anilist_id: anilistId,
-        title: group.title,
-        status: "Queued"
-      }).select("*").single();
-      if (error) throw error;
+      const { data } = await supabaseClient.from("anime").select("*").eq("anilist_id", anilistId).maybeSingle();
+      if (data) anime.unshift(data);
       await matClaimPioneerBadge({ anilistId });
-      anime.unshift(data);
     }
 
     button.textContent = "In Your Collection";

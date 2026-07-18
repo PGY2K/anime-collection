@@ -429,7 +429,7 @@ function initializeEditor(record,media){
   document.getElementById("closeRateBtn").onclick=()=>closeModal(ratingModal);
   document.getElementById("cancelRateBtn").onclick=()=>closeModal(ratingModal);
   document.getElementById("cancelRemoveBtn").onclick=()=>closeModal(removeModal);
-  document.getElementById("confirmRemoveBtn").onclick=async()=>{try{await deleteRecord(record.id);location.href="collection.html"}catch(e){document.getElementById("removeMessage").textContent=e.message||"Could not remove anime."}};
+  document.getElementById("confirmRemoveBtn").onclick=async()=>{try{const active=await fetchActiveRecommendation();const isActiveTitle=active?.item_type==="anime"&&Number(active.anilist_id)===Number(media.id);if(isActiveTitle)throw new Error("This title is your active recommendation. Remove or replace the recommendation before removing it from your collection.");await deleteRecord(record.id);location.href="collection.html"}catch(e){document.getElementById("removeMessage").textContent=e.message||"Could not remove anime."}};
   if(new URLSearchParams(location.search).get("edit")==="1")openModal(statusModal);
 
   document.getElementById("editAnimeForm").onsubmit=async(event)=>{

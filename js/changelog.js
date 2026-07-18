@@ -1,5 +1,24 @@
 const MAT_RELEASES = [
   {
+    version: "v5.4.1",
+    date: "July 2026",
+    announcementTitle: "Recommendation RP credit and collection removal are fixed",
+    announcement: "Adding a recommended title to the queue now uses one database action that adds the title, preserves attribution, and awards the +1 RP credit. Remove from Collection is also available on anime and franchise pages. View the Changelog tab for the complete details.",
+    groups: {
+      FIXED: [
+        "Replaced the separate queue insert and RP steps with one database function so a successful recommended add cannot silently skip the +1 RP reward.",
+        "Validated that RP is awarded only to users with an active recommendation for the exact anime or franchise.",
+        "Added duplicate protection so the same viewer cannot award the Added RP event more than once for the same title and recommender."
+      ],
+      NEW: [
+        "Added Remove from Collection to franchise detail pages with a confirmation prompt.",
+        "Protected active recommendations from being removed from the collection until the recommendation is removed or replaced.",
+        "Anime and franchise removal now preserve the active-recommendation rules consistently."
+      ]
+    }
+  },
+
+  {
     version: "v5.4.0",
     date: "July 2026",
     announcementTitle: "Recommended franchises can now be added correctly",

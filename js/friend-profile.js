@@ -197,13 +197,20 @@ async function fpAddRecommendationToQueue(recommendation, profileUserId, media, 
     const { error: attributionError } = await supabaseClient.rpc("set_recommendation_attribution", { p_item_type: recommendation.item_type, p_item_key: itemKey, p_source_mode: "profile", p_recommender_ids: [profileUserId] });
     if (attributionError) throw attributionError;
 
-    if (recommendation.item_type === "franchise") {
-      const { error } = await supabaseClient.from("user_franchises").insert({ user_id: friendProfileViewer.id, franchise_key: Number(recommendation.franchise_key), status: "Queued", updated_at: new Date().toISOString() });
-      if (error) throw error;
-    } else {
+    const { data: queueResult, error: queueError } = await supabaseClient.rpc("add_recommended_item_to_queue", {
+      p_item_type: recommendation.item_type,
+      p_item_key: itemKey,
+      p_title: recommendation.title,
+      p_source_mode: "profile",
+      p_recommender_ids: [profileUserId]
+    });
+    if (queueError) throw queueError;
+    if (!queueResult?.added && queueResult?.reason !== "already_in_collection") {
+      throw new Error(queueResult?.message || "The recommendation could not be added or credited.");
+    }
+
+    if (recommendation.item_type === "anime" && queueResult?.added) {
       const anilistId = fpRecommendationAnimeId(recommendation, media);
-      const { error } = await supabaseClient.from("anime").insert({ anilist_id: anilistId, title: recommendation.title, status: "Queued" });
-      if (error) throw error;
       await window.matClaimPioneerBadge?.({ anilistId });
     }
     button.textContent = "In Your Collection";
