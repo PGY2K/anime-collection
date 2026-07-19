@@ -243,7 +243,14 @@ function fpRecommendationPosterId(recommendation) {
   return Number(franchise?.cover_anilist_id) || null;
 }
 
+async function fpViewerIsAdmin() {
+  if (!friendProfileViewer?.id) return false;
+  const { data, error } = await supabaseClient.from("profiles").select("can_manage_badges").eq("user_id", friendProfileViewer.id).maybeSingle();
+  return !error && Boolean(data?.can_manage_badges);
+}
+
 async function renderFriendProfileShell(profile) {
+  const viewerIsAdmin = await fpViewerIsAdmin();
   const profileBadges = await matLoadUserBadges(profile.user_id);
   const root = document.getElementById("friendProfileRoot");
   const topFive = friendProfileTopFive;
@@ -262,6 +269,7 @@ async function renderFriendProfileShell(profile) {
       <img class="profile-main-avatar" src="${profileAvatarPath(profile.avatar_id || 1)}" alt="${fpEscape(profile.username)} avatar" />
       <h2>${fpEscape(profile.username || "Anime Fan")}</h2>
       ${matBadgeRowHtml(profileBadges, { emptyText: "No badges awarded yet." })}
+      ${viewerIsAdmin ? `<a class="secondary-btn profile-admin-controls-btn" href="admin.html?friend_code=${encodeURIComponent(profile.friend_code)}">Admin Controls</a>` : ""}
       <a class="secondary-btn profile-badges-page-btn" href="badges.html?user=${encodeURIComponent(profile.user_id)}">🏅 Badges</a>
       <p class="profile-social-meta">${profile.is_private
         ? `<span title="This user’s social lists are private">${friendProfileFriendCount.toLocaleString()} Followers</span><span>•</span><span title="This user’s social lists are private">${Number(profile.following_count||0).toLocaleString()} Following</span>`

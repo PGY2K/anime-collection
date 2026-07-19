@@ -252,7 +252,8 @@ async function renderProfile() {
         <h2 id="profileSettingsTitle">Profile Settings</h2>
         <form id="profileForm">
           <label for="profileUsername">Username</label>
-          <input class="search-box" id="profileUsername" maxlength="24" value="${escapeProfileHtml(currentProfileData.username || "")}" required />
+          <input class="search-box" id="profileUsername" maxlength="24" value="${escapeProfileHtml(currentProfileData.username || "")}" ${currentProfileData.username_privileges_revoked ? "disabled" : "required"} />
+          ${currentProfileData.username_privileges_revoked ? '<small class="profile-privilege-warning">Your username privileges have been revoked.</small>' : ""}
           <label>Choose a profile picture</label>
           <div class="avatar-grid">${Array.from({length: PROFILE_AVATAR_COUNT}, (_,i)=>i+1).map((id)=>`<button class="avatar-choice ${id===selectedAvatarId?'selected':''}" type="button" data-avatar-id="${id}"><img src="${profileAvatarPath(id)}" alt="Avatar ${id}" /></button>`).join("")}</div>
           <label>Your user code</label>
@@ -301,8 +302,10 @@ function bindProfileEvents() {
 async function saveProfile(event) {
   event.preventDefault();
   const message = document.getElementById("profileMessage");
-  const username = document.getElementById("profileUsername").value.trim();
-  if (username.length < 3) { message.textContent = "Username must be at least 3 characters."; message.className = "profile-message profile-error"; return; }
+  const username = currentProfileData.username_privileges_revoked
+    ? currentProfileData.username
+    : document.getElementById("profileUsername").value.trim();
+  if (!currentProfileData.username_privileges_revoked && username.length < 3) { message.textContent = "Username must be at least 3 characters."; message.className = "profile-message profile-error"; return; }
   const { error } = await supabaseClient.from("profiles").update({
       username,
       avatar_id: selectedAvatarId,

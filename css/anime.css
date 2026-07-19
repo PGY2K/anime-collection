@@ -1127,3 +1127,8 @@
 .remove-recommendation-btn:disabled{opacity:.55;cursor:not-allowed}
 .remove-recommendation-btn.hidden{display:none}
 @media(max-width:560px){.remove-recommendation-btn{margin-right:0}}
+
+
+/* Suspended account comment placeholder */
+.comment-card.comment-suspended .comment-author-name,
+.comment-card.comment-suspended .comment-body{color:#ff4d63!important;font-weight:800}.comment-card.comment-suspended .comment-author-button{pointer-events:none;filter:grayscale(1)}

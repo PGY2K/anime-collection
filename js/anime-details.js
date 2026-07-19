@@ -654,8 +654,9 @@ function commentOwnerControls(comment) {
 }
 
 function commentMarkup(comment, isReply = false) {
+  const suspended = String(comment.username || "").trim().toLowerCase() === "account suspended" || String(comment.comment_text || "").trim().toLowerCase() === "this account is suspended";
   return `
-    <article class="comment-card ${isReply ? "comment-reply-card" : ""}" data-comment-id="${comment.id}">
+    <article class="comment-card ${isReply ? "comment-reply-card" : ""} ${suspended ? "comment-suspended" : ""}" data-comment-id="${comment.id}">
       <button
         class="comment-author-button"
         type="button"
@@ -692,8 +693,8 @@ function commentMarkup(comment, isReply = false) {
           >
             ♥ <span>${Number(comment.like_count || 0)}</span>
           </button>
-          ${isReply ? "" : `<button class="comment-text-action" type="button" data-comment-reply="${comment.id}">Reply</button>`}
-          ${commentOwnerControls(comment)}
+          ${isReply || suspended ? "" : `<button class="comment-text-action" type="button" data-comment-reply="${comment.id}">Reply</button>`}
+          ${suspended ? "" : commentOwnerControls(comment)}
         </div>
 
         ${isReply ? "" : `<div class="reply-form-slot" id="replySlot-${comment.id}"></div>`}

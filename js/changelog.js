@@ -1,5 +1,52 @@
 const MAT_RELEASES = [
   {
+    version: "v5.7.3",
+    date: "July 2026",
+    isAnnouncement: false,
+    groups: {
+      FIXED: [
+        "Replaced browser confirmation prompts in Admin Controls with a MAT-styled confirmation window.",
+        "Fixed moderation actions failing when database output fields had the same names as profile columns.",
+        "Applied the moderation database repair to account suspension, comment privilege, and username privilege actions.",
+        "Fixed follow-backs being blocked by an older relationship rule that treated both follow directions as duplicates."
+      ]
+    }
+  },
+  {
+    version: "v5.7.2",
+    date: "July 2026",
+    isAnnouncement: false,
+    groups: {
+      FIXED: [
+        "Fixed user profiles failing to open because the Admin Controls permission check was referenced before it was loaded.",
+        "Fixed follow-back requests failing when the friendship table did not have the unique sender-and-receiver rule required by the follow function."
+      ],
+      IMPROVED: [
+        "The follow repair safely removes duplicate relationship rows before adding the required uniqueness protection."
+      ]
+    }
+  },
+  {
+    version: "v5.7.0",
+    date: "July 2026",
+    isAnnouncement: true,
+    announcementTitle: "New account moderation tools",
+    announcement: "MAT now has stronger tools to keep profiles, usernames, and community discussions safe.",
+    groups: {
+      NEW: [
+        "Added owner-only Admin Controls to every viewed user profile.",
+        "Added permanent account suspension, comment privilege controls, and username privilege controls.",
+        "Added required admin notes and permanent action history searchable by friend code."
+      ],
+      IMPROVED: [
+        "Suspended accounts keep their email reserved while public account data is removed.",
+        "Revoking comment access permanently removes previous comments and can later be restored without restoring deleted content.",
+        "Revoking username access replaces the public username with the friend code and prevents further username changes.",
+        "Added database-enforced permission checks and moderation audit records for every action."
+      ]
+    }
+  },
+  {
     version: "v5.6.1",
     date: "July 2026",
     isAnnouncement: false,

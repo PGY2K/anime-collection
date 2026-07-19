@@ -11,6 +11,45 @@ function adminEscape(value) {
     .replaceAll("'", "&#039;");
 }
 
+function showAdminConfirmation(message, actionLabel = "Confirm") {
+  return new Promise((resolve) => {
+    document.getElementById("adminConfirmationModal")?.remove();
+    const modal = document.createElement("div");
+    modal.id = "adminConfirmationModal";
+    modal.className = "admin-confirm-backdrop";
+    modal.innerHTML = `
+      <section class="admin-confirm-card" role="alertdialog" aria-modal="true" aria-labelledby="adminConfirmTitle" aria-describedby="adminConfirmMessage">
+        <div class="admin-confirm-icon" aria-hidden="true">!</div>
+        <h2 id="adminConfirmTitle">Confirm Admin Action</h2>
+        <p id="adminConfirmMessage">${adminEscape(message)}</p>
+        <div class="admin-confirm-actions">
+          <button class="secondary-btn" id="adminConfirmCancel" type="button">Cancel</button>
+          <button class="admin-danger-btn" id="adminConfirmAction" type="button">${adminEscape(actionLabel)}</button>
+        </div>
+      </section>`;
+    document.body.appendChild(modal);
+    document.body.classList.add("modal-open");
+
+    let settled = false;
+    const close = (value) => {
+      if (settled) return;
+      settled = true;
+      modal.remove();
+      document.body.classList.remove("modal-open");
+      document.removeEventListener("keydown", onKeyDown);
+      resolve(value);
+    };
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") close(false);
+    };
+    modal.querySelector("#adminConfirmCancel").addEventListener("click", () => close(false));
+    modal.querySelector("#adminConfirmAction").addEventListener("click", () => close(true));
+    modal.addEventListener("click", (event) => { if (event.target === modal) close(false); });
+    document.addEventListener("keydown", onKeyDown);
+    modal.querySelector("#adminConfirmAction").focus();
+  });
+}
+
 async function verifyBadgeManager(user) {
   const { data, error } = await supabaseClient
     .from("profiles")
@@ -84,6 +123,26 @@ function renderAdminShell() {
           <div class="admin-message" id="adminPointsMessage"></div>
         </section>
 
+        <section class="admin-tool-section admin-moderation-section">
+          <div class="admin-section-heading">
+            <h3>Account Moderation</h3>
+            <p>Every action requires a note and is permanently recorded in the user's admin history.</p>
+          </div>
+          <label class="admin-note-label" for="adminModerationNote">Admin Notes</label>
+          <textarea class="search-box admin-note-input" id="adminModerationNote" maxlength="1000" rows="4" placeholder="Explain why this action is being taken…"></textarea>
+          <div class="admin-moderation-status" id="adminModerationStatus"></div>
+          <div class="admin-moderation-actions" id="adminModerationActions"></div>
+          <div class="admin-message" id="adminModerationMessage"></div>
+        </section>
+
+        <section class="admin-tool-section">
+          <div class="admin-section-heading">
+            <h3>Admin Action History</h3>
+            <p>Permanent moderation history for this friend code.</p>
+          </div>
+          <div class="admin-history-list" id="adminHistoryList"><div class="empty-state">No history loaded.</div></div>
+        </section>
+
         <section class="admin-tool-section">
           <div class="admin-section-heading">
             <h3>Badge Management</h3>
@@ -150,7 +209,7 @@ async function findUserByFriendCode(event) {
   message.className = "admin-message";
   message.textContent = "Searching…";
 
-  const { data, error } = await supabaseClient.rpc("badge_admin_get_profile_by_friend_code", {
+  const { data, error } = await supabaseClient.rpc("admin_get_moderation_profile", {
     p_friend_code: code
   });
 
@@ -173,10 +232,12 @@ async function findUserByFriendCode(event) {
   document.getElementById("adminSelectedUser").innerHTML = `
     <img src="${profileAvatarPath(profile.avatar_id || 1)}" alt="" />
     <div>
-      <strong>${adminEscape(profile.username || "Anime Fan")}</strong>
+      <strong>${adminEscape(profile.is_suspended ? "Account Suspended" : (profile.username || "Anime Fan"))}</strong>
       <small>Friend Code: ${adminEscape(profile.friend_code)}</small>
+      ${profile.original_username ? `<small>Original username: ${adminEscape(profile.original_username)}</small>` : ""}
     </div>`;
-  await Promise.all([loadPointBalance(), openBadgeEditor(profile)]);
+  renderModerationControls();
+  await Promise.all([loadPointBalance(), openBadgeEditor(profile), loadAdminHistory()]);
 }
 
 async function loadPointBalance() {
@@ -286,6 +347,98 @@ async function saveBadgeChanges() {
   message.textContent = `Badges updated for ${adminTargetProfile.username || "this user"}.`;
 }
 
+
+function moderationDate(value) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : date.toLocaleString();
+}
+
+function renderModerationControls() {
+  if (!adminTargetProfile) return;
+  const status = document.getElementById("adminModerationStatus");
+  const actions = document.getElementById("adminModerationActions");
+  status.innerHTML = `
+    <span class="admin-status-pill ${adminTargetProfile.is_suspended ? "danger" : "ok"}">Account: ${adminTargetProfile.is_suspended ? "Suspended" : "Active"}</span>
+    <span class="admin-status-pill ${adminTargetProfile.comment_privileges_revoked ? "danger" : "ok"}">Comments: ${adminTargetProfile.comment_privileges_revoked ? "Revoked" : "Allowed"}</span>
+    <span class="admin-status-pill ${adminTargetProfile.username_privileges_revoked ? "danger" : "ok"}">Username: ${adminTargetProfile.username_privileges_revoked ? "Locked" : "Allowed"}</span>`;
+
+  actions.innerHTML = `
+    ${adminTargetProfile.is_suspended ? "" : '<button class="admin-danger-btn" type="button" data-moderation-action="ban_user">Ban User</button>'}
+    <button class="secondary-btn" type="button" data-moderation-action="${adminTargetProfile.comment_privileges_revoked ? "restore_comments" : "revoke_comments"}">${adminTargetProfile.comment_privileges_revoked ? "Restore Comment Privileges" : "Revoke Comment Privileges"}</button>
+    <button class="secondary-btn" type="button" data-moderation-action="${adminTargetProfile.username_privileges_revoked ? "restore_username" : "revoke_username"}">${adminTargetProfile.username_privileges_revoked ? "Restore Username Privileges" : "Revoke Username Privileges"}</button>`;
+
+  actions.querySelectorAll("[data-moderation-action]").forEach((button) => {
+    button.addEventListener("click", () => performModerationAction(button.dataset.moderationAction, button));
+  });
+}
+
+async function performModerationAction(action, button) {
+  if (!adminTargetProfile) return;
+  const noteInput = document.getElementById("adminModerationNote");
+  const message = document.getElementById("adminModerationMessage");
+  const note = noteInput.value.trim();
+  if (!note) {
+    message.className = "admin-message error";
+    message.textContent = "Admin Notes are required before saving an action.";
+    noteInput.focus();
+    return;
+  }
+  const labels = {
+    ban_user: "permanently suspend this account and remove its public data",
+    revoke_comments: "revoke commenting privileges and permanently delete all previous comments",
+    restore_comments: "restore commenting privileges (deleted comments will not return)",
+    revoke_username: "revoke username privileges and replace the username with the friend code",
+    restore_username: "restore username privileges"
+  };
+  if (!(await showAdminConfirmation(`Are you sure you want to ${labels[action]}?`, action === "ban_user" ? "Ban User" : "Confirm Action"))) return;
+  button.disabled = true;
+  message.className = "admin-message";
+  message.textContent = "Saving moderation action…";
+  const { data, error } = await supabaseClient.rpc("admin_apply_moderation_action", {
+    p_target_user_id: adminTargetProfile.user_id,
+    p_action: action,
+    p_note: note
+  });
+  button.disabled = false;
+  if (error) {
+    message.className = "admin-message error";
+    message.textContent = error.message;
+    return;
+  }
+  const updated = Array.isArray(data) ? data[0] : data;
+  adminTargetProfile = { ...adminTargetProfile, ...(updated || {}) };
+  noteInput.value = "";
+  message.className = "admin-message success";
+  message.textContent = "Admin action saved and logged.";
+  renderModerationControls();
+  document.getElementById("adminSelectedUser").querySelector("strong").textContent = adminTargetProfile.is_suspended ? "Account Suspended" : (adminTargetProfile.username || "Anime Fan");
+  await loadAdminHistory();
+}
+
+async function loadAdminHistory() {
+  const root = document.getElementById("adminHistoryList");
+  if (!root || !adminTargetProfile) return;
+  root.innerHTML = '<div class="loading">Loading history…</div>';
+  const { data, error } = await supabaseClient.rpc("admin_get_moderation_history", {
+    p_friend_code: adminTargetProfile.friend_code
+  });
+  if (error) {
+    root.innerHTML = `<div class="admin-message error">${adminEscape(error.message)}</div>`;
+    return;
+  }
+  root.innerHTML = data?.length ? data.map((entry) => `
+    <article class="admin-history-entry">
+      <div class="admin-history-heading"><strong>${adminEscape(String(entry.action || "Admin action").replaceAll("_", " "))}</strong><time>${adminEscape(moderationDate(entry.created_at))}</time></div>
+      <p>${adminEscape(entry.note)}</p>
+      <dl>
+        <div><dt>Original username</dt><dd>${adminEscape(entry.original_username || "Unavailable")}</dd></div>
+        <div><dt>Friend code</dt><dd>${adminEscape(entry.friend_code)}</dd></div>
+        <div><dt>Previous status</dt><dd>${adminEscape(JSON.stringify(entry.previous_state || {}))}</dd></div>
+        <div><dt>New status</dt><dd>${adminEscape(JSON.stringify(entry.new_state || {}))}</dd></div>
+      </dl>
+    </article>`).join("") : '<div class="empty-state">No admin actions have been logged for this user.</div>';
+}
+
 async function initAdminPanel(user) {
   adminCurrentUser = user;
   const root = document.getElementById("adminRoot");
@@ -298,6 +451,11 @@ async function initAdminPanel(user) {
     adminBadgeCatalog = await matLoadBadgeCatalog();
     renderAdminShell();
     await loadEmergencyBannerAdmin();
+    const requestedCode = new URLSearchParams(location.search).get("friend_code");
+    if (requestedCode) {
+      document.getElementById("adminFriendCode").value = requestedCode.toUpperCase();
+      document.getElementById("adminFriendCodeForm").requestSubmit();
+    }
   } catch (error) {
     console.error(error);
     root.innerHTML = `<div class="error">${adminEscape(error.message || "Could not load the Admin Control Panel.")}</div>`;

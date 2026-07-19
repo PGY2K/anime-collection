@@ -289,3 +289,6 @@
 
 /* v5.3.6 recommendation cards and queue action */
 .profile-rec-card{position:relative}.profile-rec-poster-link{display:block;align-self:stretch;text-decoration:none;color:inherit}.profile-rec-card .recommendation-title-link,.recommendation-title-link{text-decoration:none;color:inherit}.profile-rec-card .recommendation-title-link:hover h3,.recommendation-title-link:hover h3{color:#f6d36b}.profile-rec-card .dashboard-queue-btn{margin-top:auto;width:fit-content;min-width:132px}
+
+
+.profile-privilege-warning{display:block;margin:-4px 0 12px;color:#ff8d9d;font-weight:700}.profile-admin-controls-btn{margin:10px auto 0;text-decoration:none}

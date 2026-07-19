@@ -18,7 +18,19 @@ async function requireSignedInUser() {
     return null;
   }
 
-  return data.session.user;
+  const user = data.session.user;
+  const { data: profile } = await supabaseClient
+    .from("profiles")
+    .select("is_suspended")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (profile?.is_suspended) {
+    await supabaseClient.auth.signOut();
+    sessionStorage.setItem("mat-auth-message", "This account is suspended.");
+    window.location.href = "login.html";
+    return null;
+  }
+  return user;
 }
 
 async function signOutUser() {

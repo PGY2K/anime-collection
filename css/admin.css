@@ -104,3 +104,21 @@
 .admin-emergency-form{display:grid;gap:10px;margin-top:20px}.admin-emergency-form>label{color:rgba(255,255,255,.86);font-size:.82rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
 .admin-emergency-form input{text-transform:none;letter-spacing:normal;font-weight:700}.admin-emergency-actions{display:flex;gap:10px;flex-wrap:wrap}
 @media(max-width:620px){.admin-emergency-actions>*{width:100%}}
+
+
+/* v5.7.0 owner moderation controls */
+.admin-note-label{display:block;margin:18px 0 8px;color:rgba(255,255,255,.86);font-size:.82rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.admin-note-input{width:100%;min-height:110px;resize:vertical;text-transform:none!important;letter-spacing:normal!important}
+.admin-moderation-status{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.admin-status-pill{padding:7px 10px;border-radius:999px;font-size:.76rem;font-weight:800;background:rgba(126,231,183,.12);color:#7ee7b7;border:1px solid rgba(126,231,183,.3)}.admin-status-pill.danger{background:rgba(255,77,99,.12);color:#ff8d9d;border-color:rgba(255,77,99,.35)}
+.admin-moderation-actions{display:flex;gap:10px;flex-wrap:wrap}.admin-danger-btn{border:1px solid rgba(255,77,99,.55);border-radius:10px;background:rgba(255,77,99,.15);color:#ff9aaa;padding:11px 16px;font-weight:800;cursor:pointer}.admin-danger-btn:hover{background:rgba(255,77,99,.25)}
+.admin-history-list{display:grid;gap:12px;margin-top:16px}.admin-history-entry{padding:15px;border:1px solid rgba(255,255,255,.09);border-radius:14px;background:rgba(0,0,0,.18)}.admin-history-heading{display:flex;justify-content:space-between;gap:12px;text-transform:capitalize}.admin-history-heading time{color:var(--muted);font-size:.8rem}.admin-history-entry p{margin:10px 0;color:#fff;line-height:1.5}.admin-history-entry dl{display:grid;gap:6px;margin:0}.admin-history-entry dl div{display:grid;grid-template-columns:130px 1fr;gap:10px;font-size:.78rem}.admin-history-entry dt{color:var(--muted)}.admin-history-entry dd{margin:0;overflow-wrap:anywhere}.profile-admin-controls-btn{margin-top:12px}
+@media(max-width:620px){.admin-moderation-actions>*{width:100%}.admin-history-entry dl div{grid-template-columns:1fr}.admin-history-heading{flex-direction:column}}
+
+
+/* v5.7.3 MAT confirmation dialog */
+.admin-confirm-backdrop{position:fixed;inset:0;z-index:2500;display:grid;place-items:center;padding:20px;background:rgba(4,5,10,.78);backdrop-filter:blur(8px)}
+.admin-confirm-card{width:min(470px,100%);padding:26px;border:1px solid rgba(255,77,99,.35);border-radius:20px;background:linear-gradient(180deg,rgba(30,24,43,.99),rgba(15,13,23,.99));box-shadow:0 24px 80px rgba(0,0,0,.55);text-align:center}
+.admin-confirm-icon{display:grid;place-items:center;width:48px;height:48px;margin:0 auto 14px;border:1px solid rgba(255,77,99,.5);border-radius:50%;background:rgba(255,77,99,.14);color:#ff9aaa;font-size:1.45rem;font-weight:900}
+.admin-confirm-card h2{margin:0 0 10px}.admin-confirm-card p{margin:0;color:var(--muted);line-height:1.6}
+.admin-confirm-actions{display:flex;justify-content:center;gap:10px;margin-top:22px}.admin-confirm-actions button{min-width:130px}
+@media(max-width:520px){.admin-confirm-actions{flex-direction:column-reverse}.admin-confirm-actions button{width:100%}}
