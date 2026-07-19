@@ -957,3 +957,31 @@ body.modal-open { overflow: hidden; }
     box-shadow:0 -8px 30px rgba(0,0,0,.52);
   }
 }
+
+
+/* v5.8.5 mobile RP shop scroll fix */
+@media (max-width:760px){
+  .rp-hub-modal.is-shop-view{
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+  .rp-hub-modal.is-shop-view .rp-modal-header,
+  .rp-hub-modal.is-shop-view .rp-modal-title,
+  .rp-hub-modal.is-shop-view .rp-hub-actions{
+    position:static!important;
+    top:auto!important;
+  }
+  .rp-hub-modal.is-shop-view .rp-designer-layout{
+    flex:1 1 auto;
+    min-height:0;
+    overflow-y:auto;
+    padding-bottom:96px;
+  }
+  .rp-designer-checkout{
+    position:sticky;
+    bottom:0;
+    margin:0;
+    border-radius:16px 16px 0 0;
+  }
+}
