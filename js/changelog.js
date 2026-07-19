@@ -1,5 +1,20 @@
 const MAT_RELEASES = [
   {
+    version: "v5.8.5",
+    date: "July 2026",
+    isAnnouncement: false,
+    groups: {
+      FIXED: [
+        "Restored the View Updates button so the What's New window opens correctly again.",
+        "Fixed the RP Shop purchase bar so it remains visible at the bottom while customizing on mobile."
+      ],
+      IMPROVED: [
+        "Changed the Recommendation Points heading, description, and navigation tabs to scroll normally with the RP Shop on mobile.",
+        "Removed the mobile layout behavior that kept the top of the RP menu occupying the screen while the shop content scrolled beneath it."
+      ]
+    }
+  },
+  {
     version: "v5.8.4",
     date: "July 2026",
     isAnnouncement: false,

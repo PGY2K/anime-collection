@@ -902,3 +902,58 @@ body.modal-open { overflow: hidden; }
   .rp-color-picker-head{margin-bottom:6px}.rp-color-picker-head h4{font-size:13px}.rp-color-picker-head p{font-size:8px}.rp-color-picker-close{width:27px;height:27px;font-size:17px}
   .rp-color-picker .rp-designer-colors{grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
 }
+
+
+/* v5.8.5 mobile RP Shop scrolling and checkout repair */
+@media (max-width:760px){
+  .rp-hub-modal.is-shop-view{
+    display:block;
+    overflow-y:auto;
+    overflow-x:hidden;
+    overscroll-behavior:contain;
+    padding-bottom:84px;
+  }
+  .rp-hub-modal.is-shop-view .rp-modal-title,
+  .rp-hub-modal.is-shop-view .rp-hub-actions{
+    position:static;
+  }
+  .rp-hub-modal.is-shop-view .rp-hub-panel{
+    display:block;
+    min-height:auto;
+    max-height:none;
+    overflow:visible;
+    padding:0;
+  }
+  .rp-hub-modal.is-shop-view .rp-profile-designer{
+    display:block;
+    height:auto;
+    min-height:0;
+    padding:0 0 94px;
+  }
+  .rp-hub-modal.is-shop-view .rp-designer-layout{
+    display:grid;
+    grid-template-columns:1fr;
+    grid-template-rows:auto auto;
+  }
+  .rp-hub-modal.is-shop-view .rp-designer-preview-wrap{
+    overflow:visible;
+  }
+  .rp-hub-modal.is-shop-view #matRpProfilePreview{
+    height:auto;
+    max-height:none;
+    overflow:visible;
+  }
+  .rp-hub-modal.is-shop-view .rp-designer-checkout{
+    position:fixed;
+    left:50%;
+    right:auto;
+    bottom:max(8px,env(safe-area-inset-bottom));
+    width:calc(98vw - 24px);
+    max-width:calc(100vw - 24px);
+    margin:0;
+    transform:translateX(-50%);
+    z-index:2300;
+    border-radius:14px;
+    box-shadow:0 -8px 30px rgba(0,0,0,.52);
+  }
+}
