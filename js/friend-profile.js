@@ -6,6 +6,7 @@ let friendProfileFranchises = [];
 let friendProfileTopFive = [];
 let friendProfileFriendCount = 0;
 let friendActiveRecommendation = null;
+let friendProfileCustomizations = { avatar_glow: "default", profile_background: "default", top_five_glow: "default", recommendation_glow: "default" };
 let friendProfileViewer = null;
 
 function fpEscape(value) {
@@ -264,9 +265,9 @@ async function renderFriendProfileShell(profile) {
 
   root.innerHTML = `
     <a class="friend-profile-back standalone-back" href="friends.html">← Following</a>
-    <section class="public-profile-card friend-public-profile">
+    <section class="public-profile-card friend-public-profile mat-profile-customized ${matCustomizationClass("mat-profile-bg", friendProfileCustomizations.profile_background)}">
       <button class="profile-rp-corner" type="button" onclick="matOpenRpModal()"><img src="assets/icons/rp-gem.png" alt="RP"><strong>${Math.round(Number(profile.recommendation_points)||0).toLocaleString()} RP</strong></button>
-      <img class="profile-main-avatar" src="${profileAvatarPath(profile.avatar_id || 1)}" alt="${fpEscape(profile.username)} avatar" />
+      <img class="profile-main-avatar ${matCustomizationClass("mat-avatar-glow", friendProfileCustomizations.avatar_glow)}" src="${profileAvatarPath(profile.avatar_id || 1)}" alt="${fpEscape(profile.username)} avatar" />
       <h2>${fpEscape(profile.username || "Anime Fan")}</h2>
       ${matBadgeRowHtml(profileBadges, { emptyText: "No badges awarded yet." })}
       ${viewerIsAdmin ? `<a class="secondary-btn profile-admin-controls-btn" href="admin.html?friend_code=${encodeURIComponent(profile.friend_code)}">Admin Controls</a>` : ""}
@@ -274,7 +275,7 @@ async function renderFriendProfileShell(profile) {
       <p class="profile-social-meta">${profile.is_private
         ? `<span title="This user’s social lists are private">${friendProfileFriendCount.toLocaleString()} Followers</span><span>•</span><span title="This user’s social lists are private">${Number(profile.following_count||0).toLocaleString()} Following</span>`
         : `<a href="friends.html?user=${encodeURIComponent(profile.user_id)}&tab=followers">${friendProfileFriendCount.toLocaleString()} Followers</a><span>•</span><a href="friends.html?user=${encodeURIComponent(profile.user_id)}&tab=following">${Number(profile.following_count||0).toLocaleString()} Following</a>`}<span>•</span><span>${fpEscape(fpJoinedLabel(profile.created_at))}</span></p>
-      ${friendActiveRecommendation?`<section class="profile-active-recommendation"><div class="profile-section-heading"><h3>💎 Recommendation</h3><span>Featured by ${fpEscape(profile.username)}</span></div><article class="dashboard-media-card friend-rating-card profile-rec-card"><a class="profile-rec-poster-link${matAdultPosterClass(recommendationMedia?.isAdult)}" href="${fpRecommendationHref(friendActiveRecommendation,profile.user_id,recommendationMedia)}" data-profile-recommendation-open>${recommendationMedia?.url?`<img class="profile-rec-poster" src="${fpEscape(recommendationMedia.url)}" alt="${fpEscape(friendActiveRecommendation.title)} poster" loading="lazy">`:'<div class="profile-rec-poster poster-placeholder">🎌</div>'}${matAdultPosterOverlay(recommendationMedia?.isAdult)}</a><div class="dashboard-media-body"><a class="recommendation-title-link" href="${fpRecommendationHref(friendActiveRecommendation,profile.user_id,recommendationMedia)}" data-profile-recommendation-open><h3>${fpEscape(friendActiveRecommendation.title)}</h3></a><strong>⭐ ${Number(friendActiveRecommendation.rating).toFixed(1)}</strong>${friendActiveRecommendation.note?`<small>${fpEscape(friendActiveRecommendation.note)}</small>`:""}<button class="dashboard-queue-btn" id="profileRecommendationQueueBtn" type="button" ${recommendationInViewerCollection ? "disabled" : ""}>${recommendationInViewerCollection ? "In Your Collection" : "Add to Queue"}</button></div></article></section>`:""}
+      ${friendActiveRecommendation?`<section class="profile-active-recommendation ${matCustomizationClass("mat-recommendation-glow", friendProfileCustomizations.recommendation_glow)}"><div class="profile-section-heading"><h3>💎 Recommendation</h3><span>Featured by ${fpEscape(profile.username)}</span></div><article class="dashboard-media-card friend-rating-card profile-rec-card"><a class="profile-rec-poster-link${matAdultPosterClass(recommendationMedia?.isAdult)}" href="${fpRecommendationHref(friendActiveRecommendation,profile.user_id,recommendationMedia)}" data-profile-recommendation-open>${recommendationMedia?.url?`<img class="profile-rec-poster" src="${fpEscape(recommendationMedia.url)}" alt="${fpEscape(friendActiveRecommendation.title)} poster" loading="lazy">`:'<div class="profile-rec-poster poster-placeholder">🎌</div>'}${matAdultPosterOverlay(recommendationMedia?.isAdult)}</a><div class="dashboard-media-body"><a class="recommendation-title-link" href="${fpRecommendationHref(friendActiveRecommendation,profile.user_id,recommendationMedia)}" data-profile-recommendation-open><h3>${fpEscape(friendActiveRecommendation.title)}</h3></a><strong>⭐ ${Number(friendActiveRecommendation.rating).toFixed(1)}</strong>${friendActiveRecommendation.note?`<small>${fpEscape(friendActiveRecommendation.note)}</small>`:""}<button class="dashboard-queue-btn" id="profileRecommendationQueueBtn" type="button" ${recommendationInViewerCollection ? "disabled" : ""}>${recommendationInViewerCollection ? "In Your Collection" : "Add to Queue"}</button></div></article></section>`:""}
       <div class="profile-stat-grid">
         <div><strong>${count("in progress")}</strong><span>Watching</span></div>
         <div><strong>${count("waiting")}</strong><span>Waiting</span></div>
@@ -282,7 +283,7 @@ async function renderFriendProfileShell(profile) {
         <div><strong>${count("completed")}</strong><span>Completed</span></div>
         <div><strong>${count("dropped")}</strong><span>Dropped</span></div>
       </div>
-      <section class="profile-top-section">
+      <section class="profile-top-section ${matCustomizationClass("mat-top-five-glow", friendProfileCustomizations.top_five_glow)}">
         <div class="profile-section-heading"><h3>⭐ Top 5 Anime</h3><span>Highest rated</span></div>
         <div class="profile-top-grid">
           ${topFive.length ? topFive.map((item,index)=>`
@@ -378,19 +379,21 @@ async function initFriendProfile(user) {
   }
 
   try {
-    const [profile, anime, franchises, topFive, friendCount, recommendation] = await Promise.all([
+    const [profile, anime, franchises, topFive, friendCount, recommendation, customizations] = await Promise.all([
       fetchFriendProfile(activeFriendUserId),
       fetchFriendAnime(activeFriendUserId),
       fetchFriendFranchises(activeFriendUserId),
       fetchFriendTopFive(activeFriendUserId),
       supabaseClient.rpc("get_follower_count", { p_user_id: activeFriendUserId }).then(({data,error}) => error ? 0 : Number(data) || 0),
-      supabaseClient.from("recommendations").select("*").eq("recommender_id",activeFriendUserId).eq("active",true).maybeSingle().then(({data,error})=>error?null:data)
+      supabaseClient.from("recommendations").select("*").eq("recommender_id",activeFriendUserId).eq("active",true).maybeSingle().then(({data,error})=>error?null:data),
+      matLoadProfileCustomizations(activeFriendUserId)
     ]);
 
     friendProfileFranchises = franchises;
     friendProfileTopFive = topFive;
     friendProfileFriendCount = friendCount;
     friendActiveRecommendation = recommendation;
+    friendProfileCustomizations = customizations;
     friendProfileAnime = anime;
     await renderFriendProfileShell(profile);
     await renderFriendAnime();

@@ -1,5 +1,91 @@
 const MAT_RELEASES = [
   {
+    version: "v5.8.4",
+    date: "July 2026",
+    isAnnouncement: false,
+    groups: {
+      IMPROVED: [
+        "Replaced the cramped RP Shop category tabs with separate category bubbles that clearly show each selected color.",
+        "Added a focused color menu that closes automatically after a selection so the live profile preview is immediately visible again."
+      ],
+      FIXED: [
+        "Removed glow effects from the Top 5 and recommendation header bars and text.",
+        "Kept Top 5 and recommendation neon outlines limited to the anime poster and content-card areas."
+      ]
+    }
+  },
+  {
+    version: "v5.8.3",
+    date: "July 2026",
+    isAnnouncement: false,
+    groups: {
+      IMPROVED: [
+        "Rebuilt the RP Shop into a compact profile designer with category tabs and small color controls.",
+        "Reduced the RP balance icon and condensed the live preview so profile customization fits on desktop and mobile without unnecessary scrolling."
+      ],
+      FIXED: [
+        "Fixed Top 5 glow selections so neon outlines apply to the section heading and every Top 5 card.",
+        "Fixed recommendation glow selections so neon outlines apply to the recommendation heading and card.",
+        "Removed the oversized RP gem from the Shop layout while keeping a compact balance indicator."
+      ]
+    }
+  },
+  {
+    version: "v5.8.2",
+    date: "July 2026",
+    isAnnouncement: false,
+    groups: {
+      IMPROVED: [
+        "Changed profile background rewards from blended gradients to complete solid-color profile themes.",
+        "Matched Top 5 and recommendation header backgrounds to the profile background selected by the profile owner.",
+        "Reworked all customization effects into crisp neon outlines with the glow radiating from the border."
+      ],
+      FIXED: [
+        "Fixed profile-picture rewards so they render as a visible neon ring around the avatar.",
+        "Removed the dark, discolored fill from glowing Top 5 and recommendation headers."
+      ]
+    }
+  },
+  {
+    version: "v5.8.1",
+    date: "July 2026",
+    isAnnouncement: false,
+    groups: {
+      IMPROVED: [
+        "Rebuilt the RP Shop as a live profile designer instead of a long product list.",
+        "Added a full profile preview that changes immediately while selecting avatar, background, Top 5, and recommendation colors.",
+        "Added one Purchase and Equip action with pending cost, current balance, and remaining balance totals.",
+        "Owned colors and Restore Default can be equipped without being charged again."
+      ],
+      FIXED: [
+        "Connected equipped shop selections to the actual profile customization classes used on personal and public profiles.",
+        "Strengthened every glow effect so profile backgrounds, avatars, Top 5 posters, and recommendations visibly change color.",
+        "Added compatibility for alternate customization field names returned by existing database functions."
+      ]
+    }
+  },
+  {
+    version: "v5.8.0",
+    date: "July 2026",
+    isAnnouncement: true,
+    announcementTitle: "The RP Shop is open",
+    announcement: "Spend your RP on permanent profile glows for your picture, background, Top 5, and recommendation.",
+    groups: {
+      NEW: [
+        "Opened the RP Shop with red, blue, green, pink, black, and white glow customizations.",
+        "Added separate profile-picture, profile-background, Top 5, and recommendation glow categories.",
+        "Purchased colors stay permanently unlocked and can be equipped again for free.",
+        "Added a free Restore Default option to every customization category."
+      ],
+      IMPROVED: [
+        "Each customization costs 500 RP and the balance is deducted only when the purchase succeeds.",
+        "Purchases are checked and completed securely so RP cannot fall below zero or be charged twice for the same item.",
+        "Added a MAT popup when a user does not have enough RP for a transaction.",
+        "Profile customizations are visible to anyone who is already allowed to view that profile and do not change existing privacy rules."
+      ]
+    }
+  },
+  {
     version: "v5.7.4",
     date: "July 2026",
     isAnnouncement: false,

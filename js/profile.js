@@ -9,6 +9,7 @@ let profileFranchiseEntryRatings = [];
 let profileFriendCount = 0;
 let profileFollowingCount = 0;
 let activeRecommendation = null;
+let profileCustomizations = { avatar_glow: "default", profile_background: "default", top_five_glow: "default", recommendation_glow: "default" };
 
 function profileJoinedLabel(value) {
   const date = value ? new Date(value) : null;
@@ -210,14 +211,14 @@ async function renderProfile() {
   const recommendationMedia = activeRecommendation ? await resolveOwnRecommendationMedia(activeRecommendation) : null;
   const root = document.getElementById("profileRoot");
   root.innerHTML = `
-    <section class="public-profile-card">
+    <section class="public-profile-card mat-profile-customized ${matCustomizationClass("mat-profile-bg", profileCustomizations.profile_background)}">
       <button class="profile-rp-corner" type="button" onclick="matOpenRpModal()"><img src="assets/icons/rp-gem.png" alt="RP"><strong>${Math.round(Number(currentProfileData.recommendation_points)||0).toLocaleString()} RP</strong></button>
-      <img class="profile-main-avatar" src="${profileAvatarPath(selectedAvatarId)}" alt="Your profile avatar" />
+      <img class="profile-main-avatar ${matCustomizationClass("mat-avatar-glow", profileCustomizations.avatar_glow)}" src="${profileAvatarPath(selectedAvatarId)}" alt="Your profile avatar" />
       <h2>${escapeProfileHtml(currentProfileData.username || "Anime Fan")}</h2>
       ${matBadgeRowHtml(profileBadges, { emptyText: "No badges awarded yet." })}
       <a class="secondary-btn profile-badges-page-btn" href="badges.html">🏅 Badges</a>
       <p class="profile-social-meta"><a href="friends.html?tab=followers">${profileFriendCount.toLocaleString()} Followers</a><span>•</span><a href="friends.html?tab=following">${profileFollowingCount.toLocaleString()} Following</a><span>•</span><span>${escapeProfileHtml(profileJoinedLabel(currentProfileUser?.created_at || currentProfileData.created_at))}</span></p>
-      ${activeRecommendation?`<section class="profile-active-recommendation"><div class="profile-section-heading"><h3>💎 My Recommendation</h3><span>Featured title</span></div><a class="dashboard-media-card friend-rating-card profile-rec-card" href="${activeRecommendation.item_type==='franchise'?`franchise.html?key=${activeRecommendation.franchise_key}&rec_source=profile&recommender=${currentProfileUser.id}`:`anime.html?anilist_id=${recommendationMedia?.anilistId||activeRecommendation.anilist_id}&rec_source=profile&recommender=${currentProfileUser.id}`}">${recommendationMedia?.url?`<img class="profile-rec-poster" src="${escapeProfileHtml(recommendationMedia.url)}" alt="${escapeProfileHtml(activeRecommendation.title)} poster">`:'<div class="profile-rec-poster poster-placeholder">🎌</div>'}<div class="dashboard-media-body"><h3>${escapeProfileHtml(activeRecommendation.title)}</h3><strong>⭐ ${Number(activeRecommendation.rating).toFixed(1)}</strong>${activeRecommendation.note?`<small>${escapeProfileHtml(activeRecommendation.note)}</small>`:""}</div></a></section>`:""}
+      ${activeRecommendation?`<section class="profile-active-recommendation ${matCustomizationClass("mat-recommendation-glow", profileCustomizations.recommendation_glow)}"><div class="profile-section-heading"><h3>💎 My Recommendation</h3><span>Featured title</span></div><a class="dashboard-media-card friend-rating-card profile-rec-card" href="${activeRecommendation.item_type==='franchise'?`franchise.html?key=${activeRecommendation.franchise_key}&rec_source=profile&recommender=${currentProfileUser.id}`:`anime.html?anilist_id=${recommendationMedia?.anilistId||activeRecommendation.anilist_id}&rec_source=profile&recommender=${currentProfileUser.id}`}">${recommendationMedia?.url?`<img class="profile-rec-poster" src="${escapeProfileHtml(recommendationMedia.url)}" alt="${escapeProfileHtml(activeRecommendation.title)} poster">`:'<div class="profile-rec-poster poster-placeholder">🎌</div>'}<div class="dashboard-media-body"><h3>${escapeProfileHtml(activeRecommendation.title)}</h3><strong>⭐ ${Number(activeRecommendation.rating).toFixed(1)}</strong>${activeRecommendation.note?`<small>${escapeProfileHtml(activeRecommendation.note)}</small>`:""}</div></a></section>`:""}
 
       <div class="profile-stat-grid">
         <div><strong>${statusCount("in progress")}</strong><span>Watching</span></div>
@@ -227,7 +228,7 @@ async function renderProfile() {
         <div><strong>${statusCount("dropped")}</strong><span>Dropped</span></div>
       </div>
 
-      <section class="profile-top-section">
+      <section class="profile-top-section ${matCustomizationClass("mat-top-five-glow", profileCustomizations.top_five_glow)}">
         <div class="profile-section-heading"><h3>⭐ Top 5 Anime</h3><span>Highest rated</span></div>
         <div class="profile-top-grid">
           ${topFive.length ? topFive.map((item, index) => `
@@ -321,7 +322,7 @@ async function saveProfile(event) {
 async function initProfile(user) {
   currentProfileUser = user;
   try {
-    [currentProfileData, profileAnime, profileBadges, profileFranchises, profileFranchiseEntryRatings, profileFriendCount, profileFollowingCount, activeRecommendation] = await Promise.all([
+    [currentProfileData, profileAnime, profileBadges, profileFranchises, profileFranchiseEntryRatings, profileFriendCount, profileFollowingCount, activeRecommendation, profileCustomizations] = await Promise.all([
       getOrCreateProfile(user),
       loadProfileAnime(),
       matLoadUserBadges(user.id),
@@ -329,7 +330,8 @@ async function initProfile(user) {
       loadProfileFranchiseEntryRatings(),
       supabaseClient.rpc("get_follower_count", { p_user_id: user.id }).then(({data,error}) => error ? 0 : Number(data) || 0),
       supabaseClient.rpc("get_following_count", { p_user_id: user.id }).then(({data,error}) => error ? 0 : Number(data) || 0),
-      supabaseClient.from("recommendations").select("*").eq("recommender_id", user.id).eq("active", true).maybeSingle().then(({data,error}) => error ? null : data)
+      supabaseClient.from("recommendations").select("*").eq("recommender_id", user.id).eq("active", true).maybeSingle().then(({data,error}) => error ? null : data),
+      matLoadProfileCustomizations(user.id)
     ]);
     await renderProfile();
   } catch (error) {
@@ -338,3 +340,5 @@ async function initProfile(user) {
     document.getElementById("profileRoot").innerHTML = `<div class="error">Could not load profile.</div>`;
   }
 }
+
+window.addEventListener("mat-profile-customization-changed", async (event) => { if (!currentProfileUser) return; profileCustomizations = event.detail && Object.keys(event.detail).length ? event.detail : await matLoadProfileCustomizations(currentProfileUser.id); await renderProfile(); });

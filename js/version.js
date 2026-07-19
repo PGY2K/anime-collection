@@ -1,4 +1,4 @@
-window.MAT_VERSION = "v5.7.4";
+window.MAT_VERSION = "v5.8.4";
 
 (function initMatSharedChrome() {
   const bannerId = "matEmergencyBanner";
