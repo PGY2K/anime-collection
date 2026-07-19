@@ -805,7 +805,7 @@ body.modal-open { overflow: hidden; }
 /* v5.3.6 recommendation attribution controls */
 .recommendation-title-link{text-decoration:none;color:inherit}.recommendation-title-link:hover h3{color:#f6d36b}.friend-rating-card .dashboard-queue-btn{margin-top:auto}
 
-/* v5.4.6 theme-matched emergency ticker */
+/* v5.4.7 theme-matched emergency ticker */
 .mat-emergency-banner{position:relative;z-index:2000;width:100%;height:40px;overflow:hidden;border-bottom:1px solid var(--border);background:linear-gradient(90deg,rgba(18,18,38,.98),rgba(45,25,82,.98),rgba(18,18,38,.98));color:var(--text);box-shadow:0 6px 22px rgba(0,0,0,.28)}
 .mat-emergency-banner[hidden]{display:none!important}
 .mat-emergency-track{display:flex;width:max-content;height:100%;align-items:center;white-space:nowrap;will-change:transform;animation:matEmergencyTicker 24s linear infinite}
@@ -814,3 +814,12 @@ body.modal-open { overflow: hidden; }
 @media(prefers-reduced-motion:reduce){.mat-emergency-track{animation-duration:42s}}
 @media(max-width:600px){.mat-emergency-banner{height:36px}.mat-emergency-message{font-size:.76rem}}
 .mat-footer-version{color:var(--muted);font-weight:800}
+
+/* v5.4.7 RP hub, shop placeholder, and recommendation history */
+.rp-hub-modal{width:min(700px,100%);max-height:min(86vh,820px);overflow:auto}.rp-hub-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0}.rp-hub-actions button{padding:12px 10px;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(255,255,255,.05);color:#fff;font-weight:800;cursor:pointer}.rp-hub-actions button:hover,.rp-hub-actions button.is-active{border-color:rgba(187,153,255,.7);background:rgba(139,92,246,.24)}.rp-hub-panel h3{margin:0 0 8px}.rp-guide>p,.rp-history>p,.rp-shop-placeholder p{color:var(--muted);line-height:1.55}.rp-shop-placeholder{text-align:center;padding:34px 18px;border:1px dashed rgba(187,153,255,.4);border-radius:18px;background:rgba(139,92,246,.08)}.rp-shop-placeholder img{display:block;width:82px;height:82px;object-fit:contain;margin:12px auto}.rp-shop-placeholder strong{display:block;font-size:22px}.rp-history-list{display:grid;gap:12px;margin-top:16px}.rp-history-card{padding:16px;border:1px solid rgba(255,255,255,.09);border-radius:16px;background:rgba(255,255,255,.035)}.rp-history-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.08)}.rp-history-card-head h4{margin:0 0 3px;font-size:18px}.rp-history-card-head small{color:var(--muted)}.rp-history-card-head>strong{white-space:nowrap;color:#f7bcff;font-size:18px}.rp-history-line{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06)}.rp-history-line:last-child{border-bottom:0}.rp-history-line span{color:var(--muted)}.rp-history-empty,.rp-history-loading{padding:28px;text-align:center;color:var(--muted);border:1px dashed rgba(255,255,255,.12);border-radius:14px}@media(max-width:560px){.rp-hub-actions{grid-template-columns:1fr}.rp-history-line{grid-template-columns:1fr 1fr}.rp-history-line strong{grid-column:1/-1}.rp-history-card-head{align-items:center}}
+
+
+/* v5.6.0 What's New unread announcement indicator */
+#openChangelogBtn,#announcementsTab{position:relative}
+#openChangelogBtn.has-unread-announcement::after,#announcementsTab.has-unread-announcement::after{content:"";position:absolute;top:-5px;right:-5px;width:10px;height:10px;border:2px solid #171024;border-radius:50%;background:#ff3b4f;box-shadow:0 0 0 2px rgba(255,59,79,.15),0 0 10px rgba(255,59,79,.65)}
+#announcementsTab.has-unread-announcement::after{top:5px;right:6px}

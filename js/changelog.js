@@ -1,5 +1,117 @@
 const MAT_RELEASES = [
   {
+    version: "v5.6.0",
+    date: "July 2026",
+    isAnnouncement: true,
+    announcementTitle: "Finding anime is faster",
+    announcement: "Add Anime now searches while you type, posters open the title page, and What's New alerts you when a major announcement is available.",
+    groups: {
+      NEW: [
+        "Added live AniList search results that refresh automatically while the user types.",
+        "Made search-result posters clickable so users can open the anime title page and its resolved franchise before adding it.",
+        "Added an unread red-dot indicator to What's New when a major announcement has not been opened."
+      ],
+      IMPROVED: [
+        "Added a 300 millisecond debounce to reduce unnecessary AniList requests while preserving responsive search.",
+        "Prevented slower, outdated search responses from replacing results for newer text.",
+        "Removed the manual Search button while preserving Enter as an immediate-search shortcut.",
+        "Changed release-note policy so every release appears in Changelog, while only major user-facing releases appear under Announcements.",
+        "Opening What's New stores the latest viewed announcement version and clears the red dot until another major announcement is published."
+      ]
+    }
+  },
+  {
+    version: "v5.5.1",
+    date: "July 2026",
+    announcementTitle: "Franchise ratings stay accurate",
+    announcement: "Franchise display options no longer change recommendation ratings. Only rated entries count toward the score.",
+    groups: {
+      FIXED: [
+        "Separated Franchise Options visibility filters from franchise rating and recommendation calculations.",
+        "Franchise ratings now use every rated entry assigned to the franchise, even when all entry formats are hidden from the Entries list.",
+        "Prevented active franchise recommendations from receiving a null rating when visibility settings hide every displayed entry."
+      ],
+      IMPROVED: [
+        "Unrated franchise entries are ignored instead of being treated as zero.",
+        "The Entries list still follows the user's visibility preferences without changing the stored franchise score."
+      ]
+    }
+  },
+  {
+    version: "v5.5.0",
+    date: "July 2026",
+    announcementTitle: "Recommendations are simpler",
+    announcement: "Rate a title first, then recommend it using that saved rating. Recommendation ratings can no longer conflict with your personal ratings.",
+    groups: {
+      FIXED: [
+        "Removed the editable recommendation-rating controls that could conflict with anime and franchise rating calculations.",
+        "Stopped recommendation saves from rewriting anime status, personal ratings, franchise status, or calculated franchise ratings.",
+        "Added validation that blocks anime and franchise recommendations until the item is completed and has a saved rating."
+      ],
+      IMPROVED: [
+        "Anime recommendations now use the anime's existing personal rating as a read-only source.",
+        "Franchise recommendations now use the calculated overall franchise rating as a read-only source.",
+        "Recommendation updates now change only the note and active recommendation while preserving the existing one-way personal-rating refresh behavior."
+      ]
+    }
+  },
+  {
+    version: "v5.4.9",
+    date: "July 2026",
+    announcementTitle: "Recommendation ratings now save correctly",
+    announcement: "Updating either your personal rating or your active recommendation rating now keeps both values matched and saved everywhere.",
+    groups: {
+      FIXED: [
+        "Fixed recommendation-rating edits being overwritten by the previously saved personal rating.",
+        "Added an atomic database function that saves the submitted rating to both the collection record and matching active recommendation.",
+        "Updated anime and franchise rating flows to use the newly submitted value as the source of truth before refreshing the page."
+      ],
+      IMPROVED: [
+        "Personal-rating changes now update the matching active recommendation after the collection save succeeds.",
+        "Recommendation-rating changes now persist to the personal rating and active recommendation before the interface reloads.",
+        "Rating synchronization remains separate from RP award logic and cannot create duplicate first-rating or exact-match rewards."
+      ]
+    }
+  },
+
+  {
+    version: "v5.4.8",
+    date: "July 2026",
+    announcementTitle: "RP history and recommendation ratings are more accurate",
+    announcement: "RP History now shows the correct point totals, and your recommendation rating always stays matched with your personal rating.",
+    groups: {
+      FIXED: [
+        "Fixed RP History totals being multiplied when a title had multiple recommendation records.",
+        "Changed the history query to count each unique RP award event exactly once before grouping totals by anime or franchise."
+      ],
+      IMPROVED: [
+        "Synchronized active anime recommendation ratings with the recommender's personal anime rating in both directions.",
+        "Synchronized active franchise recommendation ratings with the recommender's personal franchise rating in both directions.",
+        "Added guarded database triggers so rating synchronization does not loop or create duplicate RP rewards."
+      ]
+    }
+  },
+
+  {
+    version: "v5.4.7",
+    date: "July 2026",
+    announcementTitle: "The RP menu has more options",
+    announcement: "You can now learn how RP works, preview the upcoming Shop, and see how many points each recommendation has earned.",
+    groups: {
+      NEW: [
+        "Changed the RP popup into a three-button menu with How RP Works, Shop, and History views.",
+        "Added an RP Shop placeholder that encourages users to save points while profile rewards are being prepared.",
+        "Added grouped recommendation history showing total RP per anime or franchise and separate user and point totals for Added, Completed, Rated, and Rating Match events.",
+        "Added the protected get_my_recommendation_rp_history database function so users can only retrieve their own earned recommendation history."
+      ],
+      IMPROVED: [
+        "Updated RP navigation labels and accessibility text to describe the full RP menu instead of only the earning guide.",
+        "Kept the What's New announcement short and user-friendly while retaining implementation details in the Changelog."
+      ]
+    }
+  },
+
+  {
     version: "v5.4.6",
     date: "July 2026",
     announcementTitle: "Emergency banners are easier to read",
@@ -548,19 +660,25 @@ const MAT_RELEASES = [
   if (!openButton || !modal || !closeButton || !announcementList || !changelogList || !announcementTab || !changelogTab || !announcementPanel || !changelogPanel) return;
 
   const preview = document.getElementById("latestChangelogPreview");
-  const latest = MAT_RELEASES[0];
+  const announcements = MAT_RELEASES.filter((entry) => entry.isAnnouncement !== false && entry.announcementTitle && entry.announcement);
+  const latestAnnouncement = announcements[0];
+  const announcementStorageKey = "mat-last-viewed-announcement";
+  const viewedAnnouncement = localStorage.getItem(announcementStorageKey);
+  const hasUnreadAnnouncement = Boolean(latestAnnouncement && viewedAnnouncement !== latestAnnouncement.version);
+  openButton.classList.toggle("has-unread-announcement", hasUnreadAnnouncement);
+  announcementTab.classList.toggle("has-unread-announcement", hasUnreadAnnouncement);
 
-  if (preview && latest) {
+  if (preview && latestAnnouncement) {
     preview.innerHTML = `
       <span class="dashboard-mini-icon">📢</span>
       <div>
-        <strong>${escapeHtml(latest.announcementTitle)}</strong>
-        <p>${escapeHtml(latest.announcement)}</p>
+        <strong>${escapeHtml(latestAnnouncement.announcementTitle)}</strong>
+        <p>${escapeHtml(latestAnnouncement.announcement)}</p>
       </div>
     `;
   }
 
-  announcementList.innerHTML = MAT_RELEASES.map((entry) => `
+  announcementList.innerHTML = announcements.map((entry) => `
     <article class="announcement-entry">
       <div class="announcement-entry-heading">
         <div>
@@ -604,6 +722,11 @@ const MAT_RELEASES = [
     selectTab("announcements");
     modal.hidden = false;
     document.body.classList.add("modal-open");
+    if (latestAnnouncement) {
+      localStorage.setItem(announcementStorageKey, latestAnnouncement.version);
+      openButton.classList.remove("has-unread-announcement");
+      announcementTab.classList.remove("has-unread-announcement");
+    }
     announcementTab.focus();
   };
 
