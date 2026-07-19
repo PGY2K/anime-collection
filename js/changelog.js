@@ -1,5 +1,46 @@
 const MAT_RELEASES = [
   {
+    version: "v6.0.2",
+    date: "July 2026",
+    isAnnouncement: false,
+    groups: {
+      IMPROVED: [
+        "Moved all PFP selection out of Profile Settings so profile appearance is managed only through the RP Shop.",
+        "Restored Avatar Decoration as its own RP Shop category with neon PFP rings starting at 500 RP and doubling after each purchase.",
+        "Made signup PFP cards substantially larger on desktop and mobile so each character is easy to identify before selecting."
+      ]
+    }
+  },
+  {
+    version: "v6.0.1",
+    date: "July 2026",
+    isAnnouncement: false,
+    groups: {
+      FIXED: [
+        "Fixed broken PFP images by placing every avatar and the fallback image in the exact asset paths used by signup, profiles, navigation, comments, and the RP Shop."
+      ]
+    }
+  },
+  {
+    version: "v6.0.0",
+    date: "July 2026",
+    isAnnouncement: true,
+    announcementTitle: "A new PFP collection and progressive RP Shop are here",
+    announcement: "New members can choose one character PFP for free, then unlock more PFPs and profile cosmetics through the RP Shop with category-based progressive pricing.",
+    groups: {
+      NEW: [
+        "Added 24 categorized character PFPs across eight anime series.",
+        "New users can choose any one PFP during account creation, and that PFP becomes their first permanently unlocked avatar.",
+        "Added PFP ownership, purchasing, and equipping to the RP Shop."
+      ],
+      IMPROVED: [
+        "Profile customization now shows only PFPs the user has unlocked.",
+        "The default image is now reserved for loading and error fallback instead of being selectable.",
+        "Added independent progressive prices: PFPs start at 50 RP, backgrounds at 500 RP, and Top 5 and Recommendation cosmetics at 1,000 RP, with each category doubling after every purchase."
+      ]
+    }
+  },
+  {
     version: "v5.9.2",
     date: "July 2026",
     isAnnouncement: true,

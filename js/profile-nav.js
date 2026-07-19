@@ -1,13 +1,17 @@
-const PROFILE_AVATAR_COUNT=8;
-const MAT_RP_SHOP_PRICE=500;
+const PROFILE_AVATAR_COUNT=24;
 const MAT_RP_COLORS=["red","blue","green","pink","black","white"];
+const MAT_AVATAR_FALLBACK="assets/pfps/default.png";
+const MAT_AVATAR_CATALOG=[{"id":1,"name":"Eren","category":"Attack on Titan","path":"assets/pfps/attack-on-titan/eren.png"},{"id":2,"name":"Levi","category":"Attack on Titan","path":"assets/pfps/attack-on-titan/levi.png"},{"id":3,"name":"Attack Titan","category":"Attack on Titan","path":"assets/pfps/attack-on-titan/attack-titan.png"},{"id":4,"name":"Ichigo","category":"Bleach","path":"assets/pfps/bleach/ichigo.png"},{"id":5,"name":"Kenpachi","category":"Bleach","path":"assets/pfps/bleach/kenpachi.png"},{"id":6,"name":"Rukia","category":"Bleach","path":"assets/pfps/bleach/rukia.png"},{"id":7,"name":"Gohan","category":"Dragon Ball Z","path":"assets/pfps/dbz/gohan.png"},{"id":8,"name":"Goku","category":"Dragon Ball Z","path":"assets/pfps/dbz/goku.png"},{"id":9,"name":"Vegeta","category":"Dragon Ball Z","path":"assets/pfps/dbz/vegeta.png"},{"id":10,"name":"Nezuko","category":"Demon Slayer","path":"assets/pfps/demon-slayer/nezuko.png"},{"id":11,"name":"Tanjiro","category":"Demon Slayer","path":"assets/pfps/demon-slayer/tanjiro.png"},{"id":12,"name":"Zenitsu","category":"Demon Slayer","path":"assets/pfps/demon-slayer/zenitsu.png"},{"id":13,"name":"Gojo","category":"Jujutsu Kaisen","path":"assets/pfps/jujutsu-kaisen/gojo.png"},{"id":14,"name":"Toji","category":"Jujutsu Kaisen","path":"assets/pfps/jujutsu-kaisen/toji.png"},{"id":15,"name":"Yuji","category":"Jujutsu Kaisen","path":"assets/pfps/jujutsu-kaisen/yuji.png"},{"id":16,"name":"Bakugo","category":"My Hero Academia","path":"assets/pfps/my-hero-academia/bakugo.png"},{"id":17,"name":"Deku","category":"My Hero Academia","path":"assets/pfps/my-hero-academia/deku.png"},{"id":18,"name":"Todoroki","category":"My Hero Academia","path":"assets/pfps/my-hero-academia/todoroki.png"},{"id":19,"name":"Naruto","category":"Naruto","path":"assets/pfps/naruto/naruto.png"},{"id":20,"name":"Sakura","category":"Naruto","path":"assets/pfps/naruto/sakura.png"},{"id":21,"name":"Sasuke","category":"Naruto","path":"assets/pfps/naruto/sauske.png"},{"id":22,"name":"Chopper","category":"One Piece","path":"assets/pfps/one-piece/chopper.png"},{"id":23,"name":"Luffy","category":"One Piece","path":"assets/pfps/one-piece/luffy.png"},{"id":24,"name":"Zoro","category":"One Piece","path":"assets/pfps/one-piece/zoro.png"}];
 const MAT_RP_SHOP_CATEGORIES=[
-  {key:"avatar_glow",title:"PFP",fullTitle:"Profile Picture Glow",description:"Neon ring around your profile picture."},
-  {key:"profile_background",title:"Background",fullTitle:"Profile Background",description:"Solid color theme for your complete profile."},
-  {key:"top_five_glow",title:"Top 5",fullTitle:"Top 5 Glow",description:"Neon outlines around the Top 5 poster cards."},
-  {key:"recommendation_glow",title:"Recommendation",fullTitle:"Recommendation Glow",description:"Neon outline around the recommendation card."}
+  {key:"avatar",title:"PFP",fullTitle:"Profile Picture",description:"Choose a character PFP. Your first signup choice is free; additional PFPs start at 50 RP and double after each purchase."},
+  {key:"avatar_glow",title:"Avatar Decoration",fullTitle:"Avatar Decoration",description:"Add a neon ring around your PFP. Decorations start at 500 RP and double after each purchase."},
+  {key:"profile_background",title:"Background",fullTitle:"Profile Background",description:"Solid color theme for your complete profile. Prices start at 500 RP and double after each purchase."},
+  {key:"top_five_glow",title:"Top 5",fullTitle:"Top 5 Glow",description:"Neon outlines around the Top 5 poster cards. Prices start at 1,000 RP and double after each purchase."},
+  {key:"recommendation_glow",title:"Recommendation",fullTitle:"Recommendation Glow",description:"Neon outline around the recommendation card. Prices start at 1,000 RP and double after each purchase."}
 ];
-function profileAvatarPath(avatarId){const safeId=Math.min(PROFILE_AVATAR_COUNT,Math.max(1,Number(avatarId)||1));return `assets/avatars/avatar-${safeId}.svg`}
+function profileAvatarInfo(avatarId){return MAT_AVATAR_CATALOG.find(item=>item.id===Number(avatarId))||MAT_AVATAR_CATALOG[0]}
+function profileAvatarPath(avatarId){return profileAvatarInfo(avatarId)?.path||MAT_AVATAR_FALLBACK}
+function matAvatarImageError(image){if(image&&image.src&&!image.src.endsWith("/assets/pfps/default.png"))image.src=MAT_AVATAR_FALLBACK}
 function matRpEscape(value){return String(value??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
 function matRpFormatPoints(value){const number=Number(value)||0;return Number.isInteger(number)?number.toLocaleString():number.toLocaleString(undefined,{maximumFractionDigits:2})}
 function matRpLabel(value){return String(value||"").split("_").map(word=>word.charAt(0).toUpperCase()+word.slice(1)).join(" ")}
@@ -43,99 +47,74 @@ function matRpBuildPreview(){
   const avatar=document.getElementById("navProfileAvatar")?.getAttribute("src")||profileAvatarPath(1);
   return `<section class="public-profile-card mat-profile-customized rp-shop-profile-preview-card mat-profile-bg-default"><div class="profile-header"><img class="profile-main-avatar mat-avatar-glow-default" src="${matRpEscape(avatar)}" alt="Your profile avatar"><h2>Your Profile</h2><p>Live RP Shop preview</p></div><section class="profile-active-recommendation mat-recommendation-glow-default"><div class="profile-section-heading"><h3>💎 My Recommendation</h3><span>Featured title</span></div><article class="dashboard-media-card profile-rec-card"><div class="profile-rec-poster poster-placeholder">🎌</div><div class="dashboard-media-body"><h3>Your Recommendation</h3><strong>⭐ 10.0</strong></div></article></section><section class="profile-top-section mat-top-five-glow-default"><div class="profile-section-heading"><h3>🏆 Top 5</h3><span>Your favorites</span></div><div class="profile-top-grid">${[1,2,3,4,5].map(number=>`<article class="profile-top-card"><div class="profile-top-rank">${number}</div><div class="profile-top-poster poster-placeholder">🎌</div></article>`).join("")}</div></section></section>`;
 }
-function matRpOption(category,color,state){
-  const itemKey=`${category.key}:${color}`;
-  const owned=color==="default"||state.ownedSet.has(itemKey);
-  const selected=state.draft[category.key]===color;
-  const status=color==="default"?"Free":owned?"Owned":"500 RP";
-  return `<button type="button" class="rp-designer-color ${selected?"is-selected":""} ${owned?"is-owned":"is-locked"}" data-rp-design-category="${category.key}" data-rp-design-color="${color}" aria-label="${color==="default"?"Restore default":matRpLabel(color)}. ${status}." aria-pressed="${selected}"><span class="rp-color-preview mat-preview-${color}"></span><strong>${color==="default"?"Default":matRpLabel(color)}</strong><small>${status}</small></button>`;
+
+function matRpCategoryPrice(state,key){return Number(state.nextPrices?.[key])||0}
+function matRpOption(category,value,state){
+  const isAvatar=category.key==="avatar";
+  const owned=isAvatar?state.ownedAvatarSet.has(Number(value)):value==="default"||state.ownedSet.has(`${category.key}:${value}`);
+  const selected=isAvatar?Number(state.draft.avatar_id)===Number(value):state.draft[category.key]===value;
+  const price=matRpCategoryPrice(state,category.key);
+  const label=isAvatar?profileAvatarInfo(value)?.name:(value==="default"?"Default":matRpLabel(value));
+  const status=owned?"Owned":`${matRpFormatPoints(price)} RP`;
+  const preview=isAvatar?`<img class="rp-pfp-option-image" src="${profileAvatarPath(value)}" onerror="matAvatarImageError(this)" alt="">`:`<span class="rp-color-preview mat-preview-${value}"></span>`;
+  return `<button type="button" class="rp-designer-color ${isAvatar?'rp-pfp-option':''} ${selected?'is-selected':''} ${owned?'is-owned':'is-locked'}" data-rp-design-category="${category.key}" data-rp-design-value="${value}" aria-label="${matRpEscape(label)}. ${status}." aria-pressed="${selected}">${preview}<strong>${matRpEscape(label)}</strong><small>${status}</small></button>`;
 }
 function matRpCategoryButton(category,state){
-  const color=state.draft[category.key]||"default";
-  const label=color==="default"?"Default":matRpLabel(color);
-  return `<button type="button" class="rp-category-bubble" data-rp-category-open="${category.key}" aria-label="Customize ${matRpEscape(category.fullTitle||category.title)}"><span class="rp-category-bubble-copy"><strong>${matRpEscape(category.title)}</strong><small>${matRpEscape(label)}</small></span><span class="rp-category-bubble-swatch mat-preview-${color}"></span></button>`;
+  const isAvatar=category.key==="avatar";
+  const value=isAvatar?state.draft.avatar_id:(state.draft[category.key]||"default");
+  const label=isAvatar?profileAvatarInfo(value)?.name:(value==="default"?"Default":matRpLabel(value));
+  const swatch=isAvatar?`<img class="rp-category-avatar" src="${profileAvatarPath(value)}" onerror="matAvatarImageError(this)" alt="">`:`<span class="rp-category-bubble-swatch mat-preview-${value}"></span>`;
+  return `<button type="button" class="rp-category-bubble" data-rp-category-open="${category.key}" aria-label="Customize ${matRpEscape(category.fullTitle||category.title)}"><span class="rp-category-bubble-copy"><strong>${matRpEscape(category.title)}</strong><small>${matRpEscape(label)}</small></span>${swatch}</button>`;
 }
 function matRpDesignerHtml(state){
-  return `<section class="rp-shop rp-profile-designer"><div class="rp-shop-heading"><div><h3>Design Your Profile</h3><p>Preview your design, then purchase and equip it once.</p></div><strong class="rp-shop-balance"><img src="assets/icons/rp-gem.png" alt="">${matRpFormatPoints(state.balance)} RP</strong></div><div class="rp-designer-layout"><div class="rp-designer-preview-wrap"><div class="rp-designer-preview-label"><strong>Live Preview</strong><span>Not saved yet</span></div><div id="matRpProfilePreview">${matRpBuildPreview()}</div></div><div class="rp-designer-controls"><div class="rp-category-home" id="matRpCategoryHome"><div class="rp-category-home-copy"><h4>Customize</h4><p>Choose a category, then select a color.</p></div><div class="rp-category-bubbles">${MAT_RP_SHOP_CATEGORIES.map(category=>matRpCategoryButton(category,state)).join("")}</div></div><section class="rp-color-picker" id="matRpColorPicker" hidden><div class="rp-color-picker-head"><div><h4 id="matRpColorPickerTitle">Choose a color</h4><p id="matRpColorPickerDescription"></p></div><button type="button" class="rp-color-picker-close" id="matRpColorPickerClose" aria-label="Close color menu">×</button></div><div class="rp-designer-colors" id="matRpColorPickerOptions"></div></section></div></div><footer class="rp-designer-checkout"><div class="rp-designer-totals"><span>Cost <strong id="matRpPendingCost">0 RP</strong></span><span>Balance <strong id="matRpCurrentBalance">${matRpFormatPoints(state.balance)} RP</strong></span><span>After <strong id="matRpRemainingBalance">${matRpFormatPoints(state.balance)} RP</strong></span></div><button class="primary-btn rp-purchase-equip-btn" id="matRpPurchaseEquip" type="button">Purchase and Equip</button></footer></section>`;
+  return `<section class="rp-shop rp-profile-designer"><div class="rp-shop-heading"><div><h3>Design Your Profile</h3><p>Preview your design, then purchase and equip it.</p></div><strong class="rp-shop-balance"><img src="assets/icons/rp-gem.png" alt="">${matRpFormatPoints(state.balance)} RP</strong></div><div class="rp-designer-layout"><div class="rp-designer-preview-wrap"><div class="rp-designer-preview-label"><strong>Live Preview</strong><span>Not saved yet</span></div><div id="matRpProfilePreview">${matRpBuildPreview()}</div></div><div class="rp-designer-controls"><div class="rp-category-home" id="matRpCategoryHome"><div class="rp-category-home-copy"><h4>Customize</h4><p>Choose a category, then select an option.</p></div><div class="rp-category-bubbles">${MAT_RP_SHOP_CATEGORIES.map(category=>matRpCategoryButton(category,state)).join("")}</div></div><section class="rp-color-picker" id="matRpColorPicker" hidden><div class="rp-color-picker-head"><div><h4 id="matRpColorPickerTitle">Choose an option</h4><p id="matRpColorPickerDescription"></p></div><button type="button" class="rp-color-picker-close" id="matRpColorPickerClose" aria-label="Close menu">×</button></div><div class="rp-designer-colors" id="matRpColorPickerOptions"></div></section></div></div><footer class="rp-designer-checkout"><div class="rp-designer-totals"><span>Cost <strong id="matRpPendingCost">0 RP</strong></span><span>Balance <strong id="matRpCurrentBalance">${matRpFormatPoints(state.balance)} RP</strong></span><span>After <strong id="matRpRemainingBalance">${matRpFormatPoints(state.balance)} RP</strong></span></div><button class="primary-btn rp-purchase-equip-btn" id="matRpPurchaseEquip" type="button">Purchase and Equip</button></footer></section>`;
 }
-function matRpRenderCategoryBubbles(state){
-  const wrap=document.querySelector(".rp-category-bubbles");
-  if(!wrap)return;
-  wrap.innerHTML=MAT_RP_SHOP_CATEGORIES.map(category=>matRpCategoryButton(category,state)).join("");
-  wrap.querySelectorAll("[data-rp-category-open]").forEach(button=>button.onclick=()=>matRpOpenColorPicker(state,button.dataset.rpCategoryOpen));
-}
-function matRpCloseColorPicker(){
-  const picker=document.getElementById("matRpColorPicker");
-  const home=document.getElementById("matRpCategoryHome");
-  if(picker)picker.hidden=true;
-  if(home)home.hidden=false;
-}
+function matRpRenderCategoryBubbles(state){const wrap=document.querySelector(".rp-category-bubbles");if(!wrap)return;wrap.innerHTML=MAT_RP_SHOP_CATEGORIES.map(category=>matRpCategoryButton(category,state)).join("");wrap.querySelectorAll("[data-rp-category-open]").forEach(button=>button.onclick=()=>matRpOpenColorPicker(state,button.dataset.rpCategoryOpen))}
+function matRpCloseColorPicker(){const picker=document.getElementById("matRpColorPicker");const home=document.getElementById("matRpCategoryHome");if(picker)picker.hidden=true;if(home)home.hidden=false}
 function matRpOpenColorPicker(state,key){
-  const category=MAT_RP_SHOP_CATEGORIES.find(item=>item.key===key);
-  if(!category)return;
-  state.activeCategory=key;
-  const home=document.getElementById("matRpCategoryHome");
-  const picker=document.getElementById("matRpColorPicker");
-  const title=document.getElementById("matRpColorPickerTitle");
-  const description=document.getElementById("matRpColorPickerDescription");
-  const options=document.getElementById("matRpColorPickerOptions");
-  if(home)home.hidden=true;
-  if(title)title.textContent=category.fullTitle||category.title;
-  if(description)description.textContent=category.description;
+  const category=MAT_RP_SHOP_CATEGORIES.find(item=>item.key===key);if(!category)return;state.activeCategory=key;
+  const home=document.getElementById("matRpCategoryHome"),picker=document.getElementById("matRpColorPicker"),title=document.getElementById("matRpColorPickerTitle"),description=document.getElementById("matRpColorPickerDescription"),options=document.getElementById("matRpColorPickerOptions");
+  if(home)home.hidden=true;if(title)title.textContent=category.fullTitle||category.title;if(description)description.textContent=category.description;
   if(options){
-    options.innerHTML=[...MAT_RP_COLORS,"default"].map(color=>matRpOption(category,color,state)).join("");
-    options.querySelectorAll("[data-rp-design-category]").forEach(button=>button.onclick=()=>{
-      state.draft[button.dataset.rpDesignCategory]=button.dataset.rpDesignColor;
-      matRpRefreshDesigner(state);
-      matRpRenderCategoryBubbles(state);
-      matRpCloseColorPicker();
-    });
+    if(key==="avatar"){
+      const groups=[...new Set(MAT_AVATAR_CATALOG.map(item=>item.category))];
+      options.classList.add("rp-pfp-catalog");
+      options.innerHTML=groups.map(group=>`<section class="rp-pfp-group"><h5>${matRpEscape(group)}</h5><div class="rp-pfp-grid">${MAT_AVATAR_CATALOG.filter(item=>item.category===group).map(item=>matRpOption(category,item.id,state)).join("")}</div></section>`).join("");
+    }else{
+      options.classList.remove("rp-pfp-catalog");
+      options.innerHTML=["default",...MAT_RP_COLORS].map(color=>matRpOption(category,color,state)).join("");
+    }
+    options.querySelectorAll("[data-rp-design-category]").forEach(button=>button.onclick=()=>{const designCategory=button.dataset.rpDesignCategory;const value=button.dataset.rpDesignValue;if(designCategory==="avatar")state.draft.avatar_id=Number(value);else state.draft[designCategory]=value;matRpRefreshDesigner(state);matRpRenderCategoryBubbles(state);matRpCloseColorPicker()});
   }
   if(picker)picker.hidden=false;
 }
 function matRpApplyDraftToPreview(draft){
-  const preview=document.querySelector("#matRpProfilePreview .public-profile-card");
-  if(!preview)return;
-  const replace=(node,prefix,color)=>{if(!node)return;[...node.classList].filter(name=>name.startsWith(`${prefix}-`)).forEach(name=>node.classList.remove(name));node.classList.add(matCustomizationClass(prefix,color));};
-  replace(preview,"mat-profile-bg",draft.profile_background);
-  replace(preview.querySelector(".profile-main-avatar"),"mat-avatar-glow",draft.avatar_glow);
-  replace(preview.querySelector(".profile-top-section"),"mat-top-five-glow",draft.top_five_glow);
-  replace(preview.querySelector(".profile-active-recommendation"),"mat-recommendation-glow",draft.recommendation_glow);
+  const preview=document.querySelector("#matRpProfilePreview .public-profile-card");if(!preview)return;
+  const replace=(node,prefix,color)=>{if(!node)return;[...node.classList].filter(name=>name.startsWith(`${prefix}-`)).forEach(name=>node.classList.remove(name));node.classList.add(matCustomizationClass(prefix,color))};
+  const avatar=preview.querySelector(".profile-main-avatar");if(avatar){avatar.src=profileAvatarPath(draft.avatar_id);avatar.onerror=()=>matAvatarImageError(avatar)}
+  replace(avatar,"mat-avatar-glow",draft.avatar_glow);replace(preview,"mat-profile-bg",draft.profile_background);replace(preview.querySelector(".profile-top-section"),"mat-top-five-glow",draft.top_five_glow);replace(preview.querySelector(".profile-active-recommendation"),"mat-recommendation-glow",draft.recommendation_glow);
 }
-function matRpDraftCost(state){return MAT_RP_SHOP_CATEGORIES.reduce((total,category)=>{const color=state.draft[category.key];return total+(color!=="default"&&!state.ownedSet.has(`${category.key}:${color}`)?MAT_RP_SHOP_PRICE:0)},0)}
-function matRpRefreshDesigner(state){
-  matRpApplyDraftToPreview(state.draft);
-  const cost=matRpDraftCost(state);const remaining=state.balance-cost;
-  const costNode=document.getElementById("matRpPendingCost");const remainingNode=document.getElementById("matRpRemainingBalance");
-  if(costNode)costNode.textContent=`${matRpFormatPoints(cost)} RP`;if(remainingNode){remainingNode.textContent=`${matRpFormatPoints(remaining)} RP`;remainingNode.classList.toggle("is-negative",remaining<0)}
-  document.querySelectorAll("[data-rp-design-category]").forEach(button=>{const selected=state.draft[button.dataset.rpDesignCategory]===button.dataset.rpDesignColor;button.classList.toggle("is-selected",selected);button.setAttribute("aria-pressed",String(selected));button.title=selected?"Selected":button.classList.contains("is-owned")?"Owned":"Locked"});
+function matRpDraftCost(state){
+  let total=0;
+  if(!state.ownedAvatarSet.has(Number(state.draft.avatar_id)))total+=matRpCategoryPrice(state,"avatar");
+  for(const category of MAT_RP_SHOP_CATEGORIES.filter(item=>item.key!=="avatar")){const value=state.draft[category.key];if(value!=="default"&&!state.ownedSet.has(`${category.key}:${value}`))total+=matRpCategoryPrice(state,category.key)}
+  return total;
 }
+function matRpRefreshDesigner(state){matRpApplyDraftToPreview(state.draft);const cost=matRpDraftCost(state),remaining=state.balance-cost;const costNode=document.getElementById("matRpPendingCost"),remainingNode=document.getElementById("matRpRemainingBalance");if(costNode)costNode.textContent=`${matRpFormatPoints(cost)} RP`;if(remainingNode){remainingNode.textContent=`${matRpFormatPoints(remaining)} RP`;remainingNode.classList.toggle("is-negative",remaining<0)}document.querySelectorAll("[data-rp-design-category]").forEach(button=>{const selected=button.dataset.rpDesignCategory==="avatar"?Number(state.draft.avatar_id)===Number(button.dataset.rpDesignValue):state.draft[button.dataset.rpDesignCategory]===button.dataset.rpDesignValue;button.classList.toggle("is-selected",selected);button.setAttribute("aria-pressed",String(selected))})}
 async function matLoadRpShop(){
   const panel=document.getElementById("matRpPanel");if(!panel)return;panel.innerHTML='<div class="rp-history-loading">Loading profile designer…</div>';
-  try{
-    const {data,error}=await supabaseClient.rpc("get_my_rp_shop_state");if(error)throw error;
-    const raw=Array.isArray(data)?(data[0]||{}):(data||{});const equipped=matNormalizeCustomizations(raw.equipped||raw);
-    const state={balance:Number(raw.balance)||0,ownedSet:matRpOwnedSet(raw.owned),equipped,draft:{...equipped},activeCategory:MAT_RP_SHOP_CATEGORIES[0].key};
-    panel.innerHTML=matRpDesignerHtml(state);matRpApplyDraftToPreview(state.draft);
-    matRpRenderCategoryBubbles(state);
-    document.getElementById("matRpColorPickerClose").onclick=matRpCloseColorPicker;
-    document.getElementById("matRpPurchaseEquip").onclick=()=>matPurchaseAndEquipDesign(state);
-    matRpRefreshDesigner(state);
-  }catch(error){panel.innerHTML=`<div class="rp-history-empty">${matRpEscape(error.message||"Could not load the RP Shop.")}</div>`}
+  try{const {data,error}=await supabaseClient.rpc("get_my_rp_shop_state");if(error)throw error;const raw=Array.isArray(data)?(data[0]||{}):(data||{}),equipped=matNormalizeCustomizations(raw.equipped||raw);const state={balance:Number(raw.balance)||0,ownedSet:matRpOwnedSet(raw.owned),ownedAvatarSet:new Set((raw.owned_avatars||[]).map(Number)),nextPrices:raw.next_prices||{},equipped,draft:{...equipped,avatar_id:Number(raw.equipped_avatar)||1},activeCategory:"avatar"};panel.innerHTML=matRpDesignerHtml(state);matRpApplyDraftToPreview(state.draft);matRpRenderCategoryBubbles(state);document.getElementById("matRpColorPickerClose").onclick=matRpCloseColorPicker;document.getElementById("matRpPurchaseEquip").onclick=()=>matPurchaseAndEquipDesign(state);matRpRefreshDesigner(state)}catch(error){panel.innerHTML=`<div class="rp-history-empty">${matRpEscape(error.message||"Could not load the RP Shop.")}</div>`}
 }
 async function matPurchaseAndEquipDesign(state){
-  const total=matRpDraftCost(state);
-  if(total>state.balance){await matRpPopup("Not Enough RP","You do not have enough RP for this transaction.");return}
-  const summary=total?`Purchase the locked colors in this design for ${matRpFormatPoints(total)} RP and equip the full design?`:"Equip this profile design?";
-  const confirmed=await matRpPopup("Confirm Profile Design",summary,[{label:"Cancel",value:false},{label:total?"Purchase and Equip":"Equip",value:true,primary:true}]);if(!confirmed)return;
+  const total=matRpDraftCost(state);if(total>state.balance){await matRpPopup("Not Enough RP","You do not have enough RP for this transaction.");return}
+  const summary=total?`Purchase the locked items in this design for ${matRpFormatPoints(total)} RP and equip the full design?`:"Equip this profile design?";const confirmed=await matRpPopup("Confirm Profile Design",summary,[{label:"Cancel",value:false},{label:total?"Purchase and Equip":"Equip",value:true,primary:true}]);if(!confirmed)return;
   const button=document.getElementById("matRpPurchaseEquip");if(button){button.disabled=true;button.textContent="Saving…"}
   try{
-    for(const category of MAT_RP_SHOP_CATEGORIES){const color=state.draft[category.key];const itemKey=`${category.key}:${color}`;if(color!=="default"&&!state.ownedSet.has(itemKey)){const {data,error}=await supabaseClient.rpc("purchase_rp_shop_item",{p_item_key:itemKey});if(error)throw error;state.ownedSet.add(itemKey);const result=Array.isArray(data)?(data[0]||{}):(data||{});if(result.balance!=null)state.balance=Number(result.balance)||0}}
-    for(const category of MAT_RP_SHOP_CATEGORIES){const {error}=await supabaseClient.rpc("equip_profile_customization",{p_category:category.key,p_color:state.draft[category.key]});if(error)throw error}
-    state.equipped={...state.draft};matApplyRpBalance(state.balance);
-    window.dispatchEvent(new CustomEvent("mat-profile-customization-changed",{detail:{...state.draft}}));
-    await matRpPopup("Profile Updated",total?`Your design has been purchased and equipped for ${matRpFormatPoints(total)} RP.`:"Your profile design has been equipped.");
-    await matLoadRpShop();
+    if(!state.ownedAvatarSet.has(Number(state.draft.avatar_id))){const {data,error}=await supabaseClient.rpc("purchase_profile_avatar",{p_avatar_id:Number(state.draft.avatar_id)});if(error)throw error;state.ownedAvatarSet.add(Number(state.draft.avatar_id));const result=Array.isArray(data)?data[0]:data;if(result?.balance!=null)state.balance=Number(result.balance)||0}
+    for(const category of MAT_RP_SHOP_CATEGORIES.filter(item=>item.key!=="avatar")){const value=state.draft[category.key],itemKey=`${category.key}:${value}`;if(value!=="default"&&!state.ownedSet.has(itemKey)){const {data,error}=await supabaseClient.rpc("purchase_rp_shop_item",{p_item_key:itemKey});if(error)throw error;state.ownedSet.add(itemKey);const result=Array.isArray(data)?data[0]:data;if(result?.balance!=null)state.balance=Number(result.balance)||0}}
+    const {error:avatarError}=await supabaseClient.rpc("equip_owned_avatar",{p_avatar_id:Number(state.draft.avatar_id)});if(avatarError)throw avatarError;
+    for(const category of MAT_RP_SHOP_CATEGORIES.filter(item=>item.key!=="avatar")){const {error}=await supabaseClient.rpc("equip_profile_customization",{p_category:category.key,p_color:state.draft[category.key]});if(error)throw error}
+    matApplyRpBalance(state.balance);const navAvatar=document.getElementById("navProfileAvatar");if(navAvatar)navAvatar.src=profileAvatarPath(state.draft.avatar_id);window.dispatchEvent(new CustomEvent("mat-profile-customization-changed",{detail:{...state.draft}}));await matRpPopup("Profile Updated",total?`Your design has been purchased and equipped for ${matRpFormatPoints(total)} RP.`:"Your profile design has been equipped.");await matLoadRpShop();
   }catch(error){if(String(error.message||"").toLowerCase().includes("enough rp"))await matRpPopup("Not Enough RP","You do not have enough RP for this transaction.");else await matRpPopup("Could Not Save Design",error.message||"Your profile design could not be saved.");await matLoadRpShop()}
 }
 

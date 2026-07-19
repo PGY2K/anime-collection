@@ -9,39 +9,27 @@ function escapeSignupHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+
 function renderSignupAvatars() {
   const grid = document.getElementById("signupAvatarGrid");
-
-  grid.innerHTML = Array.from(
-    { length: PROFILE_AVATAR_COUNT },
-    (_, index) => index + 1
-  )
-    .map(
-      (id) => `
-        <button
-          class="signup-avatar-choice ${id === selectedSignupAvatarId ? "selected" : ""}"
-          type="button"
-          data-avatar-id="${id}"
-          aria-label="Choose avatar ${id}"
-        >
-          <img src="${profileAvatarPath(id)}" alt="Avatar option ${id}" />
-          <span class="avatar-check">✓</span>
-        </button>
-      `
-    )
-    .join("");
-
-  grid.querySelectorAll(".signup-avatar-choice").forEach((button) => {
-    button.addEventListener("click", () => {
-      selectedSignupAvatarId = Number(button.dataset.avatarId);
-
-      grid.querySelectorAll(".signup-avatar-choice").forEach((item) => {
-        item.classList.remove("selected");
-      });
-
-      button.classList.add("selected");
-    });
-  });
+  const groups = [...new Set(MAT_AVATAR_CATALOG.map((item) => item.category))];
+  grid.innerHTML = groups.map((group) => `
+    <section class="signup-avatar-category">
+      <h3>${escapeSignupHtml(group)}</h3>
+      <div class="signup-avatar-category-grid">
+        ${MAT_AVATAR_CATALOG.filter((item) => item.category === group).map((item) => `
+          <button class="signup-avatar-choice ${item.id === selectedSignupAvatarId ? "selected" : ""}" type="button" data-avatar-id="${item.id}" aria-label="Choose ${escapeSignupHtml(item.name)}">
+            <img src="${profileAvatarPath(item.id)}" onerror="matAvatarImageError(this)" alt="${escapeSignupHtml(item.name)}" />
+            <span class="signup-avatar-name">${escapeSignupHtml(item.name)}</span>
+            <span class="avatar-check">✓</span>
+          </button>`).join("")}
+      </div>
+    </section>`).join("");
+  grid.querySelectorAll(".signup-avatar-choice").forEach((button) => button.addEventListener("click", () => {
+    selectedSignupAvatarId = Number(button.dataset.avatarId);
+    grid.querySelectorAll(".signup-avatar-choice").forEach((item) => item.classList.remove("selected"));
+    button.classList.add("selected");
+  }));
 }
 
 function validateSignup(username, password, confirmPassword) {

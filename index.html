@@ -9,8 +9,8 @@
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png" />
   <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" />
-  <link rel="stylesheet" href="css/style.css?v=5.9.2" />
-  <link rel="stylesheet" href="css/profile.css?v=5.9.2" />
+  <link rel="stylesheet" href="css/style.css?v=6.0.2" />
+  <link rel="stylesheet" href="css/profile.css?v=6.0.2" />
 </head>
 <body class="home-auth-checking">
   <section class="landing-page" id="publicLanding" hidden>
@@ -129,7 +129,7 @@
         <div><a class="primary-btn" href="signup.html">Start Tracking Free</a><a class="secondary-btn" href="login.html">Sign In</a></div>
       </section>
     </main>
-    <footer class="landing-footer landing-public-footer"><span class="mat-footer-version">v5.9.2</span><a class="mat-footer-discord" href="https://discord.gg/" target="_blank" rel="noopener noreferrer"><span class="mat-footer-discord-copy"><strong>MAT Discord</strong><small>Support &amp; Suggestions</small></span></a></footer>
+    <footer class="landing-footer landing-public-footer"><span class="mat-footer-version">v6.0.0</span><a class="mat-footer-discord" href="https://discord.gg/" target="_blank" rel="noopener noreferrer"><span class="mat-footer-discord-copy"><strong>MAT Discord</strong><small>Support &amp; Suggestions</small></span></a></footer>
   </section>
 
   <main class="shell" id="signedInDashboard" hidden>
@@ -143,7 +143,7 @@
         <a href="friends.html">Following</a>
         <button class="nav-rp-button" type="button" aria-label="Recommendation Points. Open earning guide."><img src="assets/icons/rp-gem.png" alt="RP"><strong data-rp-total>0</strong><span>RP</span></button>
         <a class="profile-nav-link" href="profile.html" aria-label="Open profile" title="Profile">
-          <img id="navProfileAvatar" src="assets/avatars/avatar-1.svg" alt="Profile" />
+          <img id="navProfileAvatar" src="assets/pfps/default.png" alt="Profile" />
         </a>
       </div>
     </nav>
@@ -241,12 +241,12 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/supabase-client.js?v=5.7.4"></script>
-  <script src="js/profile-nav.js?v=5.9.2"></script>
+  <script src="js/supabase-client.js?v=6.0.2"></script>
+  <script src="js/profile-nav.js?v=6.0.2"></script>
   <script src="js/content-preferences.js"></script>
   <script src="js/pioneer-badge.js"></script>
-  <script src="js/recommendation-collection-state.js?v=5.4.3"></script>
-  <script src="js/dashboard.js?v=5.4.3"></script>
+  <script src="js/recommendation-collection-state.js?v=6.0.2"></script>
+  <script src="js/dashboard.js?v=6.0.2"></script>
   <script>
     (async function initializeHomePage() {
       const landing = document.getElementById("publicLanding");
@@ -286,9 +286,9 @@
       document.getElementById("matInAction")?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   </script>
-  <script src="js/landing-posters.js?v=5.9.2"></script>
-  <script src="js/version.js?v=5.9.2"></script>
-  <script src="js/changelog.js?v=5.9.2"></script>
+  <script src="js/landing-posters.js?v=6.0.2"></script>
+  <script src="js/version.js?v=6.0.2"></script>
+  <script src="js/changelog.js?v=6.0.2"></script>
   <script src="js/pwa.js"></script>
 </body>
 </html>

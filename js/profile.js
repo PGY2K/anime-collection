@@ -2,6 +2,7 @@ const PROFILE_ANILIST_ENDPOINT = "https://graphql.anilist.co";
 let currentProfileUser = null;
 let currentProfileData = null;
 let selectedAvatarId = 1;
+let profileOwnedAvatarIds = [1];
 let profileAnime = [];
 let profileBadges = [];
 let profileFranchises = [];
@@ -255,8 +256,6 @@ async function renderProfile() {
           <label for="profileUsername">Username</label>
           <input class="search-box" id="profileUsername" maxlength="24" value="${escapeProfileHtml(currentProfileData.username || "")}" ${currentProfileData.username_privileges_revoked ? "disabled" : "required"} />
           ${currentProfileData.username_privileges_revoked ? '<small class="profile-privilege-warning">Your username privileges have been revoked.</small>' : ""}
-          <label>Choose a profile picture</label>
-          <div class="avatar-grid">${Array.from({length: PROFILE_AVATAR_COUNT}, (_,i)=>i+1).map((id)=>`<button class="avatar-choice ${id===selectedAvatarId?'selected':''}" type="button" data-avatar-id="${id}"><img src="${profileAvatarPath(id)}" alt="Avatar ${id}" /></button>`).join("")}</div>
           <label>Your user code</label>
           <div class="friend-code-row"><code id="friendCode">${escapeProfileHtml(currentProfileData.friend_code)}</code><button class="secondary-btn" id="copyFriendCodeBtn" type="button">Copy</button></div>
           <div class="profile-setting-row">
@@ -289,11 +288,6 @@ function bindProfileEvents() {
     matSetShow18Posters(event.target.checked);
     renderProfile();
   });
-  document.querySelectorAll(".avatar-choice").forEach((button) => button.addEventListener("click", () => {
-    selectedAvatarId = Number(button.dataset.avatarId);
-    document.querySelectorAll(".avatar-choice").forEach((item)=>item.classList.remove("selected"));
-    button.classList.add("selected");
-  }));
   document.getElementById("copyFriendCodeBtn").addEventListener("click", async () => {
     await navigator.clipboard.writeText(document.getElementById("friendCode").textContent.trim());
     document.getElementById("copyFriendCodeBtn").textContent = "Copied";
@@ -309,13 +303,11 @@ async function saveProfile(event) {
   if (!currentProfileData.username_privileges_revoked && username.length < 3) { message.textContent = "Username must be at least 3 characters."; message.className = "profile-message profile-error"; return; }
   const { error } = await supabaseClient.from("profiles").update({
       username,
-      avatar_id: selectedAvatarId,
       is_private: document.getElementById("profilePrivateToggle").checked,
       updated_at: new Date().toISOString()
     }).eq("user_id", currentProfileUser.id);
   if (error) { message.textContent = error.code === "23505" ? "That username is already taken." : error.message; message.className = "profile-message profile-error"; return; }
-  currentProfileData.username = username; currentProfileData.avatar_id = selectedAvatarId; currentProfileData.is_private=document.getElementById("profilePrivateToggle").checked;
-  document.getElementById("navProfileAvatar").src = profileAvatarPath(selectedAvatarId);
+  currentProfileData.username = username; currentProfileData.is_private=document.getElementById("profilePrivateToggle").checked;
   message.textContent = "Profile saved."; message.className = "profile-message profile-success";
   setTimeout(renderProfile, 600);
 }
@@ -333,6 +325,9 @@ async function initProfile(user) {
       supabaseClient.from("recommendations").select("*").eq("recommender_id", user.id).eq("active", true).maybeSingle().then(({data,error}) => error ? null : data),
       matLoadProfileCustomizations(user.id)
     ]);
+    const { data: ownedAvatarData, error: ownedAvatarError } = await supabaseClient.rpc("get_my_owned_avatars");
+    profileOwnedAvatarIds = ownedAvatarError ? [Number(currentProfileData.avatar_id) || 1] : (ownedAvatarData || []).map((row) => Number(row.avatar_id ?? row)).filter(Boolean);
+    if (!profileOwnedAvatarIds.includes(Number(currentProfileData.avatar_id))) profileOwnedAvatarIds.unshift(Number(currentProfileData.avatar_id) || 1);
     await renderProfile();
   } catch (error) {
     console.error(error);
@@ -341,4 +336,10 @@ async function initProfile(user) {
   }
 }
 
-window.addEventListener("mat-profile-customization-changed", async (event) => { if (!currentProfileUser) return; profileCustomizations = event.detail && Object.keys(event.detail).length ? event.detail : await matLoadProfileCustomizations(currentProfileUser.id); await renderProfile(); });
+window.addEventListener("mat-profile-customization-changed", async (event) => {
+  if (!currentProfileUser) return;
+  const detail = event.detail && Object.keys(event.detail).length ? event.detail : null;
+  if (detail?.avatar_id && currentProfileData) currentProfileData.avatar_id = Number(detail.avatar_id);
+  profileCustomizations = detail || await matLoadProfileCustomizations(currentProfileUser.id);
+  await renderProfile();
+});

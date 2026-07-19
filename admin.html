@@ -9,8 +9,8 @@
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png" />
   <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" />
-  <link rel="stylesheet" href="css/style.css?v=5.8.6" />
-  <link rel="stylesheet" href="css/admin.css?v=5.7.4" />
+  <link rel="stylesheet" href="css/style.css?v=6.0.2" />
+  <link rel="stylesheet" href="css/admin.css?v=6.0.2" />
 </head>
 <body>
   <main class="shell">
@@ -23,7 +23,7 @@
         <a href="friends.html">Following</a>
         <button class="nav-rp-button" type="button" aria-label="Recommendation Points. Open earning guide."><img src="assets/icons/rp-gem.png" alt="RP"><strong data-rp-total>0</strong><span>RP</span></button>
         <a class="profile-nav-link" href="profile.html" aria-label="Open profile" title="Profile">
-          <img id="navProfileAvatar" src="assets/avatars/avatar-1.svg" alt="Profile" />
+          <img id="navProfileAvatar" src="assets/pfps/default.png" alt="Profile" />
         </a>
       </div>
     </nav>
@@ -42,16 +42,16 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/supabase-client.js?v=5.7.4"></script>
-  <script src="js/profile-nav.js?v=5.8.6"></script>
+  <script src="js/supabase-client.js?v=6.0.2"></script>
+  <script src="js/profile-nav.js?v=6.0.2"></script>
   <script src="js/badges.js"></script>
-  <script src="js/admin.js?v=5.7.4"></script>
+  <script src="js/admin.js?v=6.0.2"></script>
   <script>
     requireSignedInUser().then((user) => {
       if (user) initAdminPanel(user);
     });
   </script>
-  <script src="js/version.js?v=5.8.6"></script>
+  <script src="js/version.js?v=6.0.2"></script>
   <script src="js/pwa.js"></script>
 </body>
 </html>
