@@ -10,7 +10,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png" />
   <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" />
   <link rel="stylesheet" href="css/style.css?v=5.5.1" />
-  <link rel="stylesheet" href="css/auth.css" />
+  <link rel="stylesheet" href="css/auth.css?v=5.7.4" />
 </head>
 <body>
   <main class="auth-page">
@@ -38,16 +38,63 @@
     </section>
     <footer class="mat-footer"></footer>
   </main>
+  <div class="auth-confirm-modal hidden" id="suspendedAccountModal" role="dialog" aria-modal="true" aria-labelledby="suspendedAccountTitle">
+    <section class="auth-confirm-card">
+      <div class="auth-confirm-icon" aria-hidden="true">!</div>
+      <h2 id="suspendedAccountTitle">Account Suspended</h2>
+      <p>Your MAT account has been deleted. You can no longer access this account.</p>
+      <div class="auth-confirm-actions auth-confirm-actions-single">
+        <button class="primary-btn" id="suspendedAccountReturn" type="button">Return to Login</button>
+      </div>
+    </section>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/supabase-client.js"></script>
+  <script src="js/supabase-client.js?v=5.7.4"></script>
   <script>
     const form = document.getElementById("loginForm");
     const message = document.getElementById("authMessage");
+    const suspendedModal = document.getElementById("suspendedAccountModal");
+    const suspendedReturnButton = document.getElementById("suspendedAccountReturn");
 
-    supabaseClient.auth.getSession().then(({ data }) => {
-      if (data?.session) window.location.href = "collection.html";
-    });
+    function showSuspendedAccountModal() {
+      suspendedModal.classList.remove("hidden");
+      document.body.classList.add("auth-modal-open");
+      suspendedReturnButton.focus();
+    }
+
+    function closeSuspendedAccountModal() {
+      suspendedModal.classList.add("hidden");
+      document.body.classList.remove("auth-modal-open");
+      document.getElementById("email").focus();
+    }
+
+    async function rejectSuspendedLogin(userId) {
+      const isSuspended = await getMatSuspensionStatus(userId);
+      if (!isSuspended) return false;
+
+      await endSuspendedMatSession({ redirectToLogin: false });
+      sessionStorage.removeItem(MAT_SUSPENDED_SESSION_KEY);
+      message.textContent = "";
+      showSuspendedAccountModal();
+      return true;
+    }
+
+    suspendedReturnButton.addEventListener("click", closeSuspendedAccountModal);
+
+    (async function restoreLoginState() {
+      const redirectedSuspendedUser = sessionStorage.getItem(MAT_SUSPENDED_SESSION_KEY) === "1";
+      if (redirectedSuspendedUser) {
+        sessionStorage.removeItem(MAT_SUSPENDED_SESSION_KEY);
+        showSuspendedAccountModal();
+      }
+
+      const { data, error } = await supabaseClient.auth.getSession();
+      if (error || !data?.session) return;
+
+      if (await rejectSuspendedLogin(data.session.user.id)) return;
+      window.location.href = "collection.html";
+    })();
 
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
@@ -57,7 +104,7 @@
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
 
-      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
       if (error) {
         message.textContent = error.message;
@@ -65,10 +112,11 @@
         return;
       }
 
+      if (await rejectSuspendedLogin(data?.user?.id)) return;
       window.location.href = "collection.html";
     });
   </script>
-  <script src="js/version.js?v=5.7.3"></script>
+  <script src="js/version.js?v=5.7.4"></script>
   <script src="js/pwa.js"></script>
 </body>
 </html>

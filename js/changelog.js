@@ -1,5 +1,17 @@
 const MAT_RELEASES = [
   {
+    version: "v5.7.4",
+    date: "July 2026",
+    isAnnouncement: false,
+    groups: {
+      FIXED: [
+        "Suspended accounts are now signed out immediately when they attempt to sign in or restore an existing session.",
+        "Replaced the previous suspended-account text notice with a MAT-styled Account Suspended popup.",
+        "Added the suspended-account check to protected-page session restoration so access cannot continue after a refresh."
+      ]
+    }
+  },
+  {
     version: "v5.7.3",
     date: "July 2026",
     isAnnouncement: false,

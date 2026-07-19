@@ -202,3 +202,11 @@ body { min-height: 100vh; }
   color: #70e69d;
   line-height: 1.5;
 }
+
+.auth-modal-open {
+  overflow: hidden;
+}
+
+.auth-confirm-actions-single {
+  grid-template-columns: 1fr;
+}
