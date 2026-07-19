@@ -3,17 +3,136 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard • My Anime Tracker</title>
+  <title>My Anime Tracker • Track Every Anime</title>
   <meta name="theme-color" content="#8b5cf6" />
   <meta name="application-name" content="My Anime Tracker" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png" />
   <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" />
-  <link rel="stylesheet" href="css/style.css?v=5.8.6" />
-  <link rel="stylesheet" href="css/profile.css?v=5.8.6" />
+  <link rel="stylesheet" href="css/style.css?v=5.9.2" />
+  <link rel="stylesheet" href="css/profile.css?v=5.9.2" />
 </head>
-<body>
-  <main class="shell">
+<body class="home-auth-checking">
+  <section class="landing-page" id="publicLanding" hidden>
+    <nav class="landing-nav">
+      <a class="brand brand-link" href="index.html" aria-label="My Anime Tracker home"><img class="brand-logo" src="assets/icons/mat-logo.png" alt="" /><span>MAT</span></a>
+      <div class="landing-nav-actions">
+        <a class="landing-signin" href="login.html">Sign In</a>
+        <a class="primary-btn landing-create" href="signup.html">Create Account</a>
+      </div>
+    </nav>
+
+    <main class="landing-main">
+      <section class="landing-hero">
+        <div class="landing-hero-copy">
+          <span class="landing-eyebrow">Your personal anime tracker</span>
+          <h1>Track every anime.<br><span>Never lose your place.</span></h1>
+          <p>Keep everything you have watched, are currently watching, and plan to watch next organized in one simple place.</p>
+          <div class="landing-hero-actions">
+            <a class="primary-btn" href="signup.html">Start Tracking Free</a>
+            <a class="secondary-btn" href="login.html">Sign In</a>
+            <button class="secondary-btn landing-action-scroll" id="seeMatInActionBtn" type="button">See MAT in Action ↓</button>
+          </div>
+          <div class="landing-quick-points" aria-label="MAT highlights">
+            <span>✓ Track progress</span><span>✓ Rate favorites</span><span>✓ Follow friends</span>
+          </div>
+        </div>
+
+        <div class="landing-browser landing-browser-hero" aria-label="Preview of the MAT dashboard">
+          <div class="landing-browser-bar"><i></i><i></i><i></i><span>My Anime Tracker</span></div>
+          <div class="landing-app-nav"><strong>MAT</strong><span>Dashboard</span><span>Collection</span><span>Ratings</span><b>◉</b></div>
+          <div class="landing-preview-body">
+            <div class="landing-preview-heading"><div><small>WELCOME BACK</small><h3>Your Anime Dashboard</h3></div><button>+ Add Anime</button></div>
+            <div class="landing-stat-row"><div><strong>148</strong><span>Total Anime</span></div><div><strong>83</strong><span>Completed</span></div><div><strong>12</strong><span>Watching</span></div><div><strong>24</strong><span>Queued</span></div></div>
+            <div class="landing-preview-panel">
+              <div class="landing-preview-panel-title"><strong>Continue Watching</strong><span>View Collection →</span></div>
+              <div class="landing-mini-cards">
+                <article><div class="landing-poster poster-purple"><img data-landing-anime="Jujutsu Kaisen" alt="Jujutsu Kaisen poster"><span>JJK</span></div><strong>Jujutsu Kaisen</strong><small>Season 2 • Episode 18</small><em>Watching</em></article>
+                <article><div class="landing-poster poster-orange"><img data-landing-anime="Demon Slayer: Kimetsu no Yaiba" alt="Demon Slayer poster"><span>DS</span></div><strong>Demon Slayer</strong><small>Season 4 • Episode 6</small><em>Watching</em></article>
+                <article><div class="landing-poster poster-blue"><img data-landing-anime="Solo Leveling" alt="Solo Leveling poster"><span>SL</span></div><strong>Solo Leveling</strong><small>Season 2 • Episode 10</small><em>Watching</em></article>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="landing-intro" id="matInAction">
+        <span class="landing-eyebrow">See exactly what MAT does</span>
+        <h2>Everything you need to organize your anime journey</h2>
+        <p>MAT turns your watch history into a clean, visual collection that is easy to update from any device.</p>
+      </section>
+
+      <section class="landing-feature landing-feature-collection">
+        <div class="landing-feature-copy">
+          <span class="landing-feature-number">01</span>
+          <h2>Build your complete anime collection</h2>
+          <p>Add every show you have watched and organize it by Watching, Completed, Waiting, Dropped, or Queued.</p>
+          <ul><li>Search and add titles quickly</li><li>Filter your collection by status</li><li>See ratings and progress at a glance</li></ul>
+        </div>
+        <div class="landing-browser landing-feature-window">
+          <div class="landing-browser-bar"><i></i><i></i><i></i><span>Collection</span></div>
+          <div class="landing-collection-toolbar"><strong>My Collection</strong><div>Search your anime…</div><button>All Statuses⌄</button></div>
+          <div class="landing-collection-grid">
+            <article><div class="landing-poster poster-red"><img data-landing-anime="Attack on Titan" alt="Attack on Titan poster"><span>AOT</span><b>9.6</b></div><strong>Attack on Titan</strong><small>Completed</small></article>
+            <article><div class="landing-poster poster-purple"><img data-landing-anime="Jujutsu Kaisen" alt="Jujutsu Kaisen poster"><span>JJK</span><b>9.1</b></div><strong>Jujutsu Kaisen</strong><small>Watching</small></article>
+            <article><div class="landing-poster poster-orange"><img data-landing-anime="Demon Slayer: Kimetsu no Yaiba" alt="Demon Slayer poster"><span>DS</span><b>8.8</b></div><strong>Demon Slayer</strong><small>Waiting</small></article>
+            <article><div class="landing-poster poster-green"><img data-landing-anime="One Piece" alt="One Piece poster"><span>OP</span><b>9.4</b></div><strong>One Piece</strong><small>Watching</small></article>
+          </div>
+        </div>
+      </section>
+
+      <section class="landing-feature">
+        <div class="landing-feature-copy">
+          <span class="landing-feature-number">02</span>
+          <h2>Rate what you finish and find your favorites</h2>
+          <p>Score completed anime across detailed categories and let MAT calculate your final rating.</p>
+          <ul><li>Rate story, animation, characters, and more</li><li>Separate rated and unrated titles</li><li>Build a personal Top 5</li></ul>
+        </div>
+        <div class="landing-ratings-mock">
+          <div class="landing-ratings-head"><div><strong>Your Ratings</strong><small>42 anime rated</small></div><span>Rated &nbsp; Unrated</span></div>
+          <div class="landing-rating-row"><div class="landing-poster poster-red"><img data-landing-anime="Attack on Titan" alt="Attack on Titan poster"><span>AOT</span></div><div><strong>Attack on Titan</strong><small>Story</small><i style="--score:96%"></i></div><b>9.6</b></div>
+          <div class="landing-rating-row"><div class="landing-poster poster-green"><img data-landing-anime="One Piece" alt="One Piece poster"><span>OP</span></div><div><strong>One Piece</strong><small>World</small><i style="--score:94%"></i></div><b>9.4</b></div>
+          <div class="landing-rating-row"><div class="landing-poster poster-purple"><img data-landing-anime="Jujutsu Kaisen" alt="Jujutsu Kaisen poster"><span>JJK</span></div><div><strong>Jujutsu Kaisen</strong><small>Animation</small><i style="--score:91%"></i></div><b>9.1</b></div>
+        </div>
+      </section>
+
+      <section class="landing-social-section">
+        <div class="landing-intro">
+          <span class="landing-eyebrow">More than a list</span>
+          <h2>Discover anime through people you trust</h2>
+          <p>Follow friends, see their recommendations, and add interesting titles directly to your own queue.</p>
+        </div>
+        <div class="landing-social-grid">
+          <article class="landing-profile-card"><img src="assets/avatars/avatar-2.svg" alt=""><div><strong>AnimeFan92</strong><small>148 anime tracked</small></div><button>Following</button></article>
+          <article class="landing-recommend-card"><div class="landing-poster poster-orange"><img data-landing-anime="Demon Slayer: Kimetsu no Yaiba" alt="Demon Slayer poster"><span>DS</span></div><div><small>RECOMMENDED BY A FRIEND</small><strong>Demon Slayer</strong><p>“The animation in this arc is unreal.”</p></div><button>+ Queue</button></article>
+          <article class="landing-profile-preview"><div class="landing-profile-banner"><img src="assets/avatars/avatar-5.svg" alt=""><div><strong>Your Profile</strong><small>@AnimeTracker</small></div></div><div class="landing-top-five"><small>TOP 5 ANIME</small><div><i class="poster-red"><img data-landing-anime="Attack on Titan" alt="Attack on Titan poster"><span>1</span></i><i class="poster-green"><img data-landing-anime="One Piece" alt="One Piece poster"><span>2</span></i><i class="poster-purple"><img data-landing-anime="Jujutsu Kaisen" alt="Jujutsu Kaisen poster"><span>3</span></i><i class="poster-blue"><img data-landing-anime="Solo Leveling" alt="Solo Leveling poster"><span>4</span></i><i class="poster-orange"><img data-landing-anime="Demon Slayer: Kimetsu no Yaiba" alt="Demon Slayer poster"><span>5</span></i></div></div></article>
+        </div>
+      </section>
+
+      <section class="landing-mobile-section">
+        <div class="landing-feature-copy">
+          <span class="landing-feature-number">03</span>
+          <h2>Made for the way you actually watch</h2>
+          <p>Update your collection from your phone, tablet, or computer. Your anime list stays with you wherever you watch.</p>
+          <a class="primary-btn" href="signup.html">Create Your Collection</a>
+        </div>
+        <div class="landing-phones" aria-label="Mobile MAT previews">
+          <div class="landing-phone phone-back"><div class="phone-speaker"></div><div class="phone-screen"><strong>Collection</strong><div class="phone-search">Search anime…</div><div class="phone-card"><i class="poster-purple"><img data-landing-anime="Jujutsu Kaisen" alt="Jujutsu Kaisen poster"><span>JJK</span></i><span><b>Jujutsu Kaisen</b><small>Watching</small></span></div><div class="phone-card"><i class="poster-orange"><img data-landing-anime="Demon Slayer: Kimetsu no Yaiba" alt="Demon Slayer poster"><span>DS</span></i><span><b>Demon Slayer</b><small>Waiting</small></span></div><div class="phone-card"><i class="poster-blue"><img data-landing-anime="Solo Leveling" alt="Solo Leveling poster"><span>SL</span></i><span><b>Solo Leveling</b><small>Watching</small></span></div></div></div>
+          <div class="landing-phone phone-front"><div class="phone-speaker"></div><div class="phone-screen"><small>MY ANIME TRACKER</small><h3>Welcome Back</h3><div class="phone-stat"><b>148</b><span>Anime Tracked</span></div><div class="phone-now"><small>CONTINUE WATCHING</small><i class="poster-green"><img data-landing-anime="One Piece" alt="One Piece poster"><span>OP</span></i><strong>One Piece</strong><span>Season 21 • Episode 1120</span><button>Update Progress</button></div></div></div>
+        </div>
+      </section>
+
+      <section class="landing-final-cta">
+        <img src="assets/icons/mat-logo.png" alt="">
+        <h2>Your anime journey deserves more than scattered notes.</h2>
+        <p>Start tracking what you have watched, what you are watching, and what comes next.</p>
+        <div><a class="primary-btn" href="signup.html">Start Tracking Free</a><a class="secondary-btn" href="login.html">Sign In</a></div>
+      </section>
+    </main>
+    <footer class="landing-footer landing-public-footer"><span class="mat-footer-version">v5.9.2</span><a class="mat-footer-discord" href="https://discord.gg/" target="_blank" rel="noopener noreferrer"><span class="mat-footer-discord-copy"><strong>MAT Discord</strong><small>Support &amp; Suggestions</small></span></a></footer>
+  </section>
+
+  <main class="shell" id="signedInDashboard" hidden>
     <nav class="navbar">
       <a class="brand brand-link" href="index.html" aria-label="My Anime Tracker dashboard"><img class="brand-logo" src="assets/icons/mat-logo.png" alt="" /><span>MAT</span></a>
 
@@ -123,20 +242,53 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-client.js?v=5.7.4"></script>
-  <script src="js/profile-nav.js?v=5.8.6"></script>
+  <script src="js/profile-nav.js?v=5.9.2"></script>
   <script src="js/content-preferences.js"></script>
   <script src="js/pioneer-badge.js"></script>
   <script src="js/recommendation-collection-state.js?v=5.4.3"></script>
   <script src="js/dashboard.js?v=5.4.3"></script>
   <script>
-    requireSignedInUser().then((user) => {
-      if (user) {
+    (async function initializeHomePage() {
+      const landing = document.getElementById("publicLanding");
+      const dashboard = document.getElementById("signedInDashboard");
+
+      try {
+        const { data, error } = await supabaseClient.auth.getSession();
+        if (error) throw error;
+
+        const session = data?.session;
+        if (!session) {
+          landing.hidden = false;
+          document.body.classList.remove("home-auth-checking");
+          document.body.classList.add("landing-visible");
+          return;
+        }
+
+        const isSuspended = await getMatSuspensionStatus(session.user.id);
+        if (isSuspended) {
+          await endSuspendedMatSession();
+          return;
+        }
+
+        dashboard.hidden = false;
+        document.body.classList.remove("home-auth-checking");
+        document.body.classList.add("dashboard-visible");
         initDashboard();
+      } catch (error) {
+        console.error("MAT could not load the home page.", error);
+        landing.hidden = false;
+        document.body.classList.remove("home-auth-checking");
+        document.body.classList.add("landing-visible");
       }
+    })();
+
+    document.getElementById("seeMatInActionBtn")?.addEventListener("click", () => {
+      document.getElementById("matInAction")?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   </script>
-  <script src="js/version.js?v=5.8.6"></script>
-  <script src="js/changelog.js?v=5.8.6"></script>
+  <script src="js/landing-posters.js?v=5.9.2"></script>
+  <script src="js/version.js?v=5.9.2"></script>
+  <script src="js/changelog.js?v=5.9.2"></script>
   <script src="js/pwa.js"></script>
 </body>
 </html>

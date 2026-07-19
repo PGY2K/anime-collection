@@ -1,5 +1,54 @@
 const MAT_RELEASES = [
   {
+    version: "v5.9.2",
+    date: "July 2026",
+    isAnnouncement: true,
+    announcementTitle: "The MAT homepage is now the starting point",
+    announcement: "New and signed-out visitors now begin on the public MAT homepage, where they can see the app in action before choosing to sign in or create an account.",
+    groups: {
+      NEW: [
+        "Added a See MAT in Action button that smoothly moves visitors from the hero section to the visual MAT feature previews."
+      ],
+      IMPROVED: [
+        "Confirmed the public landing page is the default homepage for signed-out visitors while signed-in users continue directly to their Dashboard.",
+        "Changed sign out behavior so users return to the public MAT homepage instead of being sent directly to the login page."
+      ]
+    }
+  },
+  {
+    version: "v5.9.1",
+    date: "July 2026",
+    isAnnouncement: true,
+    announcementTitle: "The MAT homepage now shows real anime artwork",
+    announcement: "The public homepage previews now use recognizable anime posters and the extra progress section has been removed for a cleaner introduction to MAT.",
+    groups: {
+      IMPROVED: [
+        "Replaced the letter-based landing page poster placeholders with real anime cover artwork throughout the Dashboard, Collection, Ratings, recommendations, profile Top 5, and mobile previews.",
+        "Removed the Always remember where you stopped section to keep the public homepage focused and easier to scan.",
+        "Renumbered the remaining landing page feature sections after removing the progress preview."
+      ]
+    }
+  },
+  {
+    version: "v5.9.0",
+    date: "July 2026",
+    isAnnouncement: true,
+    announcementTitle: "Welcome to the new MAT homepage",
+    announcement: "New and signed-out visitors can now see exactly how MAT helps track, organize, rate, and discover anime before creating an account.",
+    groups: {
+      NEW: [
+        "Added a complete public landing page for new and signed-out visitors.",
+        "Added visual previews of the Dashboard, Collection, anime progress, Ratings, friend recommendations, profiles, and mobile experience.",
+        "Added clear Create Account and Sign In actions throughout the public homepage."
+      ],
+      IMPROVED: [
+        "Signed-in users continue directly to their normal Dashboard while signed-out users remain on the public homepage.",
+        "Explained MAT's main purpose through realistic interface previews instead of relying on text alone.",
+        "Added responsive layouts so the new homepage works across desktop, tablet, and mobile screens."
+      ]
+    }
+  },
+  {
     version: "v5.8.6",
     date: "July 2026",
     isAnnouncement: false,
