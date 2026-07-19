@@ -985,3 +985,63 @@ body.modal-open { overflow: hidden; }
     border-radius:16px 16px 0 0;
   }
 }
+
+/* v5.8.6 mobile RP Shop single-scroll repair */
+@media (max-width:760px){
+  .rp-hub-modal.is-shop-view{
+    display:block!important;
+    height:94dvh!important;
+    max-height:94dvh!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    padding:12px!important;
+    overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
+  }
+  .rp-hub-modal.is-shop-view .rp-modal-title,
+  .rp-hub-modal.is-shop-view .rp-hub-actions,
+  .rp-hub-modal.is-shop-view .rp-hub-panel,
+  .rp-hub-modal.is-shop-view .rp-profile-designer,
+  .rp-hub-modal.is-shop-view .rp-designer-layout,
+  .rp-hub-modal.is-shop-view .rp-designer-preview-wrap,
+  .rp-hub-modal.is-shop-view #matRpProfilePreview,
+  .rp-hub-modal.is-shop-view .rp-designer-controls,
+  .rp-hub-modal.is-shop-view .rp-designer-checkout{
+    position:static!important;
+    inset:auto!important;
+    top:auto!important;
+    right:auto!important;
+    bottom:auto!important;
+    left:auto!important;
+    transform:none!important;
+  }
+  .rp-hub-modal.is-shop-view .rp-hub-panel,
+  .rp-hub-modal.is-shop-view .rp-profile-designer,
+  .rp-hub-modal.is-shop-view .rp-designer-layout,
+  .rp-hub-modal.is-shop-view .rp-designer-preview-wrap,
+  .rp-hub-modal.is-shop-view #matRpProfilePreview,
+  .rp-hub-modal.is-shop-view .rp-designer-controls{
+    display:block!important;
+    width:100%!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    overflow:visible!important;
+  }
+  .rp-hub-modal.is-shop-view .rp-profile-designer{
+    padding:0!important;
+  }
+  .rp-hub-modal.is-shop-view .rp-designer-layout{
+    padding:0!important;
+  }
+  .rp-hub-modal.is-shop-view .rp-designer-preview-wrap{
+    margin-bottom:10px;
+  }
+  .rp-hub-modal.is-shop-view .rp-designer-checkout{
+    width:100%!important;
+    max-width:none!important;
+    margin:12px 0 0!important;
+    border-radius:14px!important;
+    box-shadow:none!important;
+  }
+}

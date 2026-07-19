@@ -1,5 +1,19 @@
 const MAT_RELEASES = [
   {
+    version: "v5.8.6",
+    date: "July 2026",
+    isAnnouncement: false,
+    groups: {
+      FIXED: [
+        "Changed the mobile RP Shop into one continuous scrolling view so no section remains pinned to the screen.",
+        "Removed the fixed and sticky behavior from both the Recommendation Points controls and the Purchase and Equip section."
+      ],
+      IMPROVED: [
+        "The RP Shop header, tabs, profile preview, customization controls, totals, and purchase button now scroll together naturally on mobile."
+      ]
+    }
+  },
+  {
     version: "v5.8.5",
     date: "July 2026",
     isAnnouncement: false,
