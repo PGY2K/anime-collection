@@ -267,7 +267,7 @@ async function renderProfile() {
               <span></span>
             </label>
           </div>
-          <div class="profile-setting-row"><div><strong>Private Profile</strong><small>Public profiles can be followed instantly. Private profiles approve follow requests.</small></div><label class="settings-switch"><input id="profilePrivateToggle" type="checkbox" ${currentProfileData.is_private ? "checked" : ""}><span></span></label></div><section class="franchise-settings"><h3>Franchise Options</h3><p>TV seasons and movies are grouped by default. Optional formats can be included when organizing franchises.</p><label class="profile-setting-row"><span><strong>Group TV Seasons</strong></span><input id="franchiseGroupTv" type="checkbox" ${currentProfileData.franchise_group_tv!==false?"checked":""}></label><label class="profile-setting-row"><span><strong>Group Movies</strong></span><input id="franchiseGroupMovies" type="checkbox" ${currentProfileData.franchise_group_movies!==false?"checked":""}></label><label class="profile-setting-row"><span><strong>Include OVAs</strong></span><input id="franchiseIncludeOva" type="checkbox" ${currentProfileData.franchise_include_ova?"checked":""}></label><label class="profile-setting-row"><span><strong>Include Specials</strong></span><input id="franchiseIncludeSpecials" type="checkbox" ${currentProfileData.franchise_include_specials?"checked":""}></label><label class="profile-setting-row"><span><strong>Include ONAs</strong></span><input id="franchiseIncludeOna" type="checkbox" ${currentProfileData.franchise_include_ona?"checked":""}></label><label class="profile-setting-row"><span><strong>Include Recaps</strong></span><input id="franchiseIncludeRecaps" type="checkbox" ${currentProfileData.franchise_include_recaps?"checked":""}></label></section><button class="primary-btn profile-save-btn" type="submit">Save Changes</button>
+          <div class="profile-setting-row"><div><strong>Private Profile</strong><small>Public profiles can be followed instantly. Private profiles approve follow requests.</small></div><label class="settings-switch"><input id="profilePrivateToggle" type="checkbox" ${currentProfileData.is_private ? "checked" : ""}><span></span></label></div><button class="primary-btn profile-save-btn" type="submit">Save Changes</button>
           <div class="profile-message" id="profileMessage"></div>
         </form>
       </section>
@@ -303,10 +303,14 @@ async function saveProfile(event) {
   const message = document.getElementById("profileMessage");
   const username = document.getElementById("profileUsername").value.trim();
   if (username.length < 3) { message.textContent = "Username must be at least 3 characters."; message.className = "profile-message profile-error"; return; }
-  const { error } = await supabaseClient.from("profiles").update({ username, avatar_id: selectedAvatarId, franchise_group_tv: document.getElementById("franchiseGroupTv").checked, franchise_group_movies: document.getElementById("franchiseGroupMovies").checked, franchise_include_ova: document.getElementById("franchiseIncludeOva").checked, franchise_include_specials: document.getElementById("franchiseIncludeSpecials").checked, franchise_include_ona: document.getElementById("franchiseIncludeOna").checked, franchise_include_recaps: document.getElementById("franchiseIncludeRecaps").checked,
-      is_private: document.getElementById("profilePrivateToggle").checked, updated_at: new Date().toISOString() }).eq("user_id", currentProfileUser.id);
+  const { error } = await supabaseClient.from("profiles").update({
+      username,
+      avatar_id: selectedAvatarId,
+      is_private: document.getElementById("profilePrivateToggle").checked,
+      updated_at: new Date().toISOString()
+    }).eq("user_id", currentProfileUser.id);
   if (error) { message.textContent = error.code === "23505" ? "That username is already taken." : error.message; message.className = "profile-message profile-error"; return; }
-  currentProfileData.username = username; currentProfileData.avatar_id = selectedAvatarId; currentProfileData.franchise_group_tv=document.getElementById("franchiseGroupTv").checked; currentProfileData.franchise_group_movies=document.getElementById("franchiseGroupMovies").checked; currentProfileData.franchise_include_ova=document.getElementById("franchiseIncludeOva").checked; currentProfileData.franchise_include_specials=document.getElementById("franchiseIncludeSpecials").checked; currentProfileData.franchise_include_ona=document.getElementById("franchiseIncludeOna").checked; currentProfileData.franchise_include_recaps=document.getElementById("franchiseIncludeRecaps").checked; currentProfileData.is_private=document.getElementById("profilePrivateToggle").checked;
+  currentProfileData.username = username; currentProfileData.avatar_id = selectedAvatarId; currentProfileData.is_private=document.getElementById("profilePrivateToggle").checked;
   document.getElementById("navProfileAvatar").src = profileAvatarPath(selectedAvatarId);
   message.textContent = "Profile saved."; message.className = "profile-message profile-success";
   setTimeout(renderProfile, 600);

@@ -539,7 +539,7 @@ async function initAnimeDetails() {
     let record = recordId ? await fetchOwnRecordById(recordId) : null;
     let mediaId = detailsPositiveInteger(record?.anilist_id, requestedAnimeId);
     if (!mediaId && recommendationTitle) mediaId = await resolveAnimeIdFromTitle(recommendationTitle);
-    if (!mediaId) throw new Error("This recommendation is missing a valid AniList title ID.");
+    if (!mediaId) throw new Error("This recommendation is missing a valid title ID.");
 
     let media = null;
     try { media = await fetchAnimeDetails(mediaId); }

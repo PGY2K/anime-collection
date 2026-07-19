@@ -1,5 +1,17 @@
 const MAT_RELEASES = [
   {
+    version: "v5.6.1",
+    date: "July 2026",
+    isAnnouncement: false,
+    groups: {
+      IMPROVED: [
+        "Removed provider branding from all user-facing text, announcements, errors, and historical changelog entries.",
+        "Removed Franchise Options from Profile Settings because the same controls are available on franchise title pages.",
+        "Replaced the expanded Franchise Options section on franchise pages with a compact Filter button that opens and closes the existing entry visibility controls."
+      ]
+    }
+  },
+  {
     version: "v5.6.0",
     date: "July 2026",
     isAnnouncement: true,
@@ -7,12 +19,12 @@ const MAT_RELEASES = [
     announcement: "Add Anime now searches while you type, posters open the title page, and What's New alerts you when a major announcement is available.",
     groups: {
       NEW: [
-        "Added live AniList search results that refresh automatically while the user types.",
+        "Added live anime search results that refresh automatically while the user types.",
         "Made search-result posters clickable so users can open the anime title page and its resolved franchise before adding it.",
         "Added an unread red-dot indicator to What's New when a major announcement has not been opened."
       ],
       IMPROVED: [
-        "Added a 300 millisecond debounce to reduce unnecessary AniList requests while preserving responsive search.",
+        "Added a 300 millisecond debounce to reduce unnecessary search requests while preserving responsive search.",
         "Prevented slower, outdated search responses from replacing results for newer text.",
         "Removed the manual Search button while preserving Enter as an immediate-search shortcut.",
         "Changed release-note policy so every release appears in Changelog, while only major user-facing releases appear under Announcements.",
@@ -260,9 +272,9 @@ const MAT_RELEASES = [
     announcement: "Recommendation cards now store their verified title and attribution data before opening the title page. The title page can recover from an invalid stored ID, and credit is saved when the follower actually adds the title. View the Changelog tab for the complete details.",
     groups: {
       FIXED: [
-        "Rebuilt profile and dashboard recommendation clicks to use a verified AniList ID instead of relying on a fragile generated route.",
+        "Rebuilt profile and dashboard recommendation clicks to use a verified title ID instead of relying on a fragile generated route.",
         "Added a session handoff containing the recommendation title, source, and eligible recommender IDs before navigation.",
-        "Added title-based recovery on the anime page when an older recommendation contains an invalid or missing AniList ID.",
+        "Added title-based recovery on the anime page when an older recommendation contains an invalid or missing title ID.",
         "Recommendation attribution is now written when Add to Collection is completed, while opening the title page preserves the source without prematurely awarding credit."
       ]
     }
@@ -272,12 +284,12 @@ const MAT_RELEASES = [
     version: "v5.3.7",
     date: "July 2026",
     announcementTitle: "Recommendation links now open the correct title page",
-    announcement: "Recommendation posters and titles on followed-user profiles and the dashboard now use a validated AniList ID with a title fallback, so followers can open the title page without the unexpected error while recommendation credit remains attached. View the Changelog tab for the complete details.",
+    announcement: "Recommendation posters and titles on followed-user profiles and the dashboard now use a validated title ID with a title fallback, so followers can open the title page without the unexpected error while recommendation credit remains attached. View the Changelog tab for the complete details.",
     groups: {
       FIXED: [
         "Fixed profile recommendation posters and titles opening an invalid anime route.",
         "Fixed dashboard recommendation posters and titles showing the unexpected error after being clicked.",
-        "Recommendation links now validate stored IDs and fall back to resolving the title through AniList when an older recommendation record is missing its AniList ID.",
+        "Recommendation links now validate stored IDs and fall back to resolving the title through the anime database when an older recommendation record is missing its title ID.",
         "Preserved profile and dashboard recommendation attribution when the title page is opened before Add to Queue is used."
       ]
     }
@@ -294,7 +306,7 @@ const MAT_RELEASES = [
         "Recommendation source information now travels with title links so adding from the title page still credits the correct recommender or followed recommender group."
       ],
       FIXED: [
-        "Fixed missing recommendation poster artwork by resolving media from the stored AniList ID with a title-search fallback.",
+        "Fixed missing recommendation poster artwork by resolving media from the stored title ID with a title-search fallback.",
         "Fixed recommendation cards opening an invalid title route and showing an unexpected error.",
         "Dashboard attribution remains limited to recommenders the viewing user follows; profile attribution credits only the profile owner."
       ]

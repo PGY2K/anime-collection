@@ -178,7 +178,7 @@ function fpOpenRecommendation(recommendation, profileUserId, media) {
     location.href = `franchise.html?key=${encodeURIComponent(payload.franchiseKey)}&rec_token=1`;
     return;
   }
-  if (!payload.anilistId) throw new Error("This recommendation is missing its AniList ID.");
+  if (!payload.anilistId) throw new Error("This recommendation is missing its title ID.");
   location.href = `anime.html?anilist_id=${encodeURIComponent(payload.anilistId)}&rec_token=1`;
 }
 function fpRecommendationHref(recommendation, profileUserId, media) {

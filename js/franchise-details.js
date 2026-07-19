@@ -163,14 +163,10 @@ async function fdLoad(key) {
 
 function fdFranchiseOptionsMarkup() {
   const prefs = matFranchisePrefs(fdProfile || {});
-  return `<section class="franchise-page-options" aria-labelledby="franchiseOptionsHeading">
-    <div class="franchise-options-heading">
-      <div>
-        <h3 id="franchiseOptionsHeading">Franchise Options</h3>
-        <p>Choose which formats appear in this franchise's Entries list. These are the same options saved in Settings.</p>
-      </div>
-    </div>
-    <form id="franchisePageOptionsForm" class="franchise-options-form">
+  return `<section class="franchise-page-options">
+    <button class="secondary-btn franchise-filter-toggle" id="franchiseFilterToggle" type="button" aria-expanded="false" aria-controls="franchisePageOptionsForm">Filter</button>
+    <form id="franchisePageOptionsForm" class="franchise-options-form" hidden>
+      <p class="franchise-filter-description">Choose which formats appear in the Entries list.</p>
       <label><span>Group TV Seasons</span><input id="fdFranchiseGroupTv" type="checkbox" ${prefs.tv ? "checked" : ""}></label>
       <label><span>Group Movies</span><input id="fdFranchiseGroupMovies" type="checkbox" ${prefs.movie ? "checked" : ""}></label>
       <label><span>Include OVAs</span><input id="fdFranchiseIncludeOva" type="checkbox" ${prefs.ova ? "checked" : ""}></label>
@@ -178,11 +174,23 @@ function fdFranchiseOptionsMarkup() {
       <label><span>Include ONAs</span><input id="fdFranchiseIncludeOna" type="checkbox" ${prefs.ona ? "checked" : ""}></label>
       <label><span>Include Recaps</span><input id="fdFranchiseIncludeRecaps" type="checkbox" ${prefs.recaps ? "checked" : ""}></label>
       <div class="franchise-options-actions">
-        <button class="primary-btn" id="saveFranchisePageOptionsBtn" type="submit">Save Options</button>
+        <button class="primary-btn" id="saveFranchisePageOptionsBtn" type="submit">Apply Filter</button>
         <span class="franchise-options-message" id="franchisePageOptionsMessage" role="status"></span>
       </div>
     </form>
   </section>`;
+}
+
+function fdBindFranchiseFilter() {
+  const button = document.getElementById("franchiseFilterToggle");
+  const form = document.getElementById("franchisePageOptionsForm");
+  if (!button || !form) return;
+  button.addEventListener("click", () => {
+    const opening = form.hidden;
+    form.hidden = !opening;
+    button.setAttribute("aria-expanded", String(opening));
+    button.textContent = opening ? "Close Filter" : "Filter";
+  });
 }
 
 async function fdSaveFranchisePageOptions(event) {
@@ -216,9 +224,9 @@ async function fdSaveFranchisePageOptions(event) {
   } catch (error) {
     console.error(error);
     button.disabled = false;
-    button.textContent = "Save Options";
+    button.textContent = "Apply Filter";
     message.className = "franchise-options-message error";
-    message.textContent = error.message || "Could not save franchise options.";
+    message.textContent = error.message || "Could not apply filter.";
   }
 }
 
@@ -462,12 +470,13 @@ function fdRender() {
     <section class="franchise-entries-section">
       <div class="profile-section-heading"><h2>Entries</h2></div>
       ${fdFranchiseOptionsMarkup()}
-      <div class="franchise-entry-list">${fdEntryMedia.length ? fdEntryMedia.map(fdEntryCard).join("") : '<div class="franchise-empty-entries">No entries match your current Franchise Options.</div>'}</div>
+      <div class="franchise-entry-list">${fdEntryMedia.length ? fdEntryMedia.map(fdEntryCard).join("") : '<div class="franchise-empty-entries">No entries match your current filter.</div>'}</div>
     </section>
     ${ownView ? fdStatusModalMarkup() + fdRecommendationModalMarkup() + `<div class="remove-modal-backdrop hidden" id="removeFranchiseModal" aria-hidden="true"><section class="remove-modal-card" role="dialog" aria-modal="true"><h2>Remove from Collection?</h2><p>Remove <strong>${fdEsc(fdFranchise.title)}</strong> from your collection? Franchise ratings and progress for this franchise will also be removed.</p><div class="remove-modal-actions"><button class="secondary-action-btn" id="cancelRemoveFranchiseBtn" type="button">Cancel</button><button class="confirm-remove-btn" id="confirmRemoveFranchiseBtn" type="button">Remove</button></div><div class="edit-message" id="removeFranchiseMessage"></div></section></div>` : ""}
     <div id="entryRatingModalHost"></div>`;
 
   document.getElementById("franchiseCollectionCount")?.addEventListener("click", () => openFranchiseCollectionPopup());
+  fdBindFranchiseFilter();
   document.getElementById("franchisePageOptionsForm")?.addEventListener("submit", fdSaveFranchisePageOptions);
   document.getElementById("addRecommendedFranchiseBtn")?.addEventListener("click", (event) => fdAddRecommendedFranchiseToQueue(event.currentTarget));
   if (ownView) { fdBind(); fdBindRecommendation(); }
