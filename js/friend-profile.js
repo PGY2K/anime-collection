@@ -8,6 +8,7 @@ let friendProfileFriendCount = 0;
 let friendActiveRecommendation = null;
 let friendProfileCustomizations = { avatar_glow: "default", profile_background: "default", top_five_glow: "default", recommendation_glow: "default" };
 let friendProfileViewer = null;
+let friendProfileFollowStatus = "";
 
 function fpEscape(value) {
   return String(value ?? "")
@@ -250,6 +251,59 @@ async function fpViewerIsAdmin() {
   return !error && Boolean(data?.can_manage_badges);
 }
 
+function fpFollowButtonHtml(profile) {
+  if (!friendProfileViewer?.id || profile.user_id === friendProfileViewer.id) return "";
+  const status = String(friendProfileFollowStatus || profile.viewer_follow_status || "").toLowerCase();
+  if (status === "pending" || status === "requested") {
+    return '<button class="profile-follow-btn is-requested" type="button" disabled>Requested</button>';
+  }
+  if (status === "accepted" || status === "following") {
+    return '<button class="profile-follow-btn is-following" id="friendProfileFollowBtn" type="button">Unfollow</button>';
+  }
+  return '<button class="profile-follow-btn" id="friendProfileFollowBtn" type="button">Follow</button>';
+}
+
+async function fpResolveFollowStatus(profile) {
+  const direct = String(profile?.viewer_follow_status || profile?.follow_status || "").toLowerCase();
+  if (direct) return direct;
+  try {
+    const { data, error } = await supabaseClient.rpc("get_user_following", { p_user_id: friendProfileViewer.id });
+    if (error) throw error;
+    return (data || []).some((row) => String(row.listed_user_id || row.user_id) === String(profile.user_id)) ? "accepted" : "";
+  } catch (error) {
+    console.warn("Follow status could not be confirmed.", error);
+    return "";
+  }
+}
+
+function bindFriendProfileFollowButton(profile) {
+  const button = document.getElementById("friendProfileFollowBtn");
+  if (!button) return;
+  button.addEventListener("click", async () => {
+    const isFollowing = String(friendProfileFollowStatus).toLowerCase() === "accepted" || button.textContent.trim() === "Unfollow";
+    button.disabled = true;
+    button.textContent = isFollowing ? "Unfollowing…" : "Following…";
+    try {
+      if (isFollowing) {
+        const { error } = await supabaseClient.rpc("unfollow_user", { p_user_id: profile.user_id });
+        if (error) throw error;
+        friendProfileFollowStatus = "";
+      } else {
+        const { data, error } = await supabaseClient.rpc("follow_user", { p_user_id: profile.user_id });
+        if (error) throw error;
+        const result = typeof data === "string" ? data : data?.status;
+        friendProfileFollowStatus = String(result || (profile.is_private ? "pending" : "accepted")).toLowerCase();
+      }
+      await renderFriendProfileShell(profile);
+      await renderFriendAnime();
+    } catch (error) {
+      alert(error.message || "The follow status could not be updated.");
+      button.disabled = false;
+      button.textContent = isFollowing ? "Unfollow" : "Follow";
+    }
+  });
+}
+
 async function renderFriendProfileShell(profile) {
   const viewerIsAdmin = await fpViewerIsAdmin();
   const profileBadges = await matLoadUserBadges(profile.user_id);
@@ -268,10 +322,11 @@ async function renderFriendProfileShell(profile) {
     <section class="public-profile-card friend-public-profile mat-profile-customized ${matCustomizationClass("mat-profile-bg", friendProfileCustomizations.profile_background)}">
       <button class="profile-rp-corner" type="button" onclick="matOpenRpModal()"><img src="assets/icons/rp-gem.png" alt="RP"><strong>${Math.round(Number(profile.recommendation_points)||0).toLocaleString()} RP</strong></button>
       <img class="profile-main-avatar ${matCustomizationClass("mat-avatar-glow", friendProfileCustomizations.avatar_glow)}" src="${profileAvatarPath(profile.avatar_id || 1)}" alt="${fpEscape(profile.username)} avatar" />
-      <h2>${fpEscape(profile.username || "Anime Fan")}</h2>
+      <div class="profile-name-code-row"><h2>${fpEscape(profile.username || "Anime Fan")}</h2></div>
+      <p class="profile-friend-code">Friend Code: <span>${fpEscape(profile.friend_code || "Unavailable")}</span></p>
+      <div class="profile-follow-action" id="friendProfileFollowAction">${fpFollowButtonHtml(profile)}</div>
       ${matBadgeRowHtml(profileBadges, { emptyText: "No badges awarded yet." })}
       ${viewerIsAdmin ? `<a class="secondary-btn profile-admin-controls-btn" href="admin.html?friend_code=${encodeURIComponent(profile.friend_code)}">Admin Controls</a>` : ""}
-      <a class="secondary-btn profile-badges-page-btn" href="badges.html?user=${encodeURIComponent(profile.user_id)}">🏅 Badges</a>
       <p class="profile-social-meta">${profile.is_private
         ? `<span title="This user’s social lists are private">${friendProfileFriendCount.toLocaleString()} Followers</span><span>•</span><span title="This user’s social lists are private">${Number(profile.following_count||0).toLocaleString()} Following</span>`
         : `<a href="friends.html?user=${encodeURIComponent(profile.user_id)}&tab=followers">${friendProfileFriendCount.toLocaleString()} Followers</a><span>•</span><a href="friends.html?user=${encodeURIComponent(profile.user_id)}&tab=following">${Number(profile.following_count||0).toLocaleString()} Following</a>`}<span>•</span><span>${fpEscape(fpJoinedLabel(profile.created_at))}</span></p>
@@ -310,6 +365,7 @@ async function renderFriendProfileShell(profile) {
     </section>`;
 
   matBindBadgeButtons(root);
+  bindFriendProfileFollowButton(profile);
   document.querySelectorAll("[data-profile-recommendation-open]").forEach((link) => {
     link.addEventListener("click", (event) => {
       event.preventDefault();
@@ -395,6 +451,7 @@ async function initFriendProfile(user) {
     friendActiveRecommendation = recommendation;
     friendProfileCustomizations = customizations;
     friendProfileAnime = anime;
+    friendProfileFollowStatus = await fpResolveFollowStatus(profile);
     await renderFriendProfileShell(profile);
     await renderFriendAnime();
   } catch (error) {

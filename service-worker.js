@@ -1,4 +1,4 @@
-const CACHE_NAME = "mat-offline-fallback-v45";
+const CACHE_NAME = "mat-v6.2.0";
 const OFFLINE_ASSETS = [
   "./offline.html",
   "./assets/icons/icon-192.png",

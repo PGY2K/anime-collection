@@ -284,6 +284,117 @@ function fdEntryRatingForm(entry, index) {
   </div>`;
 }
 
+
+function fdFranchiseRatingModalMarkup() {
+  const rating = fdCalculatedFranchiseRating() ?? fdAverage(fdFranchise) ?? 5;
+  const advancedSeed = Object.fromEntries(FRANCHISE_RATING_FIELDS.map(({ key }) => [key, rating]));
+  return `<div class="edit-modal-backdrop hidden" id="franchiseRatingModal" aria-hidden="true">
+    <section class="edit-modal-card franchise-rating-modal-card" role="dialog" aria-modal="true" aria-labelledby="franchiseRatingTitle">
+      <div class="edit-modal-header"><div><h2 id="franchiseRatingTitle">Rate ${fdEsc(fdFranchise.title)}</h2><p>This rating will be applied to every entry in the franchise.</p></div><button class="edit-close-btn" id="closeFranchiseRatingBtn" type="button">×</button></div>
+      <form id="franchiseRatingForm" class="edit-form">
+        <div class="simple-rating-box"><div><strong>Franchise Rating</strong><small>Choose one score from 1–10.</small></div><output id="franchiseOverallOutput">${Number(rating).toFixed(1)}</output><div class="rating-slider-control"><span>1</span><input id="franchiseOverallInput" type="range" min="1" max="10" step="0.1" value="${Number(rating).toFixed(1)}"><span>10</span></div></div>
+        <details id="franchiseAdvancedRating" class="advanced-rating-disclosure">
+          <summary>Advanced Rating</summary>
+          <p class="advanced-rating-note">Score each category. Their average becomes the franchise rating and the same advanced rating is applied to every entry.</p>
+          <div class="rating-slider-list">${fdAdvancedSliders(advancedSeed, "franchise-modal", "data-franchise-modal-field")}</div>
+        </details>
+        <details class="status-guide"><summary>How franchise ratings work</summary><div class="status-guide-list"><p>Rating the franchise applies that rating to every entry. Changing an individual entry afterward automatically updates the franchise rating to the average of all rated entries.</p><p>You can rate the franchise again at any time to overwrite every entry with a new rating.</p></div></details>
+        <div class="edit-message" id="franchiseRatingMessage"></div><div class="edit-form-actions"><button class="secondary-action-btn" id="cancelFranchiseRatingBtn" type="button">Cancel</button><button class="save-anime-btn" id="saveFranchiseRatingBtn" type="submit">Save Rating</button></div>
+      </form>
+    </section>
+  </div>`;
+}
+
+function fdBindFranchiseRating() {
+  const modal = document.getElementById("franchiseRatingModal");
+  const openButton = document.getElementById("rateFranchiseBtn");
+  if (!modal || !openButton) return;
+  const close = () => { modal.classList.add("hidden"); modal.setAttribute("aria-hidden", "true"); document.body.classList.remove("modal-open"); };
+  openButton.addEventListener("click", () => { modal.classList.remove("hidden"); modal.setAttribute("aria-hidden", "false"); document.body.classList.add("modal-open"); });
+  document.getElementById("closeFranchiseRatingBtn").onclick = close;
+  document.getElementById("cancelFranchiseRatingBtn").onclick = close;
+  modal.addEventListener("click", (event) => { if (event.target === modal) close(); });
+
+  const input = document.getElementById("franchiseOverallInput");
+  const output = document.getElementById("franchiseOverallOutput");
+  const advanced = document.getElementById("franchiseAdvancedRating");
+  input.addEventListener("input", () => { output.textContent = Number(input.value).toFixed(1); });
+
+  const recalcAdvanced = () => {
+    const values = FRANCHISE_RATING_FIELDS.map(({ key }) => Number(document.querySelector(`[data-franchise-modal-field="${key}"]`).value));
+    const average = values.reduce((sum, value) => sum + value, 0) / values.length;
+    input.value = average.toFixed(1);
+    output.textContent = average.toFixed(1);
+  };
+  advanced.addEventListener("toggle", () => {
+    input.disabled = advanced.open;
+    if (advanced.open) recalcAdvanced();
+  });
+  document.querySelectorAll("[data-franchise-modal-field]").forEach((slider) => {
+    slider.addEventListener("input", () => {
+      document.getElementById(`${slider.id}-value`).textContent = slider.value;
+      recalcAdvanced();
+    });
+  });
+
+  document.getElementById("franchiseRatingForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const message = document.getElementById("franchiseRatingMessage");
+    const button = document.getElementById("saveFranchiseRatingBtn");
+    const value = Number(output.textContent);
+    const ratingMode = advanced.open ? "advanced" : "simple";
+    const advancedValues = Object.fromEntries(FRANCHISE_RATING_FIELDS.map(({ key }) => [
+      key,
+      advanced.open ? Number(document.querySelector(`[data-franchise-modal-field="${key}"]`).value) : null
+    ]));
+    const now = new Date().toISOString();
+    button.disabled = true; button.textContent = "Saving…"; message.textContent = "Updating every entry…";
+    try {
+      const rows = fdAllEntries.map((entry) => ({
+        user_id: fdUser.id,
+        franchise_key: Number(fdFranchise.franchise_key),
+        anilist_id: Number(entry.anilist_id),
+        rating_mode: ratingMode,
+        overall_rating: value,
+        ...advancedValues,
+        updated_at: now
+      }));
+      if (rows.length) {
+        const { data, error } = await supabaseClient.from("user_franchise_entry_ratings").upsert(rows, { onConflict: "user_id,franchise_key,anilist_id" }).select("*");
+        if (error) throw error;
+        fdEntryRatings = data || rows;
+      }
+
+      const entryIds = fdAllEntries.map((entry) => Number(entry.anilist_id)).filter(Number.isFinite);
+      if (entryIds.length) {
+        const { error } = await supabaseClient.from("anime").update({
+          rating_mode: ratingMode,
+          overall_rating: value,
+          ...advancedValues,
+          updated_at: now
+        }).eq("user_id", fdUser.id).in("anilist_id", entryIds);
+        if (error) throw error;
+      }
+
+      const { error: franchiseError } = await supabaseClient.from("user_franchises").update({ overall_rating: value, rating_mode: "entries", updated_at: now }).eq("user_id", fdUser.id).eq("franchise_key", Number(fdFranchise.franchise_key));
+      if (franchiseError) throw franchiseError;
+      fdFranchise.overall_rating = value;
+      fdFranchise.rating_mode = "entries";
+      await fdSyncActiveRecommendationRating(value);
+      await fdAwardRecommendationProgress("rated", value);
+      message.className = "edit-message success";
+      message.textContent = "Franchise and entry ratings updated everywhere.";
+      setTimeout(() => location.reload(), 450);
+    } catch (error) {
+      console.error(error);
+      message.className = "edit-message";
+      message.textContent = error.message || "Could not save the franchise rating.";
+      button.disabled = false;
+      button.textContent = "Save Rating";
+    }
+  });
+}
+
 function fdStatusModalMarkup() {
   return `<div class="edit-modal-backdrop hidden" id="franchiseStatusModal" aria-hidden="true">
     <section class="edit-modal-card franchise-status-modal-card" role="dialog" aria-modal="true">
@@ -462,6 +573,7 @@ function fdRender() {
         <div class="details-actions franchise-actions">
           ${fdHasUserFranchise ? `<span class="details-status status ${fdStatusClass(fdFranchise.status)}">${fdEsc(fdFranchise.status)}</span>` : ""}
           ${rating !== null ? `<span class="details-rating">⭐ ${rating.toFixed(1)}</span>` : ""}
+          ${ownView ? `<button class="edit-anime-btn franchise-rate-all-btn" id="rateFranchiseBtn" type="button">${rating !== null ? "Edit Franchise Rating" : "Rate Franchise"}</button>` : ""}
           ${canAddRecommended ? `<button class="recommend-anime-btn" id="addRecommendedFranchiseBtn" type="button">Add to Queue</button>` : ""}
           ${ownView ? `<button class="edit-anime-btn status-details-btn" id="changeFranchiseStatusBtn" type="button">Change Status</button><button class="recommend-anime-btn" id="recommendFranchiseBtn" type="button">Recommend</button><button class="remove-anime-btn" id="removeFranchiseBtn" type="button">Remove from Collection</button>` : ""}
         </div>
@@ -472,14 +584,14 @@ function fdRender() {
       ${fdFranchiseOptionsMarkup()}
       <div class="franchise-entry-list">${fdEntryMedia.length ? fdEntryMedia.map(fdEntryCard).join("") : '<div class="franchise-empty-entries">No entries match your current filter.</div>'}</div>
     </section>
-    ${ownView ? fdStatusModalMarkup() + fdRecommendationModalMarkup() + `<div class="remove-modal-backdrop hidden" id="removeFranchiseModal" aria-hidden="true"><section class="remove-modal-card" role="dialog" aria-modal="true"><h2>Remove from Collection?</h2><p>Remove <strong>${fdEsc(fdFranchise.title)}</strong> from your collection? Franchise ratings and progress for this franchise will also be removed.</p><div class="remove-modal-actions"><button class="secondary-action-btn" id="cancelRemoveFranchiseBtn" type="button">Cancel</button><button class="confirm-remove-btn" id="confirmRemoveFranchiseBtn" type="button">Remove</button></div><div class="edit-message" id="removeFranchiseMessage"></div></section></div>` : ""}
+    ${ownView ? fdStatusModalMarkup() + fdFranchiseRatingModalMarkup() + fdRecommendationModalMarkup() + `<div class="remove-modal-backdrop hidden" id="removeFranchiseModal" aria-hidden="true"><section class="remove-modal-card" role="dialog" aria-modal="true"><h2>Remove from Collection?</h2><p>Remove <strong>${fdEsc(fdFranchise.title)}</strong> from your collection? Franchise ratings and progress for this franchise will also be removed.</p><div class="remove-modal-actions"><button class="secondary-action-btn" id="cancelRemoveFranchiseBtn" type="button">Cancel</button><button class="confirm-remove-btn" id="confirmRemoveFranchiseBtn" type="button">Remove</button></div><div class="edit-message" id="removeFranchiseMessage"></div></section></div>` : ""}
     <div id="entryRatingModalHost"></div>`;
 
   document.getElementById("franchiseCollectionCount")?.addEventListener("click", () => openFranchiseCollectionPopup());
   fdBindFranchiseFilter();
   document.getElementById("franchisePageOptionsForm")?.addEventListener("submit", fdSaveFranchisePageOptions);
   document.getElementById("addRecommendedFranchiseBtn")?.addEventListener("click", (event) => fdAddRecommendedFranchiseToQueue(event.currentTarget));
-  if (ownView) { fdBind(); fdBindRecommendation(); }
+  if (ownView) { fdBind(); fdBindFranchiseRating(); fdBindRecommendation(); }
 }
 
 async function fdRefreshFranchiseOverall() {

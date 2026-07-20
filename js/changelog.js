@@ -1,5 +1,91 @@
 const MAT_RELEASES = [
   {
+    version: "v6.2.0",
+    date: "July 2026",
+    isAnnouncement: true,
+    announcementTitle: "Find more anime fans to follow",
+    announcement: "The Following page now recommends three community members and shows follower counts on social profile cards.",
+    groups: {
+      NEW: [
+        "Added a Recommended section with three users you may want to follow.",
+        "Recommendations prioritize mutual connections, then popular community members."
+      ],
+      IMPROVED: [
+        "Replaced RP totals with follower counts on Following, Followers, Requests, and Recommended user cards.",
+        "Recommended users refresh automatically after following someone."
+      ]
+    }
+  },
+  {
+    version: "v6.1.3",
+    date: "July 2026",
+    isAnnouncement: false,
+    groups: {
+      IMPROVED: [
+        "Badge progress access is now shown only on your own profile."
+      ],
+      REMOVED: [
+        "Removed the Badges progress button when viewing another user’s profile while keeping their earned badges visible."
+      ]
+    }
+  },
+  {
+    version: "v6.1.2",
+    date: "July 2026",
+    isAnnouncement: false,
+    groups: {
+      NEW: [
+        "Added Follow and Unfollow controls directly to user profiles.",
+        "Private-profile follow requests now change from Follow to Requested."
+      ],
+      IMPROVED: [
+        "Moved each user's friend code below their username in smaller, lighter text."
+      ],
+      REMOVED: [
+        "Removed friend-code copy buttons from profile headers and Profile Settings."
+      ]
+    }
+  },
+  {
+    version: "v6.1.1",
+    date: "July 2026",
+    isAnnouncement: false,
+    groups: {
+      NEW: [
+        "Added Advanced Rating to the whole-franchise rating menu."
+      ],
+      FIXED: [
+        "Removed the inactive franchise-rating information icon.",
+        "Updated profile copy buttons to show a checkmark, tooltip confirmation, and clipboard toast after copying."
+      ],
+      IMPROVED: [
+        "Moved the franchise-rating explanation into the rating menu.",
+        "Advanced franchise ratings now apply every category score and the calculated average to all franchise entries and synchronized rating displays."
+      ]
+    }
+  },
+  {
+    version: "v6.1.0",
+    date: "July 2026",
+    isAnnouncement: true,
+    announcementTitle: "Franchise ratings and profile code copying are live",
+    announcement: "Rate an entire franchise at once, copy friend codes directly from profiles, and receive emergency announcements reliably across MAT.",
+    groups: {
+      NEW: [
+        "Added a whole-franchise rating control that applies one score to every entry.",
+        "Added copy buttons beside usernames on personal and followed-user profiles.",
+        "Added an information guide explaining how franchise and entry ratings interact."
+      ],
+      FIXED: [
+        "Restored the emergency banner across MAT pages with automatic refresh behavior."
+      ],
+      IMPROVED: [
+        "Changing an individual entry now recalculates the franchise average.",
+        "Franchise rating changes synchronize collection cards, Top 5, recommendations, and other rating displays."
+      ]
+    }
+  },
+  {
     version: "v6.0.2",
     date: "July 2026",
     isAnnouncement: false,

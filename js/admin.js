@@ -186,6 +186,7 @@ async function saveEmergencyBanner(event) {
   button.disabled = false; button.textContent = "Save Banner";
   if (error) { state.className = "admin-message error"; state.textContent = error.message; return; }
   state.className = "admin-message success"; state.textContent = "Emergency banner saved for all users.";
+  window.dispatchEvent(new CustomEvent("mat-emergency-banner-changed"));
 }
 
 async function clearEmergencyBanner() {
@@ -197,6 +198,7 @@ async function clearEmergencyBanner() {
   if (error) { state.className = "admin-message error"; state.textContent = error.message; return; }
   document.getElementById("adminEmergencyBannerMessage").value = "";
   state.className = "admin-message success"; state.textContent = "Emergency banner cleared and hidden.";
+  window.dispatchEvent(new CustomEvent("mat-emergency-banner-changed"));
 }
 
 async function findUserByFriendCode(event) {

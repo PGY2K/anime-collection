@@ -215,7 +215,8 @@ async function renderProfile() {
     <section class="public-profile-card mat-profile-customized ${matCustomizationClass("mat-profile-bg", profileCustomizations.profile_background)}">
       <button class="profile-rp-corner" type="button" onclick="matOpenRpModal()"><img src="assets/icons/rp-gem.png" alt="RP"><strong>${Math.round(Number(currentProfileData.recommendation_points)||0).toLocaleString()} RP</strong></button>
       <img class="profile-main-avatar ${matCustomizationClass("mat-avatar-glow", profileCustomizations.avatar_glow)}" src="${profileAvatarPath(selectedAvatarId)}" alt="Your profile avatar" />
-      <h2>${escapeProfileHtml(currentProfileData.username || "Anime Fan")}</h2>
+      <div class="profile-name-code-row"><h2>${escapeProfileHtml(currentProfileData.username || "Anime Fan")}</h2></div>
+      <p class="profile-friend-code">Friend Code: <span>${escapeProfileHtml(currentProfileData.friend_code || "Unavailable")}</span></p>
       ${matBadgeRowHtml(profileBadges, { emptyText: "No badges awarded yet." })}
       <a class="secondary-btn profile-badges-page-btn" href="badges.html">🏅 Badges</a>
       <p class="profile-social-meta"><a href="friends.html?tab=followers">${profileFriendCount.toLocaleString()} Followers</a><span>•</span><a href="friends.html?tab=following">${profileFollowingCount.toLocaleString()} Following</a><span>•</span><span>${escapeProfileHtml(profileJoinedLabel(currentProfileUser?.created_at || currentProfileData.created_at))}</span></p>
@@ -257,7 +258,7 @@ async function renderProfile() {
           <input class="search-box" id="profileUsername" maxlength="24" value="${escapeProfileHtml(currentProfileData.username || "")}" ${currentProfileData.username_privileges_revoked ? "disabled" : "required"} />
           ${currentProfileData.username_privileges_revoked ? '<small class="profile-privilege-warning">Your username privileges have been revoked.</small>' : ""}
           <label>Your user code</label>
-          <div class="friend-code-row"><code id="friendCode">${escapeProfileHtml(currentProfileData.friend_code)}</code><button class="secondary-btn" id="copyFriendCodeBtn" type="button">Copy</button></div>
+          <div class="friend-code-row"><code id="friendCode">${escapeProfileHtml(currentProfileData.friend_code)}</code></div>
           <div class="profile-setting-row">
             <div>
               <strong>Show 18+ Posters</strong>
@@ -287,10 +288,6 @@ function bindProfileEvents() {
   document.getElementById("show18PostersToggle").addEventListener("change", (event) => {
     matSetShow18Posters(event.target.checked);
     renderProfile();
-  });
-  document.getElementById("copyFriendCodeBtn").addEventListener("click", async () => {
-    await navigator.clipboard.writeText(document.getElementById("friendCode").textContent.trim());
-    document.getElementById("copyFriendCodeBtn").textContent = "Copied";
   });
   document.getElementById("profileForm").addEventListener("submit", saveProfile);
 }

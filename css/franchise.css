@@ -31,3 +31,6 @@
 .franchise-empty-entries{padding:24px;text-align:center;color:var(--muted);border:1px dashed var(--border);border-radius:15px}
 @media(max-width:760px){.franchise-options-form{grid-template-columns:1fr 1fr}}
 @media(max-width:520px){.franchise-options-form{grid-template-columns:1fr}.franchise-options-actions{align-items:stretch;flex-direction:column}.franchise-options-actions .primary-btn{width:100%}}
+
+/* v6.1.0 whole-franchise rating */
+.franchise-rate-all-btn{white-space:nowrap}.franchise-rating-modal-card{max-width:720px}
