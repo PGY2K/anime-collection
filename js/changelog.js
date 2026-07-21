@@ -1,5 +1,68 @@
 const MAT_RELEASES = [
   {
+    version: "v6.3.3",
+    date: "July 2026",
+    isAnnouncement: false,
+    groups: {
+      IMPROVED: [
+        "Profile customization color choices now display the full actual color across each option tile with larger, bolder labels.",
+        "Customization menus now size to their content and only scroll when a category, such as Avatar, genuinely requires it."
+      ],
+      FIXED: [
+        "Fixed most color options appearing as plain dark tiles while only Orange displayed a visible color preview."
+      ]
+    }
+  },
+  {
+    version: "v6.3.2",
+    date: "July 2026",
+    isAnnouncement: false,
+    groups: {
+      IMPROVED: [
+        "Simplified the RP Shop into six focused category mockups for Avatar, Avatar Decoration, Background, Recommendation Panel, Top 5 Panel, and Mini Profile Card.",
+        "Each category now previews only the item being customized, making the Shop easier to navigate."
+      ],
+      FIXED: [
+        "Fixed mini profile card colors so the selected color fills the entire card background instead of only changing its outline."
+      ]
+    }
+  },
+  {
+    version: "v6.3.1",
+    date: "July 2026",
+    isAnnouncement: false,
+    groups: {
+      IMPROVED: [
+        "Rebuilt the Shop as a full-screen live view of your actual profile.",
+        "Added small gear controls for Avatar, Avatar Decoration, Background, Recommendation Panel, and Top 5 Panel.",
+        "Added a clearly visible mini profile card preview below the full profile with its own gear control.",
+        "Renamed PFP to Avatar throughout the profile customization experience."
+      ],
+      FIXED: [
+        "Fixed the mini profile card preview not appearing in the current Shop layout."
+      ]
+    }
+  },
+  {
+    version: "v6.3.0",
+    date: "July 2026",
+    isAnnouncement: true,
+    announcementTitle: "The RP Shop now has a full profile designer",
+    announcement: "Customize your profile and mini profile card on a dedicated Shop page, preview every change, then purchase and equip everything together.",
+    groups: {
+      NEW: [
+        "Added a dedicated RP Shop page with a live full-profile preview and mini profile card preview.",
+        "Added Red, Blue, Green, Pink, Orange, and Black mini profile card backgrounds.",
+        "Mini profile card colors start at 2,500 RP and double after every color purchase."
+      ],
+      IMPROVED: [
+        "The RP Shop button now opens the full Shop page instead of placing the designer inside the RP menu.",
+        "All selected owned and unowned cosmetics are reviewed together before Purchase and Equip.",
+        "Equipped mini card colors display across Following, Followers, Requests, and Recommended user cards."
+      ]
+    }
+  },
+  {
     version: "v6.2.0",
     date: "July 2026",
     isAnnouncement: true,
