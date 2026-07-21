@@ -9,9 +9,9 @@
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png" />
   <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" />
-  <link rel="stylesheet" href="css/style.css?v=6.6.1" />
-  <link rel="stylesheet" href="css/profile.css?v=6.6.1" />
-  <link rel="stylesheet" href="css/add-anime.css?v=6.6.1" />
+  <link rel="stylesheet" href="css/style.css?v=6.7.0" />
+  <link rel="stylesheet" href="css/profile.css?v=6.7.0" />
+  <link rel="stylesheet" href="css/add-anime.css?v=6.7.0" />
 </head>
 <body>
   <main class="shell">
@@ -33,7 +33,7 @@
     <section class="page-header collection-heading">
       <div>
         <h1 class="page-title" id="collectionPageTitle">Your <span>Collection</span></h1>
-        <p class="page-subtitle" id="collectionPageSubtitle">Track everything you're watching, waiting on, completed, queued, or dropped.</p>
+        <p class="page-subtitle" id="collectionPageSubtitle">Track everything you've queued, started, completed, or dropped.</p>
       </div>
 
       <button class="primary-btn" id="openAddAnimeBtn" type="button">
@@ -63,7 +63,7 @@
         <button class="filter-btn active" data-filter="all">All</button>
         <button class="filter-btn" data-filter="completed">Completed</button>
         <button class="filter-btn" data-filter="in progress">In Progress</button>
-        <button class="filter-btn" data-filter="waiting">Waiting</button>
+        <button class="filter-btn" data-filter="waiting">Waiting for Updates</button>
         <button class="filter-btn" data-filter="dropped">Dropped</button>
         <button class="filter-btn" data-filter="queued">Queued</button>
       </div>
@@ -111,12 +111,12 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/supabase-client.js?v=6.6.1"></script>
-  <script src="js/profile-nav.js?v=6.6.1"></script>
-  <script src="js/content-preferences.js?v=6.6.1"></script>
-  <script src="js/franchises.js?v=6.6.1"></script>
-  <script src="js/pioneer-badge.js?v=6.6.1"></script>
-  <script src="js/app.js?v=6.6.1"></script>
+  <script src="js/supabase-client.js?v=6.7.0"></script>
+  <script src="js/profile-nav.js?v=6.7.0"></script>
+  <script src="js/content-preferences.js?v=6.7.0"></script>
+  <script src="js/franchises.js?v=6.7.0"></script>
+  <script src="js/pioneer-badge.js?v=6.7.0"></script>
+  <script src="js/app.js?v=6.7.0"></script>
   <script>
     requireSignedInUser().then((user) => {
       if (user) {
@@ -124,7 +124,7 @@
       }
     });
   </script>
-  <script src="js/version.js?v=6.6.1"></script>
-  <script src="js/pwa.js?v=6.6.1"></script>
+  <script src="js/version.js?v=6.7.0"></script>
+  <script src="js/pwa.js?v=6.7.0"></script>
 </body>
 </html>

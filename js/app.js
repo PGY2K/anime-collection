@@ -2,7 +2,7 @@ const ANILIST_ENDPOINT = "https://graphql.anilist.co";
 let collectionAnime=[]; let collectionFranchises=[]; let collectionFranchiseEntryRatings=[]; let currentFilter="all"; let currentUser=null; let currentProfile=null;
 function normalize(v){return String(v??"").trim().toLowerCase()}
 function escapeHtml(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
-function statusClass(status){const v=normalize(status);if(v==="completed")return"status-completed";if(v==="in progress")return"status-progress";if(v==="waiting")return"status-waiting";if(v==="dropped")return"status-dropped";return"status-queued"}
+function statusClass(status){const v=normalize(status);if(v==="completed")return"status-completed";if(v==="in progress")return"status-progress";if(v==="dropped")return"status-dropped";return"status-queued"}
 function itemRating(item){return matEntryRating(item)}
 async function requestAniList(query,variables){const r=await fetch(ANILIST_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify({query,variables})});if(!r.ok)throw new Error("Anime search failed.");return (await r.json())?.data}
 async function searchAniListPage(search){const q=`query($search:String){Page(page:1,perPage:8){media(search:$search,type:ANIME,sort:SEARCH_MATCH){id title{romaji english} coverImage{large medium} isAdult episodes format seasonYear status}}}`;return (await requestAniList(q,{search}))?.Page?.media||[]}
@@ -35,7 +35,7 @@ async function addAnime(anime){
   await matClaimPioneerBadge({anilistId:anime.id});
   return data;
 }
-const copy={all:["Your <span>Collection</span>","Search, filter, and browse your anime and franchises."],queued:["Queued","You've added these anime but haven't started watching them yet."],"in progress":["In Progress","You're currently watching these anime."],waiting:["Waiting","You're waiting for new episodes or the next season."],completed:["Completed","You've finished watching these anime."],dropped:["Dropped","You've decided not to continue watching these anime."]};
+const copy={all:["Your <span>Collection</span>","Search, filter, and browse your anime and franchises."],queued:["Queued","You've added these anime but haven't started watching them yet."],"in progress":["In Progress","You're currently watching these anime."],waiting:["Waiting for Updates","Anime with new-release notifications enabled."],completed:["Completed","You've finished watching these anime."],dropped:["Dropped","You've decided not to continue watching these anime."]};
 function updateHeader(){const c=copy[currentFilter]||copy.all;document.getElementById("collectionPageTitle").innerHTML=c[0];document.getElementById("collectionPageSubtitle").textContent=c[1]}
 function derivedFranchiseRating(franchise,entries){
   const dedicated=collectionFranchiseEntryRatings.filter(row=>Number(row.franchise_key)===Number(franchise.franchise_key));
@@ -56,7 +56,7 @@ async function posterHtml(id,title,extraClass="") {try{const m=await fetchPoster
 async function renderCollection(){
   updateHeader(); const search=normalize(document.getElementById("searchInput").value);const sort=document.getElementById("sortSelect").value;
   const {groups,standalone}=groupCollection();
-  let items=[...groups,...standalone].filter(x=>{const title=x.kind==="franchise"?x.franchise.title:x.item.title;const status=x.kind==="franchise"?x.franchise.status:x.item.status;return normalize(title).includes(search)&&(currentFilter==="all"||normalize(status)===currentFilter)});
+  let items=[...groups,...standalone].filter(x=>{const title=x.kind==="franchise"?x.franchise.title:x.item.title;const status=x.kind==="franchise"?x.franchise.status:x.item.status;return normalize(title).includes(search)&&(currentFilter==="all"||(currentFilter==="waiting"?Boolean(x.kind==="franchise"?x.franchise.notify_new_releases:x.item.notify_new_releases):normalize(status)===currentFilter))});
   const ratingOf=x=>x.kind==="franchise"?derivedFranchiseRating(x.franchise,x.entries):itemRating(x.item); const titleOf=x=>x.kind==="franchise"?x.franchise.title:x.item.title;
   items.sort((a,b)=>sort==="title-desc"?titleOf(b).localeCompare(titleOf(a)):sort==="rating-desc"?(ratingOf(b)??-1)-(ratingOf(a)??-1):sort==="rating-asc"?(ratingOf(a)??999)-(ratingOf(b)??999):titleOf(a).localeCompare(titleOf(b)));
   document.getElementById("resultCount").textContent=`${items.length} ${items.length===1?"item":"items"} shown`;

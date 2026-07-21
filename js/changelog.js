@@ -1,6 +1,26 @@
 const MAT_RELEASES = [
   {
-    version: "v6.6.1",
+    version: "v6.7.0",
+    date: "July 2026",
+    isAnnouncement: true,
+    announcementTitle: "Ratings, release tracking, and Taste Match are now available",
+    announcement: "Rate or recommend anime at any status, track new releases with a separate toggle, and compare anime taste from user profiles.",
+    groups: {
+      NEW: [
+        "Added a Notify me about new releases toggle that is independent from collection status.",
+        "Added the Taste Match percentage to viewed profiles using shared collection overlap and rating similarity.",
+        "Added detailed Taste Match information for shared anime, shared ratings, and average rating difference.",
+        "Added custom Taste Match and collection-count icons."
+      ],
+      IMPROVED: [
+        "Simplified statuses to Queued, In Progress, Completed, and Dropped.",
+        "Anime and franchises can now be rated or recommended regardless of status, with a rating still required for recommendations.",
+        "Waiting is now a collection filter and dashboard list powered by the new-release toggle instead of a status."
+      ]
+    }
+  },
+  {
+    version: "v6.7.0",
     date: "July 2026",
     isAnnouncement: false,
     groups: {

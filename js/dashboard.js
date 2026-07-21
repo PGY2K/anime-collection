@@ -86,6 +86,12 @@ async function loadDashboardAnime() {
   return data || [];
 }
 
+
+function renderWaitingUpdates(anime) {
+  const container=document.getElementById("waitingUpdates"); if(!container)return;
+  const waiting=anime.filter(item=>item.notify_new_releases);
+  container.innerHTML=waiting.length?`<div class="dashboard-waiting-list">${waiting.slice(0,6).map(item=>`<a href="anime.html?id=${encodeURIComponent(item.id)}"><span>🔔</span><strong>${dashboardEscapeHtml(item.title)}</strong><small>${dashboardEscapeHtml(item.status||"Queued")}</small></a>`).join("")}</div>`:'<span class="dashboard-waiting-icon">✓</span><div><strong>No anime waiting for updates</strong><p>Turn on “Notify me about new releases” from an anime or franchise status menu.</p></div>';
+}
 function renderDashboardStats(anime) {
   document.getElementById("totalAnime").textContent = anime.length;
 
@@ -97,9 +103,7 @@ function renderDashboardStats(anime) {
     (item) => dashboardNormalize(item.status) === "in progress"
   ).length;
 
-  document.getElementById("waitingAnime").textContent = anime.filter(
-    (item) => dashboardNormalize(item.status) === "waiting"
-  ).length;
+  document.getElementById("waitingAnime").textContent = anime.filter((item) => item.notify_new_releases).length;
 
   document.getElementById("droppedAnime").textContent = anime.filter(
     (item) => dashboardNormalize(item.status) === "dropped"
@@ -120,7 +124,7 @@ function renderTopRated(anime) {
   const container = document.getElementById("topRated");
 
   if (!topRated.length) {
-    container.innerHTML = '<div class="empty-state">Rate a completed anime to see it here.</div>';
+    container.innerHTML = '<div class="empty-state">Rate anime to see them here.</div>';
     return;
   }
 
@@ -492,6 +496,8 @@ function renderDashboardError(error) {
 async function initDashboard() {
   try {
     const anime = await loadDashboardAnime();
+    renderDashboardStats(anime);
+    renderWaitingUpdates(anime);
   
     const [trendingResult, friendRatingsResult] = await Promise.allSettled([
       loadTrendingAnime(),

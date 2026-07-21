@@ -39,12 +39,11 @@ function fdStatusClass(status) {
   const value = fdNormalize(status);
   if (value === "completed") return "status-completed";
   if (value === "in progress") return "status-progress";
-  if (value === "waiting") return "status-waiting";
-  if (value === "dropped") return "status-dropped";
+    if (value === "dropped") return "status-dropped";
   return "status-queued";
 }
 function fdStatusOptions(selected) {
-  return ["Queued", "In Progress", "Waiting", "Completed", "Dropped"]
+  return ["Queued", "In Progress", "Completed", "Dropped"]
     .map((status) => `<option value="${status}" ${status === selected ? "selected" : ""}>${status}</option>`)
     .join("");
 }
@@ -408,12 +407,13 @@ function fdStatusModalMarkup() {
           <summary>ⓘ Status Guide</summary>
           <div class="status-guide-list">
             <p><strong>Queued:</strong> You've added this franchise but haven't started watching it yet.</p>
-            <p><strong>In Progress:</strong> You're currently watching this franchise.</p>
-            <p><strong>Waiting:</strong> You're waiting for new episodes, movies, or the next season.</p>
+            <p><strong>In Progress:</strong> You are watching this franchise or are between seasons.</p>
+            
             <p><strong>Completed:</strong> You've finished the franchise entries you consider complete.</p>
             <p><strong>Dropped:</strong> You've decided not to continue this franchise.</p>
           </div>
         </details>
+        <label class="release-toggle-row"><input id="franchiseNotifyReleases" type="checkbox" ${fdFranchise.notify_new_releases?"checked":""}><span><strong>Notify me about new releases</strong><small>Show this franchise in Waiting Updates and the Waiting for Updates collection filter.</small></span></label>
         <div class="edit-message" id="franchiseStatusMessage"></div>
         <div class="edit-form-actions"><button class="secondary-action-btn" id="cancelFranchiseStatusBtn" type="button">Cancel</button><button class="save-anime-btn" type="submit">Save Status</button></div>
       </form>
@@ -426,15 +426,15 @@ function openFranchiseCollectionPopup(){ document.getElementById("franchiseCount
 
 function fdRecommendationModalMarkup() {
   const currentRating = fdCalculatedFranchiseRating() ?? fdAverage(fdFranchise);
-  const eligible = fdNormalize(fdFranchise?.status) === "completed" && currentRating !== null;
+  const eligible = currentRating !== null;
   const ratingText = currentRating === null ? "Not rated" : `${Number(currentRating).toFixed(1)}/10`;
-  return `<div class="recommend-modal-backdrop hidden" id="recommendFranchiseModal" aria-hidden="true"><section class="recommend-modal-card" role="dialog" aria-modal="true" aria-labelledby="recommendFranchiseTitle"><button class="recommend-modal-close" id="closeRecommendFranchiseBtn" type="button" aria-label="Close">×</button><div class="recommend-modal-heading"><img src="assets/icons/rp-gem.png" alt=""><div><h2 id="recommendFranchiseTitle">Recommend this Franchise</h2><p>Recommendations use the franchise rating calculated from your saved anime ratings.</p></div></div><div class="recommend-guidelines"><h3>Recommendation Guidelines</h3><ul><li>You may have only <strong>one active recommendation</strong>.</li><li>Status must be <strong>Completed</strong>.</li><li>You must rate the franchise before recommending it.</li><li>A new recommendation replaces your current one.</li><li>Notes are optional and limited to 250 characters.</li></ul></div><div class="recommend-current"><strong>Franchise Rating:</strong> ${ratingText}</div><label class="recommend-note-label" for="recommendFranchiseNote">Notes <span>(optional)</span></label><textarea id="recommendFranchiseNote" maxlength="250" placeholder="Why are you recommending this franchise?"></textarea><div class="recommend-rp-summary"><strong>How you earn RP</strong><span>+1 Added • +3 Completed • +5 Rated • +10 Exact Match</span></div><div class="recommend-message" id="recommendFranchiseMessage"></div><div class="recommend-modal-actions"><button class="remove-recommendation-btn hidden" id="removeFranchiseRecommendationBtn" type="button">Remove Recommendation</button><button class="secondary-action-btn" id="cancelRecommendFranchiseBtn" type="button">Cancel</button><button class="recommend-confirm-btn" id="confirmRecommendFranchiseBtn" type="button"${eligible?"":" disabled"}>Recommend Franchise</button></div></section></div>`;
+  return `<div class="recommend-modal-backdrop hidden" id="recommendFranchiseModal" aria-hidden="true"><section class="recommend-modal-card" role="dialog" aria-modal="true" aria-labelledby="recommendFranchiseTitle"><button class="recommend-modal-close" id="closeRecommendFranchiseBtn" type="button" aria-label="Close">×</button><div class="recommend-modal-heading"><img src="assets/icons/rp-gem.png" alt=""><div><h2 id="recommendFranchiseTitle">Recommend this Franchise</h2><p>Recommendations use the franchise rating calculated from your saved anime ratings.</p></div></div><div class="recommend-guidelines"><h3>Recommendation Guidelines</h3><ul><li>You may have only <strong>one active recommendation</strong>.</li><li>You must rate the franchise before recommending it.</li><li>A new recommendation replaces your current one.</li><li>Notes are optional and limited to 250 characters.</li></ul></div><div class="recommend-current"><strong>Franchise Rating:</strong> ${ratingText}</div><label class="recommend-note-label" for="recommendFranchiseNote">Notes <span>(optional)</span></label><textarea id="recommendFranchiseNote" maxlength="250" placeholder="Why are you recommending this franchise?"></textarea><div class="recommend-rp-summary"><strong>How you earn RP</strong><span>+1 Added • +3 Completed • +5 Rated • +10 Exact Match</span></div><div class="recommend-message" id="recommendFranchiseMessage"></div><div class="recommend-modal-actions"><button class="remove-recommendation-btn hidden" id="removeFranchiseRecommendationBtn" type="button">Remove Recommendation</button><button class="secondary-action-btn" id="cancelRecommendFranchiseBtn" type="button">Cancel</button><button class="recommend-confirm-btn" id="confirmRecommendFranchiseBtn" type="button"${eligible?"":" disabled"}>Recommend Franchise</button></div></section></div>`;
 }
 function fdBindRecommendation() {
   const button=document.getElementById("recommendFranchiseBtn"), modal=document.getElementById("recommendFranchiseModal");
   if(!button||!modal) return;
   const currentRating=()=>fdCalculatedFranchiseRating() ?? fdAverage(fdFranchise);
-  const eligible=()=>fdNormalize(fdFranchise?.status)==="completed"&&currentRating()!==null;
+  const eligible=()=>currentRating()!==null;
   const setRecommendedState=(active)=>{
     const same=active?.item_type==="franchise"&&Number(active.franchise_key)===Number(fdFranchise.franchise_key);
     button.classList.toggle("is-recommended",same);
@@ -449,7 +449,7 @@ function fdBindRecommendation() {
     modal.classList.remove("hidden");modal.setAttribute("aria-hidden","false");document.body.classList.add("modal-open");
     const removeButton=document.getElementById("removeFranchiseRecommendationBtn"),saveButton=document.getElementById("confirmRecommendFranchiseBtn"),message=document.getElementById("recommendFranchiseMessage");
     removeButton.classList.add("hidden");saveButton.textContent="Recommend Franchise";saveButton.disabled=!eligible();message.textContent="";message.className="recommend-message";
-    if(!eligible())message.textContent=fdNormalize(fdFranchise?.status)!=="completed"?"Mark this franchise Completed and rate it before recommending it.":"Rate this franchise before recommending it.";
+    if(!eligible())message.textContent="Rate this franchise before recommending it.";
     try{
       const {data,error}=await supabaseClient.from("recommendations").select("*").eq("recommender_id",fdUser.id).eq("active",true).maybeSingle();
       if(error)throw error;
@@ -468,7 +468,6 @@ function fdBindRecommendation() {
     save.disabled=true; save.textContent="Saving…"; message.textContent="";
     try {
       const value=currentRating();
-      if(fdNormalize(fdFranchise?.status)!=="completed")throw new Error("Mark this franchise Completed before recommending it.");
       if(value===null)throw new Error("Rate this franchise before recommending it.");
       const {error}=await supabaseClient.rpc("set_active_recommendation",{p_item_type:"franchise",p_anilist_id:null,p_franchise_key:fdFranchise.franchise_key,p_title:fdFranchise.title,p_rating:Number(value),p_note:document.getElementById("recommendFranchiseNote").value.trim()});
       if(error) throw error;
@@ -568,7 +567,7 @@ function fdRender() {
       <div class="franchise-hero-copy">
         <h1>${fdEsc(fdFranchise.title)}</h1>
         <span class="franchise-pill">Franchise</span>
-        <button class="community-count-btn" id="franchiseCollectionCount" type="button">📚 <span>${fdCollectionCount.toLocaleString()}</span></button>
+        <button class="community-count-btn" id="franchiseCollectionCount" type="button"><img class="collection-count-icon" src="assets/icons/collection-count.png" alt=""> <span>${fdCollectionCount.toLocaleString()}</span></button>
         <details class="description-disclosure franchise-description"><summary>Description</summary><p>${fdEsc(synopsis)}</p></details>
         <div class="details-actions franchise-actions">
           ${fdHasUserFranchise ? `<span class="details-status status ${fdStatusClass(fdFranchise.status)}">${fdEsc(fdFranchise.status)}</span>` : ""}
@@ -747,15 +746,9 @@ function fdBind() {
     message.textContent = "Saving…";
     try {
       const nextStatus=document.getElementById("franchiseStatusSelect").value;
-      if(fdNormalize(nextStatus)!=="completed"){
-        const {data:active,error:activeError}=await supabaseClient.from("recommendations").select("item_type,franchise_key").eq("recommender_id",fdUser.id).eq("active",true).maybeSingle();
-        if(activeError) throw activeError;
-        const isActiveFranchise=active?.item_type==="franchise"&&Number(active.franchise_key)===Number(fdFranchise.franchise_key);
-        if(isActiveFranchise) throw new Error("This franchise is your active recommendation. Remove or replace the recommendation before changing its status from Completed.");
-      }
       const { error } = await supabaseClient
         .from("user_franchises")
-        .update({ status: nextStatus, updated_at: new Date().toISOString() })
+        .update({ status: nextStatus, notify_new_releases: Boolean(document.getElementById("franchiseNotifyReleases")?.checked), updated_at: new Date().toISOString() })
         .eq("user_id", fdUser.id)
         .eq("franchise_key", fdFranchise.franchise_key);
       if (error) throw error;

@@ -1132,3 +1132,6 @@
 /* Suspended account comment placeholder */
 .comment-card.comment-suspended .comment-author-name,
 .comment-card.comment-suspended .comment-body{color:#ff4d63!important;font-weight:800}.comment-card.comment-suspended .comment-author-button{pointer-events:none;filter:grayscale(1)}
+
+/* v6.7.0 release toggles and custom collection icon */
+.release-toggle-row{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.035)}.release-toggle-row input{margin-top:4px;accent-color:var(--accent)}.release-toggle-row span{display:grid;gap:3px}.release-toggle-row small{color:var(--muted);line-height:1.4}.collection-count-icon{width:22px;height:22px;object-fit:contain;border-radius:5px;vertical-align:middle}

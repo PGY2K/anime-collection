@@ -10,6 +10,7 @@ let friendProfileCustomizations = { avatar_glow: "default", profile_background: 
 let friendProfileTheme = "default";
 let friendProfileViewer = null;
 let friendProfileFollowStatus = "";
+let friendTasteMatch = {score:0,sharedAnime:0,sharedRatings:0,averageDifference:null};
 
 function fpEscape(value) {
   return String(value ?? "")
@@ -53,7 +54,6 @@ function fpAverage(item) {
   const rawDirect = item?.overall_rating;
   const direct = rawDirect === null || rawDirect === undefined || rawDirect === "" ? null : Number(rawDirect);
   if(Number.isFinite(direct) && direct > 0) return direct;
-  if (fpNormalize(item.status) !== "completed") return null;
   const scores = ["story","characters","animation","sound","world","pacing","emotion","originality","rewatch_value","enjoyment"]
     .map((field) => item[field] === null || item[field] === undefined || item[field] === "" ? null : Number(item[field]))
     .filter(Number.isFinite);
@@ -65,7 +65,6 @@ function fpStatusClass(status) {
   const value = fpNormalize(status);
   if (value === "completed") return "status-completed";
   if (value === "in progress") return "status-progress";
-  if (value === "waiting") return "status-waiting";
   if (value === "dropped") return "status-dropped";
   return "status-queued";
 }
@@ -305,6 +304,23 @@ function bindFriendProfileFollowButton(profile) {
   });
 }
 
+
+function fpTasteMatch(viewerAnime, otherAnime) {
+  const key = (item) => Number(item.anilist_id);
+  const viewer = new Map(viewerAnime.map(item => [key(item), item]).filter(([id]) => Number.isFinite(id)));
+  const other = new Map(otherAnime.map(item => [key(item), item]).filter(([id]) => Number.isFinite(id)));
+  const sharedIds = [...viewer.keys()].filter(id => other.has(id));
+  const unionCount = new Set([...viewer.keys(), ...other.keys()]).size;
+  const collectionScore = unionCount ? (sharedIds.length / unionCount) * 100 : 0;
+  const ratedPairs = sharedIds.map(id => [fpAverage(viewer.get(id)), fpAverage(other.get(id))]).filter(([a,b]) => a !== null && b !== null);
+  const averageDifference = ratedPairs.length ? ratedPairs.reduce((sum,[a,b]) => sum + Math.abs(a-b), 0) / ratedPairs.length : null;
+  const ratingScore = averageDifference === null ? collectionScore : Math.max(0, 100 - averageDifference * 10);
+  return { score: Math.round(collectionScore * .30 + ratingScore * .70), sharedAnime: sharedIds.length, sharedRatings: ratedPairs.length, averageDifference };
+}
+function fpTasteMatchModalMarkup(stats) {
+  const difference = stats.averageDifference === null ? "Not enough shared ratings" : stats.averageDifference.toFixed(1);
+  return `<div class="taste-match-backdrop" id="tasteMatchModal" hidden><section class="taste-match-dialog" role="dialog" aria-modal="true" aria-labelledby="tasteMatchTitle"><button class="taste-match-close" id="tasteMatchClose" type="button">×</button><div class="taste-match-title"><img src="assets/icons/taste-match.png" alt=""><div><h2 id="tasteMatchTitle">Taste Match</h2><strong>${stats.score}%</strong></div></div><p>Taste Match compares your anime collection and ratings with this user to estimate how similar your anime tastes are.</p><div class="taste-match-breakdown"><div><span>Shared Anime</span><strong>${stats.sharedAnime}</strong></div><div><span>Shared Ratings</span><strong>${stats.sharedRatings}</strong></div><div><span>Average Rating Difference</span><strong>${difference}</strong></div></div><p class="taste-match-note">The score uses shared collection overlap and gives greater weight to how closely you rate the same anime. It becomes more accurate as both users rate more titles.</p></section></div>`;
+}
 async function renderFriendProfileShell(profile) {
   const viewerIsAdmin = await fpViewerIsAdmin();
   const profileBadges = await matLoadUserBadges(profile.user_id);
@@ -331,10 +347,12 @@ async function renderFriendProfileShell(profile) {
       <p class="profile-social-meta">${profile.is_private
         ? `<span title="This user’s social lists are private">${friendProfileFriendCount.toLocaleString()} Followers</span><span>•</span><span title="This user’s social lists are private">${Number(profile.following_count||0).toLocaleString()} Following</span>`
         : `<a href="friends.html?user=${encodeURIComponent(profile.user_id)}&tab=followers">${friendProfileFriendCount.toLocaleString()} Followers</a><span>•</span><a href="friends.html?user=${encodeURIComponent(profile.user_id)}&tab=following">${Number(profile.following_count||0).toLocaleString()} Following</a>`}<span>•</span><span>${fpEscape(fpJoinedLabel(profile.created_at))}</span></p>
+      <button class="taste-match-chip" id="tasteMatchButton" type="button" aria-label="Open Taste Match details"><img src="assets/icons/taste-match.png" alt=""><strong>${friendTasteMatch.score}%</strong></button>
+      ${fpTasteMatchModalMarkup(friendTasteMatch)}
       ${friendActiveRecommendation?`<section class="profile-active-recommendation ${matCustomizationClass("mat-recommendation-glow", friendProfileCustomizations.recommendation_glow)}"><div class="profile-section-heading"><h3>💎 Recommendation</h3><span>Featured by ${fpEscape(profile.username)}</span></div><article class="dashboard-media-card friend-rating-card profile-rec-card"><a class="profile-rec-poster-link${matAdultPosterClass(recommendationMedia?.isAdult)}" href="${fpRecommendationHref(friendActiveRecommendation,profile.user_id,recommendationMedia)}" data-profile-recommendation-open>${recommendationMedia?.url?`<img class="profile-rec-poster" src="${fpEscape(recommendationMedia.url)}" alt="${fpEscape(friendActiveRecommendation.title)} poster" loading="lazy">`:'<div class="profile-rec-poster poster-placeholder">🎌</div>'}${matAdultPosterOverlay(recommendationMedia?.isAdult)}</a><div class="dashboard-media-body"><a class="recommendation-title-link" href="${fpRecommendationHref(friendActiveRecommendation,profile.user_id,recommendationMedia)}" data-profile-recommendation-open><h3>${fpEscape(friendActiveRecommendation.title)}</h3></a><strong>⭐ ${Number(friendActiveRecommendation.rating).toFixed(1)}</strong>${friendActiveRecommendation.note?`<small>${fpEscape(friendActiveRecommendation.note)}</small>`:""}<button class="dashboard-queue-btn" id="profileRecommendationQueueBtn" type="button" ${recommendationInViewerCollection ? "disabled" : ""}>${recommendationInViewerCollection ? "In Your Collection" : "Add to Queue"}</button></div></article></section>`:""}
       <div class="profile-stat-grid">
         <div><strong>${count("in progress")}</strong><span>Watching</span></div>
-        <div><strong>${count("waiting")}</strong><span>Waiting</span></div>
+        <div><strong>${friendProfileAnime.filter(item=>item.notify_new_releases).length}</strong><span>Waiting Updates</span></div>
         <div><strong>${count("queued")}</strong><span>Queued</span></div>
         <div><strong>${count("completed")}</strong><span>Completed</span></div>
         <div><strong>${count("dropped")}</strong><span>Dropped</span></div>
@@ -357,7 +375,7 @@ async function renderFriendProfileShell(profile) {
       <div class="friend-filter-bar">
         <button class="filter-btn active" type="button" data-friend-filter="all">All</button>
         <button class="filter-btn" type="button" data-friend-filter="in progress">Watching</button>
-        <button class="filter-btn" type="button" data-friend-filter="waiting">Waiting</button>
+        <button class="filter-btn" type="button" data-friend-filter="waiting">Waiting for Updates</button>
         <button class="filter-btn" type="button" data-friend-filter="queued">Queue</button>
         <button class="filter-btn" type="button" data-friend-filter="completed">Completed</button>
         <button class="filter-btn" type="button" data-friend-filter="favorites">Favorites</button>
@@ -365,6 +383,7 @@ async function renderFriendProfileShell(profile) {
       <section class="friend-anime-grid" id="friendAnimeGrid"><div class="loading">Loading collection…</div></section>
     </section>`;
 
+  const tasteModal=document.getElementById("tasteMatchModal"); const closeTaste=()=>{if(tasteModal)tasteModal.hidden=true}; document.getElementById("tasteMatchButton")?.addEventListener("click",()=>{if(tasteModal)tasteModal.hidden=false}); document.getElementById("tasteMatchClose")?.addEventListener("click",closeTaste); tasteModal?.addEventListener("click",e=>{if(e.target===tasteModal)closeTaste()});
   matBindBadgeButtons(root);
   bindFriendProfileFollowButton(profile);
   document.querySelectorAll("[data-profile-recommendation-open]").forEach((link) => {
@@ -393,7 +412,7 @@ async function renderFriendAnime() {
   if (friendProfileFilter === "favorites") {
     filtered = filtered.filter((item) => item.favorite);
   } else if (friendProfileFilter !== "all") {
-    filtered = filtered.filter((item) => fpNormalize(item.status) === friendProfileFilter);
+    filtered = filtered.filter((item) => friendProfileFilter === "waiting" ? Boolean(item.notify_new_releases) : fpNormalize(item.status) === friendProfileFilter);
   }
 
   const posters = await fetchFriendPosters(filtered.map((item) => item.anilist_id));
@@ -454,6 +473,9 @@ async function initFriendProfile(user) {
     friendProfileCustomizations = customizations;
     friendProfileTheme = theme;
     friendProfileAnime = anime;
+    const {data: viewerAnimeData, error: viewerAnimeError} = await supabaseClient.from("anime").select("anilist_id,status,overall_rating,story,characters,animation,sound,world,pacing,emotion,originality,rewatch_value,enjoyment");
+    if(viewerAnimeError) console.warn("Taste Match could not load your ratings.", viewerAnimeError);
+    friendTasteMatch = fpTasteMatch(viewerAnimeData || [], anime);
     friendProfileFollowStatus = await fpResolveFollowStatus(profile);
     await renderFriendProfileShell(profile);
     await renderFriendAnime();

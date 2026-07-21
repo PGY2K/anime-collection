@@ -9,7 +9,7 @@ function detailsEscapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 function detailsNormalize(value){ return String(value ?? "").trim().toLowerCase(); }
-function detailsStatusClass(status){ const v=detailsNormalize(status); if(v==="completed")return"status-completed"; if(v==="in progress")return"status-progress"; if(v==="waiting")return"status-waiting"; if(v==="dropped")return"status-dropped"; return"status-queued"; }
+function detailsStatusClass(status){ const v=detailsNormalize(status); if(v==="completed")return"status-completed"; if(v==="in progress")return"status-progress"; if(v==="dropped")return"status-dropped"; return"status-queued"; }
 const DETAILS_RATING_FIELDS = [
   { key: "story", label: "Story", description: "How strong and well-written the plot is, including structure, conflict, and payoff." },
   { key: "characters", label: "Characters", description: "How well-developed, believable, and memorable the main and supporting characters are." },
@@ -32,7 +32,7 @@ function detailsAverage(record){
   return scores.length<10?null:scores.reduce((a,b)=>a+b,0)/scores.length;
 }
 function stripHtml(html){ const el=document.createElement("div"); el.innerHTML=html||""; return el.textContent||el.innerText||""; }
-function statusOptions(selectedStatus){ return ["Queued","In Progress","Waiting","Completed","Dropped"].map(s=>`<option value="${s}" ${s===selectedStatus?"selected":""}>${s}</option>`).join(""); }
+function statusOptions(selectedStatus){ return ["Queued","In Progress","Completed","Dropped"].map(s=>`<option value="${s}" ${s===selectedStatus?"selected":""}>${s}</option>`).join(""); }
 
 
 function detailsPositiveInteger(...values){
@@ -214,9 +214,8 @@ function trailerMarkup(media){
 
 
 function recommendationEligibility(record){
-  const completed=detailsNormalize(record?.status)==="completed";
   const rating=detailsAverage(record);
-  return {eligible:completed&&rating!==null,completed,rating};
+  return {eligible:rating!==null,rating};
 }
 async function fetchActiveRecommendation(){
   const {data:authData}=await supabaseClient.auth.getUser();
@@ -227,7 +226,7 @@ async function fetchActiveRecommendation(){
 function recommendationModalMarkup(record,title){
   const eligibility=recommendationEligibility(record);
   const ratingText=eligibility.rating===null?"Not rated":`${Number(eligibility.rating).toFixed(1)}/10`;
-  return `<div class="recommend-modal-backdrop hidden" id="recommendAnimeModal" aria-hidden="true"><section class="recommend-modal-card" role="dialog" aria-modal="true" aria-labelledby="recommendAnimeTitle"><button class="recommend-modal-close" id="closeRecommendBtn" type="button" aria-label="Close">×</button><div class="recommend-modal-heading"><img src="assets/icons/rp-gem.png" alt=""><div><h2 id="recommendAnimeTitle">Recommend this Anime</h2><p>Recommendations use the personal rating already saved to this anime.</p></div></div><div class="recommend-guidelines"><h3>Recommendation Guidelines</h3><ul><li>You may have only <strong>one active recommendation</strong>.</li><li>This title must be marked <strong>Completed</strong>.</li><li>You must rate this title before recommending it.</li><li>A new recommendation replaces your current one.</li><li>Notes are optional and limited to 250 characters.</li></ul></div><div class="recommend-current"><strong>Personal Rating:</strong> ${ratingText}</div><label class="recommend-note-label" for="recommendationNote">Notes <span>(optional)</span></label><textarea id="recommendationNote" maxlength="250" placeholder="Why are you recommending this title?"></textarea><div class="recommend-rp-summary"><strong>How you earn RP</strong><span>+1 Added • +3 Completed • +5 Rated • +10 Exact Match</span></div><div class="recommend-current" id="recommendCurrentState">Checking your current recommendation…</div><div class="recommend-message" id="recommendMessage"></div><div class="recommend-modal-actions"><button class="remove-recommendation-btn hidden" id="removeRecommendationBtn" type="button">Remove Recommendation</button><button class="secondary-action-btn" id="cancelRecommendBtn" type="button">Cancel</button><button class="recommend-confirm-btn" id="confirmRecommendBtn" type="button"${eligibility.eligible?"":" disabled"}>Recommend Anime</button></div></section></div>`;
+  return `<div class="recommend-modal-backdrop hidden" id="recommendAnimeModal" aria-hidden="true"><section class="recommend-modal-card" role="dialog" aria-modal="true" aria-labelledby="recommendAnimeTitle"><button class="recommend-modal-close" id="closeRecommendBtn" type="button" aria-label="Close">×</button><div class="recommend-modal-heading"><img src="assets/icons/rp-gem.png" alt=""><div><h2 id="recommendAnimeTitle">Recommend this Anime</h2><p>Recommendations use the personal rating already saved to this anime.</p></div></div><div class="recommend-guidelines"><h3>Recommendation Guidelines</h3><ul><li>You may have only <strong>one active recommendation</strong>.</li><li>You must rate this title before recommending it.</li><li>A new recommendation replaces your current one.</li><li>Notes are optional and limited to 250 characters.</li></ul></div><div class="recommend-current"><strong>Personal Rating:</strong> ${ratingText}</div><label class="recommend-note-label" for="recommendationNote">Notes <span>(optional)</span></label><textarea id="recommendationNote" maxlength="250" placeholder="Why are you recommending this title?"></textarea><div class="recommend-rp-summary"><strong>How you earn RP</strong><span>+1 Added • +3 Completed • +5 Rated • +10 Exact Match</span></div><div class="recommend-current" id="recommendCurrentState">Checking your current recommendation…</div><div class="recommend-message" id="recommendMessage"></div><div class="recommend-modal-actions"><button class="remove-recommendation-btn hidden" id="removeRecommendationBtn" type="button">Remove Recommendation</button><button class="secondary-action-btn" id="cancelRecommendBtn" type="button">Cancel</button><button class="recommend-confirm-btn" id="confirmRecommendBtn" type="button"${eligibility.eligible?"":" disabled"}>Recommend Anime</button></div></section></div>`;
 }
 async function initializeRecommendationControl(record,title,media){
   const button=document.getElementById("recommendAnimeBtn"),modal=document.getElementById("recommendAnimeModal");if(!button||!modal)return;
@@ -251,7 +250,7 @@ async function initializeRecommendationControl(record,title,media){
     confirmButton.classList.remove("hidden");
     confirmButton.disabled=!eligibility.eligible;
     if(!eligibility.eligible){
-      message.textContent=!eligibility.completed?"Mark this title Completed and rate it before recommending it.":"Rate this title before recommending it.";
+      message.textContent="Rate this title before recommending it.";
     }
     try{
       const active=await fetchActiveRecommendation();
@@ -274,7 +273,6 @@ async function initializeRecommendationControl(record,title,media){
     confirm.disabled=true;confirm.textContent="Saving…";message.textContent="";
     try{
       const currentEligibility=recommendationEligibility(record);
-      if(!currentEligibility.completed)throw new Error("Mark this title Completed before recommending it.");
       if(currentEligibility.rating===null)throw new Error("Rate this title before recommending it.");
       const {error}=await supabaseClient.rpc("set_active_recommendation",{p_item_type:"anime",p_anilist_id:Number(media.id),p_franchise_key:null,p_title:title,p_rating:Number(currentEligibility.rating),p_note:document.getElementById("recommendationNote").value.trim()});
       if(error)throw error;
@@ -309,7 +307,7 @@ function renderDetails(record,media,options={}){
           ${franchiseKey?`<a class="back-link" href="franchise.html?key=${encodeURIComponent(franchiseKey)}">← Back to Franchise</a>`:`<a class="back-link" href="javascript:history.back()">← Back</a>`}
           <h1 class="details-title">${detailsEscapeHtml(title)}</h1>
           <div class="details-meta">${detailsEscapeHtml(meta||"Anime")}</div>
-          <button class="community-count-btn" id="communityCollectionCount" type="button" aria-label="View collection count">📚 <span>—</span></button>
+          <button class="community-count-btn" id="communityCollectionCount" type="button" aria-label="View collection count"><img class="collection-count-icon" src="assets/icons/collection-count.png" alt=""> <span>—</span></button>
           <div class="details-actions">
             ${owned&&!informationalOnly?`<span class="details-status status ${detailsStatusClass(record.status)}">${detailsEscapeHtml(record.status||"Queued")}</span>`:""}
             ${owned&&!informationalOnly&&rating!==null?`<span class="details-rating-badge">⭐ ${rating.toFixed(1)}</span>`:""}
@@ -451,7 +449,7 @@ function editorMarkup(record,title){
   const current=detailsAverage(record)||5;
   return `
 <div class="remove-modal-backdrop hidden" id="removeAnimeModal" aria-hidden="true"><section class="remove-modal-card" role="dialog" aria-modal="true"><h2>Remove from Collection?</h2><p>Remove <strong>${detailsEscapeHtml(title)}</strong> from your collection? This cannot be undone.</p><div class="remove-modal-actions"><button class="secondary-action-btn" id="cancelRemoveBtn" type="button">Cancel</button><button class="confirm-remove-btn" id="confirmRemoveBtn" type="button">Remove</button></div><div class="edit-message" id="removeMessage"></div></section></div>
-<div class="edit-modal-backdrop hidden" id="editAnimeModal" aria-hidden="true"><section class="edit-modal-card" role="dialog" aria-modal="true"><div class="edit-modal-header"><div><h2>Change Status</h2><p>Update ${detailsEscapeHtml(title)}.</p></div><button class="edit-close-btn" id="closeEditBtn" type="button">×</button></div><form id="editAnimeForm" class="edit-form"><label>Status<select id="editStatus">${statusOptions(record.status||"Queued")}</select></label><details class="status-guide"><summary>ⓘ Status Guide</summary><div class="status-guide-list"><p><strong>Queued:</strong> You've added this anime to your collection but haven't started watching it yet.</p><p><strong>In Progress:</strong> You're currently watching this anime.</p><p><strong>Waiting:</strong> You're waiting for new episodes or the next season.</p><p><strong>Completed:</strong> You've finished watching this anime.</p><p><strong>Dropped:</strong> You've decided not to continue watching this anime.</p></div></details><div class="edit-message" id="editMessage"></div><div class="edit-form-actions"><button class="secondary-action-btn" id="cancelEditBtn" type="button">Cancel</button><button class="save-anime-btn" type="submit">Save Status</button></div></form></section></div>
+<div class="edit-modal-backdrop hidden" id="editAnimeModal" aria-hidden="true"><section class="edit-modal-card" role="dialog" aria-modal="true"><div class="edit-modal-header"><div><h2>Change Status</h2><p>Update ${detailsEscapeHtml(title)}.</p></div><button class="edit-close-btn" id="closeEditBtn" type="button">×</button></div><form id="editAnimeForm" class="edit-form"><label>Status<select id="editStatus">${statusOptions(record.status||"Queued")}</select></label><details class="status-guide"><summary>ⓘ Status Guide</summary><div class="status-guide-list"><p><strong>Queued:</strong> You've added this anime to your collection but haven't started watching it yet.</p><p><strong>In Progress:</strong> You are watching this anime or are between seasons.</p><p><strong>Completed:</strong> You've finished watching this anime.</p><p><strong>Dropped:</strong> You've decided not to continue watching this anime.</p></div></details><label class="release-toggle-row"><input id="editNotifyReleases" type="checkbox" ${record.notify_new_releases?"checked":""}><span><strong>Notify me about new releases</strong><small>Show this anime in Waiting Updates and the Waiting for Updates collection filter.</small></span></label><div class="edit-message" id="editMessage"></div><div class="edit-form-actions"><button class="secondary-action-btn" id="cancelEditBtn" type="button">Cancel</button><button class="save-anime-btn" type="submit">Save Status</button></div></form></section></div>
 <div class="edit-modal-backdrop hidden" id="rateAnimeModal" aria-hidden="true"><section class="edit-modal-card" role="dialog" aria-modal="true"><div class="edit-modal-header"><div><h2>Rate ${detailsEscapeHtml(title)}</h2><p>Use one overall score or open Advanced Rating.</p></div><button class="edit-close-btn" id="closeRateBtn" type="button">×</button></div><form id="rateAnimeForm" class="edit-form"><div class="simple-rating-box"><div><strong>Overall Rating</strong><small>Choose one score from 1–10.</small></div><output id="liveOverallRating">${current.toFixed(1)}</output><div class="rating-slider-control"><span>1</span><input id="simpleOverallRating" type="range" min="1" max="10" step="0.1" value="${current}"><span>10</span></div></div><details id="standaloneAdvancedRating" class="advanced-rating-disclosure"><summary>Advanced Rating</summary><div class="rating-slider-list">${ratingSliderMarkup(record)}</div></details><div class="edit-message" id="ratingMessage"></div><div class="edit-form-actions"><button class="secondary-action-btn" id="cancelRateBtn" type="button">Cancel</button><button class="save-anime-btn" type="submit">Save Rating</button></div></form></section></div>`;
 }
 
@@ -492,12 +490,7 @@ function initializeEditor(record,media){
     event.preventDefault();
     try{
       const nextStatus=document.getElementById("editStatus").value;
-      if(detailsNormalize(nextStatus)!=="completed"){
-        const active=await fetchActiveRecommendation();
-        const isActiveTitle=active?.item_type==="anime"&&Number(active.anilist_id)===Number(media.id);
-        if(isActiveTitle) throw new Error("This title is your active recommendation. Remove or replace the recommendation before changing its status from Completed.");
-      }
-      const updated=await updateRecord(record.id,{status:nextStatus});
+      const updated=await updateRecord(record.id,{status:nextStatus,notify_new_releases:Boolean(document.getElementById("editNotifyReleases")?.checked)});
       if(detailsNormalize(nextStatus)==="completed") await detailsAwardRecommendationProgress("completed", media.id);
       closeModal(statusModal);renderDetails(updated,media);
     }catch(error){document.getElementById("editMessage").textContent=error.message||"Could not save status."}

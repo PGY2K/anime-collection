@@ -225,7 +225,7 @@ async function renderProfile() {
 
       <div class="profile-stat-grid">
         <div><strong>${statusCount("in progress")}</strong><span>Watching</span></div>
-        <div><strong>${statusCount("waiting")}</strong><span>Waiting</span></div>
+        <div><strong>${profileAnime.filter(item=>item.notify_new_releases).length}</strong><span>Waiting Updates</span></div>
         <div><strong>${statusCount("queued")}</strong><span>Queued</span></div>
         <div><strong>${statusCount("completed")}</strong><span>Completed</span></div>
         <div><strong>${statusCount("dropped")}</strong><span>Dropped</span></div>
