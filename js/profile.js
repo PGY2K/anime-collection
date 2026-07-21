@@ -11,6 +11,7 @@ let profileFriendCount = 0;
 let profileFollowingCount = 0;
 let activeRecommendation = null;
 let profileCustomizations = { avatar_glow: "default", profile_background: "default", top_five_glow: "default", recommendation_glow: "default" };
+let profileTheme = "default";
 
 function profileJoinedLabel(value) {
   const date = value ? new Date(value) : null;
@@ -212,7 +213,7 @@ async function renderProfile() {
   const recommendationMedia = activeRecommendation ? await resolveOwnRecommendationMedia(activeRecommendation) : null;
   const root = document.getElementById("profileRoot");
   root.innerHTML = `
-    <section class="public-profile-card mat-profile-customized ${matCustomizationClass("mat-profile-bg", profileCustomizations.profile_background)}">
+    <section class="public-profile-card mat-profile-customized ${matCustomizationClass("mat-profile-bg", profileCustomizations.profile_background)} mat-theme-${profileTheme}">
       <button class="profile-rp-corner" type="button" onclick="matOpenRpModal()"><img src="assets/icons/rp-gem.png" alt="RP"><strong>${Math.round(Number(currentProfileData.recommendation_points)||0).toLocaleString()} RP</strong></button>
       <img class="profile-main-avatar ${matCustomizationClass("mat-avatar-glow", profileCustomizations.avatar_glow)}" src="${profileAvatarPath(selectedAvatarId)}" alt="Your profile avatar" />
       <div class="profile-name-code-row"><h2>${escapeProfileHtml(currentProfileData.username || "Anime Fan")}</h2></div>
@@ -311,7 +312,7 @@ async function saveProfile(event) {
 async function initProfile(user) {
   currentProfileUser = user;
   try {
-    [currentProfileData, profileAnime, profileBadges, profileFranchises, profileFranchiseEntryRatings, profileFriendCount, profileFollowingCount, activeRecommendation, profileCustomizations] = await Promise.all([
+    [currentProfileData, profileAnime, profileBadges, profileFranchises, profileFranchiseEntryRatings, profileFriendCount, profileFollowingCount, activeRecommendation, profileCustomizations, profileTheme] = await Promise.all([
       getOrCreateProfile(user),
       loadProfileAnime(),
       matLoadUserBadges(user.id),
@@ -320,7 +321,8 @@ async function initProfile(user) {
       supabaseClient.rpc("get_follower_count", { p_user_id: user.id }).then(({data,error}) => error ? 0 : Number(data) || 0),
       supabaseClient.rpc("get_following_count", { p_user_id: user.id }).then(({data,error}) => error ? 0 : Number(data) || 0),
       supabaseClient.from("recommendations").select("*").eq("recommender_id", user.id).eq("active", true).maybeSingle().then(({data,error}) => error ? null : data),
-      matLoadProfileCustomizations(user.id)
+      matLoadProfileCustomizations(user.id),
+      matLoadProfileTheme(user.id)
     ]);
     const { data: ownedAvatarData, error: ownedAvatarError } = await supabaseClient.rpc("get_my_owned_avatars");
     profileOwnedAvatarIds = ownedAvatarError ? [Number(currentProfileData.avatar_id) || 1] : (ownedAvatarData || []).map((row) => Number(row.avatar_id ?? row)).filter(Boolean);
@@ -338,5 +340,6 @@ window.addEventListener("mat-profile-customization-changed", async (event) => {
   const detail = event.detail && Object.keys(event.detail).length ? event.detail : null;
   if (detail?.avatar_id && currentProfileData) currentProfileData.avatar_id = Number(detail.avatar_id);
   profileCustomizations = detail || await matLoadProfileCustomizations(currentProfileUser.id);
+  profileTheme = detail?.profile_theme || await matLoadProfileTheme(currentProfileUser.id);
   await renderProfile();
 });

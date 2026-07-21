@@ -427,3 +427,187 @@
 .profile-follow-btn:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.08); }
 .profile-follow-btn.is-following { border-color: rgba(255,107,118,.42); background: rgba(255,107,118,.08); color: #ffabb2; }
 .profile-follow-btn.is-requested { border-color: var(--border); background: rgba(255,255,255,.055); color: var(--muted); cursor: default; }
+
+/* v6.4.0 Scarlet profile theme (originally Blood Bath) */
+.mat-theme-scarlet.public-profile-card,
+.public-profile-card.mat-theme-scarlet {
+  --blood:#8f0718;
+  --blood-dark:#390008;
+  --blood-bright:#d51b32;
+  --blood-panel:#151316;
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  color:#17151a;
+  background:
+    radial-gradient(circle at 7% 13%, rgba(139,0,19,.9) 0 4px, transparent 5px),
+    radial-gradient(circle at 12% 18%, rgba(126,0,17,.72) 0 8px, transparent 9px),
+    radial-gradient(circle at 91% 10%, rgba(151,0,22,.82) 0 7px, transparent 8px),
+    radial-gradient(circle at 96% 25%, rgba(105,0,14,.72) 0 4px, transparent 5px),
+    radial-gradient(circle at 5% 76%, rgba(145,0,20,.78) 0 10px, transparent 11px),
+    radial-gradient(circle at 93% 83%, rgba(122,0,17,.75) 0 12px, transparent 13px),
+    linear-gradient(135deg,#dedede 0%,#c7c7c7 48%,#e7e7e7 100%)!important;
+  border-color:rgba(80,0,10,.75)!important;
+  box-shadow:0 22px 56px rgba(0,0,0,.38), inset 0 0 0 1px rgba(255,255,255,.34)!important;
+}
+.mat-theme-scarlet.public-profile-card::before,
+.public-profile-card.mat-theme-scarlet::before {
+  content:"";
+  position:absolute;
+  z-index:-1;
+  left:0;right:0;top:0;
+  height:116px;
+  background:
+    radial-gradient(ellipse at 8% 95%,var(--blood) 0 13px,transparent 14px),
+    radial-gradient(ellipse at 20% 94%,var(--blood-dark) 0 8px,transparent 9px),
+    radial-gradient(ellipse at 34% 100%,var(--blood) 0 20px,transparent 21px),
+    radial-gradient(ellipse at 53% 92%,var(--blood-bright) 0 10px,transparent 11px),
+    radial-gradient(ellipse at 71% 100%,var(--blood-dark) 0 17px,transparent 18px),
+    radial-gradient(ellipse at 88% 94%,var(--blood) 0 12px,transparent 13px),
+    linear-gradient(180deg,#b20b20 0 50%,#77000f 72%,transparent 73%);
+  clip-path:polygon(0 0,100% 0,100% 62%,95% 62%,94% 88%,90% 62%,82% 62%,80% 100%,77% 62%,68% 62%,66% 82%,63% 62%,55% 62%,53% 94%,49% 62%,40% 62%,38% 78%,35% 62%,25% 62%,22% 91%,19% 62%,10% 62%,8% 82%,5% 62%,0 62%);
+  filter:drop-shadow(0 8px 6px rgba(45,0,6,.45));
+}
+.mat-theme-scarlet .profile-main-avatar {
+  position:relative;
+  z-index:2;
+  border:5px solid #7e0010!important;
+  outline:2px solid #230006!important;
+  box-shadow:0 0 0 4px rgba(194,12,37,.36),0 10px 24px rgba(45,0,7,.5)!important;
+}
+.mat-theme-scarlet .profile-name-code-row h2,
+.mat-theme-scarlet .profile-friend-code,
+.mat-theme-scarlet .profile-social-meta,
+.mat-theme-scarlet .profile-social-meta a { color:#23191d!important; }
+.mat-theme-scarlet .profile-friend-code span { color:#65000d!important; }
+.mat-theme-scarlet .profile-stat-grid > div {
+  background:rgba(255,255,255,.48)!important;
+  border-color:rgba(104,0,14,.3)!important;
+  color:#24191d!important;
+}
+.mat-theme-scarlet .profile-section-heading {
+  position:relative;
+  overflow:hidden;
+  background:linear-gradient(180deg,#2a2629,#111012)!important;
+  border:1px solid #71000f!important;
+  color:#fff!important;
+  box-shadow:inset 0 -2px 0 rgba(143,7,24,.7)!important;
+}
+.mat-theme-scarlet .profile-section-heading::after {
+  content:"";position:absolute;left:0;right:0;top:0;height:16px;
+  background:linear-gradient(180deg,#bd1028,#71000f);
+  clip-path:polygon(0 0,100% 0,100% 44%,92% 44%,90% 100%,87% 44%,75% 44%,72% 82%,69% 44%,54% 44%,51% 100%,48% 44%,34% 44%,31% 76%,28% 44%,14% 44%,11% 92%,8% 44%,0 44%);
+}
+.mat-theme-scarlet .profile-section-heading h3,
+.mat-theme-scarlet .profile-section-heading span { position:relative;z-index:2;color:#fff!important; }
+.mat-theme-scarlet .profile-top-card,
+.mat-theme-scarlet .profile-rec-card {
+  position:relative;
+  overflow:hidden;
+  background:linear-gradient(145deg,#262226,#0e0d0f)!important;
+  border:2px solid #75000f!important;
+  box-shadow:0 10px 24px rgba(45,0,7,.36), inset 0 1px rgba(255,255,255,.05)!important;
+  color:#fff!important;
+}
+.mat-theme-scarlet .profile-top-card::before,
+.mat-theme-scarlet .profile-rec-card::before {
+  content:"";position:absolute;z-index:3;left:0;right:0;top:0;height:13px;pointer-events:none;
+  background:linear-gradient(180deg,#c4142d,#6e000e);
+  clip-path:polygon(0 0,100% 0,100% 42%,88% 42%,86% 100%,82% 42%,68% 42%,66% 80%,63% 42%,49% 42%,47% 95%,44% 42%,29% 42%,27% 76%,24% 42%,11% 42%,9% 88%,6% 42%,0 42%);
+}
+.mat-theme-scarlet .profile-top-card strong,
+.mat-theme-scarlet .profile-top-card small,
+.mat-theme-scarlet .profile-rec-card h3,
+.mat-theme-scarlet .profile-rec-card strong,
+.mat-theme-scarlet .profile-rec-card small { color:#fff!important; }
+
+/* Theme overrides every mini profile card color while equipped. */
+.friend-list-card.mat-theme-scarlet,
+.request-card.mat-theme-scarlet,
+.rp-mock-mini-card.mat-theme-scarlet {
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 93% 78%,rgba(160,0,23,.6) 0 7px,transparent 8px),
+    radial-gradient(circle at 7% 74%,rgba(114,0,16,.62) 0 5px,transparent 6px),
+    linear-gradient(145deg,#dfdfdf,#bdbdbd)!important;
+  border:2px solid #71000f!important;
+  color:#1b1518!important;
+  box-shadow:0 9px 25px rgba(55,0,8,.35)!important;
+}
+.friend-list-card.mat-theme-scarlet::before,
+.request-card.mat-theme-scarlet::before,
+.rp-mock-mini-card.mat-theme-scarlet::before {
+  content:"";position:absolute;z-index:-1;left:0;right:0;top:0;height:28px;
+  background:linear-gradient(180deg,#c9142e,#71000f);
+  clip-path:polygon(0 0,100% 0,100% 38%,91% 38%,89% 100%,85% 38%,70% 38%,68% 74%,65% 38%,50% 38%,48% 92%,45% 38%,29% 38%,27% 72%,24% 38%,10% 38%,8% 84%,5% 38%,0 38%);
+}
+.friend-list-card.mat-theme-scarlet .friend-name,
+.friend-list-card.mat-theme-scarlet .friend-subtext,
+.friend-list-card.mat-theme-scarlet .recommendation-reason,
+.request-card.mat-theme-scarlet .friend-name,
+.request-card.mat-theme-scarlet .friend-subtext { color:#24181c!important; }
+.friend-list-card.mat-theme-scarlet .friend-avatar,
+.request-card.mat-theme-scarlet .friend-avatar { border:3px solid #79000f!important;box-shadow:0 0 0 2px rgba(190,14,39,.28)!important; }
+.friend-list-card.mat-theme-scarlet .friend-action-btn,
+.request-card.mat-theme-scarlet .friend-action-btn { border-color:#72000f!important;background:#2a171b!important;color:#fff!important; }
+
+
+/* v6.6.0 expanded profile themes */
+/* Sakura Dreams — floral, feminine, soft and readable. */
+.mat-theme-sakura_dreams.public-profile-card,.public-profile-card.mat-theme-sakura_dreams{color:#53344b!important;border-color:#e6a4c2!important;background:radial-gradient(circle at 8% 10%,rgba(255,255,255,.9),transparent 24%),radial-gradient(circle at 90% 20%,rgba(234,176,211,.7),transparent 28%),linear-gradient(145deg,#fff8fb,#f6dbe9 55%,#ead7f5)!important;box-shadow:0 22px 60px rgba(147,73,114,.25)!important;overflow:hidden}
+.mat-theme-sakura_dreams.public-profile-card::before,.public-profile-card.mat-theme-sakura_dreams::before{content:"✿  ❀  ✿   ❀  ✿";position:absolute;inset:0 0 auto;height:92px;padding:14px 22px;color:#d76c9e;font-size:34px;letter-spacing:20px;background:linear-gradient(180deg,rgba(255,255,255,.82),rgba(248,203,224,.72));border-bottom:1px solid rgba(202,113,153,.4);text-shadow:25px 24px 0 #f2a9c8;z-index:1;pointer-events:none}
+.mat-theme-sakura_dreams.public-profile-card::after,.public-profile-card.mat-theme-sakura_dreams::after{content:"❀";position:absolute;right:5%;bottom:6%;font-size:110px;color:#e9a4c5;opacity:.28;transform:rotate(20deg);pointer-events:none}
+.mat-theme-sakura_dreams .profile-main-avatar{position:relative;z-index:2;border:5px solid #fff!important;box-shadow:0 0 0 5px #e698ba,0 10px 30px rgba(173,86,126,.35)!important}
+.mat-theme-sakura_dreams .profile-name-code-row h2,.mat-theme-sakura_dreams .profile-friend-code,.mat-theme-sakura_dreams .profile-social-meta,.mat-theme-sakura_dreams .profile-social-meta a{color:#583448!important}.mat-theme-sakura_dreams .profile-friend-code span{color:#b24f7c!important}
+.mat-theme-sakura_dreams .profile-stat-grid>div,.mat-theme-sakura_dreams .profile-top-card,.mat-theme-sakura_dreams .profile-rec-card{background:rgba(255,255,255,.74)!important;border:1px solid rgba(211,117,161,.48)!important;color:#583448!important;box-shadow:0 12px 26px rgba(167,87,126,.13),inset 0 1px 0 #fff!important;backdrop-filter:blur(9px)}
+.mat-theme-sakura_dreams .profile-section-heading{background:linear-gradient(90deg,#d96e9e,#b785cf)!important;border:0!important;color:#fff!important;box-shadow:0 8px 20px rgba(171,83,128,.22)!important}.mat-theme-sakura_dreams .profile-section-heading h3,.mat-theme-sakura_dreams .profile-section-heading span,.mat-theme-sakura_dreams .profile-top-card strong,.mat-theme-sakura_dreams .profile-top-card small,.mat-theme-sakura_dreams .profile-rec-card h3,.mat-theme-sakura_dreams .profile-rec-card strong,.mat-theme-sakura_dreams .profile-rec-card small{color:inherit!important}
+.friend-list-card.mat-theme-sakura_dreams,.request-card.mat-theme-sakura_dreams,.rp-mock-mini-card.mat-theme-sakura_dreams{position:relative;overflow:hidden;background:linear-gradient(145deg,#fffafd,#f2d6e5)!important;border:1px solid #e2a1bf!important;color:#563347!important}.friend-list-card.mat-theme-sakura_dreams::before,.request-card.mat-theme-sakura_dreams::before,.rp-mock-mini-card.mat-theme-sakura_dreams::before{content:"❀  ✿  ❀";position:absolute;right:8px;top:4px;color:#df79a7;font-size:17px;letter-spacing:6px;opacity:.72}.friend-list-card.mat-theme-sakura_dreams .friend-name,.friend-list-card.mat-theme-sakura_dreams .friend-subtext,.friend-list-card.mat-theme-sakura_dreams .recommendation-reason,.request-card.mat-theme-sakura_dreams .friend-name,.request-card.mat-theme-sakura_dreams .friend-subtext{color:#563347!important}.friend-list-card.mat-theme-sakura_dreams .friend-avatar,.request-card.mat-theme-sakura_dreams .friend-avatar{border:3px solid #e38aaf!important;box-shadow:0 0 0 3px #fff!important}.friend-list-card.mat-theme-sakura_dreams .friend-action-btn,.request-card.mat-theme-sakura_dreams .friend-action-btn{border-color:#d778a1!important;background:#fff7fb!important;color:#9d426c!important}
+
+/* Astral Flux — original character-free psychedelic cosmic styling. */
+.mat-theme-astral_flux.public-profile-card,.public-profile-card.mat-theme-astral_flux{color:#fff!important;border-color:#16e0ff!important;overflow:hidden;background:radial-gradient(circle at 20% 18%,rgba(255,35,214,.82),transparent 19%),radial-gradient(circle at 78% 14%,rgba(17,229,255,.8),transparent 20%),radial-gradient(circle at 52% 72%,rgba(143,49,255,.9),transparent 28%),conic-gradient(from 45deg at 50% 45%,#090016,#341071,#003b67,#9d0a82,#090016)!important;box-shadow:0 0 0 1px #ff38db,0 24px 70px rgba(70,0,120,.58)!important}
+.mat-theme-astral_flux.public-profile-card::before,.public-profile-card.mat-theme-astral_flux::before{content:"";position:absolute;width:560px;height:560px;left:50%;top:-250px;transform:translateX(-50%);border-radius:44% 56% 61% 39%;border:22px solid rgba(22,230,255,.45);box-shadow:0 0 0 25px rgba(255,33,209,.22),0 0 0 52px rgba(143,54,255,.18),inset 0 0 70px #ff2bd6;filter:blur(.2px);z-index:1;pointer-events:none}
+.mat-theme-astral_flux.public-profile-card::after,.public-profile-card.mat-theme-astral_flux::after{content:"◇  ○  △  ◉  □";position:absolute;inset:110px 0 auto;text-align:center;color:#fff;font-size:26px;letter-spacing:34px;opacity:.38;transform:rotate(-7deg);text-shadow:0 0 14px #15dcff,0 0 24px #ff2ad4;pointer-events:none}
+.mat-theme-astral_flux .profile-main-avatar{position:relative;z-index:3;border:4px solid #13e5ff!important;box-shadow:0 0 0 6px #fe2bd6,0 0 0 11px rgba(128,54,255,.8),0 0 36px #20dfff!important}
+.mat-theme-astral_flux .profile-name-code-row h2,.mat-theme-astral_flux .profile-friend-code,.mat-theme-astral_flux .profile-social-meta,.mat-theme-astral_flux .profile-social-meta a,.mat-theme-astral_flux .profile-friend-code span{color:#fff!important;text-shadow:0 0 12px rgba(17,225,255,.75)}
+.mat-theme-astral_flux .profile-stat-grid>div,.mat-theme-astral_flux .profile-top-card,.mat-theme-astral_flux .profile-rec-card{background:linear-gradient(145deg,rgba(9,5,30,.78),rgba(42,8,77,.7))!important;border:1px solid rgba(35,226,255,.75)!important;color:#fff!important;box-shadow:inset 0 0 22px rgba(255,33,215,.2),0 0 18px rgba(24,226,255,.18)!important;backdrop-filter:blur(8px)}
+.mat-theme-astral_flux .profile-section-heading{background:linear-gradient(90deg,#ff24cf,#6e38ff,#12dfff)!important;border:0!important;color:#fff!important}.mat-theme-astral_flux .profile-section-heading h3,.mat-theme-astral_flux .profile-section-heading span,.mat-theme-astral_flux .profile-top-card strong,.mat-theme-astral_flux .profile-top-card small,.mat-theme-astral_flux .profile-rec-card h3,.mat-theme-astral_flux .profile-rec-card strong,.mat-theme-astral_flux .profile-rec-card small{color:#fff!important}
+.friend-list-card.mat-theme-astral_flux,.request-card.mat-theme-astral_flux,.rp-mock-mini-card.mat-theme-astral_flux{position:relative;overflow:hidden;background:radial-gradient(circle at 80% 15%,rgba(29,224,255,.65),transparent 25%),radial-gradient(circle at 18% 85%,rgba(255,35,210,.65),transparent 28%),linear-gradient(145deg,#13042e,#301064)!important;border:1px solid #17dcff!important;color:#fff!important;box-shadow:inset 0 0 25px rgba(255,34,214,.22),0 0 16px rgba(25,222,255,.2)!important}.friend-list-card.mat-theme-astral_flux::before,.request-card.mat-theme-astral_flux::before,.rp-mock-mini-card.mat-theme-astral_flux::before{content:"◉  ◇  ○";position:absolute;right:8px;top:4px;color:#fff;font-size:18px;letter-spacing:8px;opacity:.5;text-shadow:0 0 12px #19ddff}.friend-list-card.mat-theme-astral_flux .friend-name,.friend-list-card.mat-theme-astral_flux .friend-subtext,.friend-list-card.mat-theme-astral_flux .recommendation-reason,.request-card.mat-theme-astral_flux .friend-name,.request-card.mat-theme-astral_flux .friend-subtext{color:#fff!important}.friend-list-card.mat-theme-astral_flux .friend-avatar,.request-card.mat-theme-astral_flux .friend-avatar{border:3px solid #19e2ff!important;box-shadow:0 0 0 3px #ff2fd4!important}.friend-list-card.mat-theme-astral_flux .friend-action-btn,.request-card.mat-theme-astral_flux .friend-action-btn{border-color:#20dcff!important;background:rgba(8,4,30,.72)!important;color:#fff!important}
+
+
+/* v6.6.0 expanded fixed-price theme collection */
+:where(.mat-theme-galaxy,.mat-theme-cyberpunk,.mat-theme-toxic,.mat-theme-abyss,.mat-theme-inferno,.mat-theme-royal_gold,.mat-theme-haunted_manor,.mat-theme-tropical_paradise,.mat-theme-moonlit_shrine).public-profile-card{overflow:hidden;color:#fff!important;position:relative}
+:where(.mat-theme-galaxy,.mat-theme-cyberpunk,.mat-theme-toxic,.mat-theme-abyss,.mat-theme-inferno,.mat-theme-royal_gold,.mat-theme-haunted_manor,.mat-theme-tropical_paradise,.mat-theme-moonlit_shrine) .profile-main-avatar{position:relative;z-index:3}
+:where(.mat-theme-galaxy,.mat-theme-cyberpunk,.mat-theme-toxic,.mat-theme-abyss,.mat-theme-inferno,.mat-theme-royal_gold,.mat-theme-haunted_manor,.mat-theme-tropical_paradise,.mat-theme-moonlit_shrine) :is(.profile-name-code-row h2,.profile-friend-code,.profile-social-meta,.profile-social-meta a,.profile-friend-code span,.profile-section-heading h3,.profile-section-heading span,.profile-top-card strong,.profile-top-card small,.profile-rec-card h3,.profile-rec-card strong,.profile-rec-card small){color:inherit!important}
+:where(.mat-theme-galaxy,.mat-theme-cyberpunk,.mat-theme-toxic,.mat-theme-abyss,.mat-theme-inferno,.mat-theme-royal_gold,.mat-theme-haunted_manor,.mat-theme-tropical_paradise,.mat-theme-moonlit_shrine) :is(.profile-stat-grid>div,.profile-top-card,.profile-rec-card){color:inherit!important;backdrop-filter:blur(8px)}
+
+.mat-theme-galaxy.public-profile-card{background:radial-gradient(circle at 18% 15%,#7c3aed 0 2%,transparent 18%),radial-gradient(circle at 82% 24%,#2563eb 0 2%,transparent 19%),radial-gradient(circle at 50% 80%,#db2777 0 1%,transparent 22%),linear-gradient(145deg,#050516,#11154a 55%,#26083e)!important;border-color:#7dd3fc!important;box-shadow:0 24px 70px rgba(15,23,80,.55)!important}
+.mat-theme-galaxy.public-profile-card::before{content:"✦ · ✧ · ✦ · ✧";position:absolute;inset:10px 0 auto;text-align:center;font-size:28px;letter-spacing:24px;color:#fff;opacity:.72;text-shadow:0 0 12px #7dd3fc;pointer-events:none}
+.mat-theme-galaxy .profile-main-avatar{border:4px solid #93c5fd!important;box-shadow:0 0 0 5px #6d28d9,0 0 32px #38bdf8!important}.mat-theme-galaxy :is(.profile-stat-grid>div,.profile-top-card,.profile-rec-card){background:rgba(8,12,45,.72)!important;border:1px solid #6366f1!important}.mat-theme-galaxy .profile-section-heading{background:linear-gradient(90deg,#312e81,#7c3aed,#0369a1)!important}
+.friend-list-card.mat-theme-galaxy,.request-card.mat-theme-galaxy,.rp-mock-mini-card.mat-theme-galaxy{background:radial-gradient(circle at 80% 10%,#4338ca,transparent 35%),linear-gradient(145deg,#070b2f,#24104b)!important;border-color:#60a5fa!important;color:#fff!important}
+
+.mat-theme-cyberpunk.public-profile-card{background:repeating-linear-gradient(90deg,rgba(34,211,238,.08) 0 1px,transparent 1px 34px),repeating-linear-gradient(0deg,rgba(244,63,94,.07) 0 1px,transparent 1px 34px),linear-gradient(145deg,#05070d,#111827)!important;border-color:#22d3ee!important;box-shadow:0 0 0 1px #f43f5e,0 24px 70px rgba(0,0,0,.55)!important}
+.mat-theme-cyberpunk.public-profile-card::before{content:"SYSTEM // ONLINE";position:absolute;right:18px;top:14px;font:700 12px monospace;color:#22d3ee;letter-spacing:3px;text-shadow:2px 0 #f43f5e;pointer-events:none}.mat-theme-cyberpunk .profile-main-avatar{border:4px solid #22d3ee!important;box-shadow:6px 0 0 #f43f5e,-6px 0 0 #a3e635!important}.mat-theme-cyberpunk :is(.profile-stat-grid>div,.profile-top-card,.profile-rec-card){background:rgba(3,7,18,.86)!important;border:1px solid #22d3ee!important;box-shadow:inset 4px 0 #f43f5e!important}.mat-theme-cyberpunk .profile-section-heading{background:linear-gradient(90deg,#0891b2,#be123c)!important}
+.friend-list-card.mat-theme-cyberpunk,.request-card.mat-theme-cyberpunk,.rp-mock-mini-card.mat-theme-cyberpunk{background:linear-gradient(135deg,#050816,#101827)!important;border:1px solid #22d3ee!important;box-shadow:inset 5px 0 #f43f5e!important;color:#fff!important}
+
+.mat-theme-toxic.public-profile-card{background:radial-gradient(circle at 15% 20%,rgba(163,230,53,.55),transparent 20%),radial-gradient(circle at 88% 76%,rgba(34,197,94,.45),transparent 25%),linear-gradient(145deg,#071109,#152b12)!important;border-color:#a3e635!important;box-shadow:0 24px 70px rgba(19,78,24,.5)!important}.mat-theme-toxic.public-profile-card::before{content:"☣  TOXIC  ☣";position:absolute;inset:12px 0 auto;text-align:center;color:#bef264;font-size:24px;letter-spacing:10px;opacity:.7;pointer-events:none}.mat-theme-toxic .profile-main-avatar{border:4px solid #bef264!important;box-shadow:0 0 0 6px #166534,0 0 30px #84cc16!important}.mat-theme-toxic :is(.profile-stat-grid>div,.profile-top-card,.profile-rec-card){background:rgba(5,25,9,.82)!important;border:1px solid #65a30d!important}.mat-theme-toxic .profile-section-heading{background:linear-gradient(90deg,#365314,#84cc16,#166534)!important}
+.friend-list-card.mat-theme-toxic,.request-card.mat-theme-toxic,.rp-mock-mini-card.mat-theme-toxic{background:radial-gradient(circle at 90% 20%,#65a30d,transparent 30%),linear-gradient(145deg,#071208,#173313)!important;border-color:#84cc16!important;color:#f7fee7!important}
+
+.mat-theme-abyss.public-profile-card{background:radial-gradient(ellipse at 50% -10%,rgba(125,211,252,.45),transparent 35%),radial-gradient(circle at 16% 74%,rgba(6,182,212,.3),transparent 22%),linear-gradient(180deg,#082f49,#083344 45%,#020617)!important;border-color:#22d3ee!important;box-shadow:0 24px 70px rgba(2,6,23,.65)!important}.mat-theme-abyss.public-profile-card::before{content:"○   ◌   ○      ◌";position:absolute;right:4%;top:8%;font-size:34px;color:#a5f3fc;opacity:.45;transform:rotate(-12deg);pointer-events:none}.mat-theme-abyss .profile-main-avatar{border:4px solid #67e8f9!important;box-shadow:0 0 0 6px #155e75,0 0 34px #06b6d4!important}.mat-theme-abyss :is(.profile-stat-grid>div,.profile-top-card,.profile-rec-card){background:rgba(4,47,68,.72)!important;border:1px solid #0891b2!important}.mat-theme-abyss .profile-section-heading{background:linear-gradient(90deg,#164e63,#0e7490,#155e75)!important}
+.friend-list-card.mat-theme-abyss,.request-card.mat-theme-abyss,.rp-mock-mini-card.mat-theme-abyss{background:linear-gradient(145deg,#042f46,#071b33)!important;border-color:#22d3ee!important;color:#ecfeff!important}
+
+.mat-theme-inferno.public-profile-card{background:radial-gradient(circle at 15% 95%,#f97316 0 2%,transparent 26%),radial-gradient(circle at 82% 82%,#dc2626 0 1%,transparent 24%),repeating-linear-gradient(115deg,transparent 0 28px,rgba(251,146,60,.12) 29px 31px),linear-gradient(145deg,#160708,#3b0a08 58%,#111)!important;border-color:#fb923c!important;box-shadow:0 24px 70px rgba(69,10,10,.65)!important}.mat-theme-inferno.public-profile-card::before{content:"";position:absolute;inset:auto 0 0;height:70px;background:linear-gradient(180deg,transparent,#f97316);clip-path:polygon(0 100%,0 55%,8% 75%,15% 20%,22% 72%,31% 35%,40% 78%,50% 10%,58% 70%,69% 28%,80% 78%,91% 35%,100% 65%,100% 100%);opacity:.72;pointer-events:none}.mat-theme-inferno .profile-main-avatar{border:4px solid #fdba74!important;box-shadow:0 0 0 6px #991b1b,0 0 36px #f97316!important}.mat-theme-inferno :is(.profile-stat-grid>div,.profile-top-card,.profile-rec-card){background:rgba(39,8,8,.82)!important;border:1px solid #ea580c!important}.mat-theme-inferno .profile-section-heading{background:linear-gradient(90deg,#991b1b,#ea580c,#7f1d1d)!important}
+.friend-list-card.mat-theme-inferno,.request-card.mat-theme-inferno,.rp-mock-mini-card.mat-theme-inferno{background:linear-gradient(145deg,#250708,#4b1208)!important;border-color:#f97316!important;color:#fff7ed!important}
+
+.mat-theme-royal_gold.public-profile-card{background:linear-gradient(135deg,rgba(255,255,255,.08) 25%,transparent 25%) 0 0/26px 26px,linear-gradient(145deg,#090909,#211707)!important;border:2px solid #d4af37!important;box-shadow:0 24px 70px rgba(0,0,0,.65),inset 0 0 0 4px rgba(212,175,55,.16)!important}.mat-theme-royal_gold.public-profile-card::before{content:"♛";position:absolute;right:5%;top:16px;font-size:76px;color:#d4af37;opacity:.25;pointer-events:none}.mat-theme-royal_gold .profile-main-avatar{border:4px solid #f5d76e!important;box-shadow:0 0 0 6px #5f4508,0 0 28px #d4af37!important}.mat-theme-royal_gold :is(.profile-stat-grid>div,.profile-top-card,.profile-rec-card){background:rgba(18,15,8,.9)!important;border:1px solid #d4af37!important}.mat-theme-royal_gold .profile-section-heading{background:linear-gradient(90deg,#5f4508,#d4af37,#5f4508)!important;color:#111!important}
+.friend-list-card.mat-theme-royal_gold,.request-card.mat-theme-royal_gold,.rp-mock-mini-card.mat-theme-royal_gold{background:linear-gradient(145deg,#0b0b0b,#2a200b)!important;border:1px solid #d4af37!important;color:#fff8dc!important}
+
+.mat-theme-haunted_manor.public-profile-card{background:radial-gradient(circle at 50% 0,rgba(168,85,247,.18),transparent 35%),repeating-linear-gradient(90deg,rgba(255,255,255,.025) 0 2px,transparent 2px 52px),linear-gradient(145deg,#09070e,#21142d 60%,#0d1117)!important;border-color:#6b7280!important;box-shadow:0 24px 70px rgba(0,0,0,.72)!important}.mat-theme-haunted_manor.public-profile-card::before{content:"🕯     🕸";position:absolute;inset:10px 20px auto;font-size:32px;color:#c4b5fd;opacity:.55;pointer-events:none}.mat-theme-haunted_manor .profile-main-avatar{border:4px solid #a78bfa!important;box-shadow:0 0 0 6px #374151,0 0 34px #7e22ce!important}.mat-theme-haunted_manor :is(.profile-stat-grid>div,.profile-top-card,.profile-rec-card){background:rgba(14,10,20,.84)!important;border:1px solid #6b7280!important}.mat-theme-haunted_manor .profile-section-heading{background:linear-gradient(90deg,#312e3b,#6d28d9,#312e3b)!important}
+.friend-list-card.mat-theme-haunted_manor,.request-card.mat-theme-haunted_manor,.rp-mock-mini-card.mat-theme-haunted_manor{background:linear-gradient(145deg,#0c0a11,#26182f)!important;border-color:#8b5cf6!important;color:#f5f3ff!important}
+
+.mat-theme-tropical_paradise.public-profile-card{background:radial-gradient(circle at 85% 10%,#fde68a 0 4%,transparent 22%),linear-gradient(180deg,#38bdf8 0 36%,#0ea5e9 37%,#14b8a6 59%,#f8d89b 60%,#d9a867 100%)!important;border-color:#fef3c7!important;color:#073b4c!important;box-shadow:0 24px 70px rgba(8,145,178,.35)!important}.mat-theme-tropical_paradise.public-profile-card::before{content:"🌺      🌴";position:absolute;inset:12px 22px auto;font-size:38px;pointer-events:none}.mat-theme-tropical_paradise .profile-main-avatar{border:4px solid #fff7cc!important;box-shadow:0 0 0 6px #0f766e,0 0 30px #facc15!important}.mat-theme-tropical_paradise :is(.profile-stat-grid>div,.profile-top-card,.profile-rec-card){background:rgba(255,255,255,.78)!important;border:1px solid #0d9488!important;color:#073b4c!important}.mat-theme-tropical_paradise .profile-section-heading{background:linear-gradient(90deg,#0f766e,#f97316,#db2777)!important;color:#fff!important}
+.friend-list-card.mat-theme-tropical_paradise,.request-card.mat-theme-tropical_paradise,.rp-mock-mini-card.mat-theme-tropical_paradise{background:linear-gradient(145deg,#123c36,#3b2416)!important;border-color:#14b8a6!important;color:#fff!important}
+
+.mat-theme-moonlit_shrine.public-profile-card{background:radial-gradient(circle at 82% 12%,#f5f3ff 0 5%,rgba(221,214,254,.45) 6%,transparent 18%),linear-gradient(160deg,transparent 0 34%,rgba(49,46,129,.28) 35% 38%,transparent 39%),linear-gradient(145deg,#0f102d,#1e1b4b 55%,#312e81)!important;border-color:#c4b5fd!important;box-shadow:0 24px 70px rgba(30,27,75,.62)!important}.mat-theme-moonlit_shrine.public-profile-card::before{content:"⛩";position:absolute;left:6%;top:8px;font-size:90px;color:#ef4444;opacity:.42;text-shadow:0 0 18px #c4b5fd;pointer-events:none}.mat-theme-moonlit_shrine .profile-main-avatar{border:4px solid #ede9fe!important;box-shadow:0 0 0 6px #7c3aed,0 0 34px #c4b5fd!important}.mat-theme-moonlit_shrine :is(.profile-stat-grid>div,.profile-top-card,.profile-rec-card){background:rgba(24,20,63,.78)!important;border:1px solid #8b5cf6!important}.mat-theme-moonlit_shrine .profile-section-heading{background:linear-gradient(90deg,#7f1d1d,#4338ca,#312e81)!important}
+.friend-list-card.mat-theme-moonlit_shrine,.request-card.mat-theme-moonlit_shrine,.rp-mock-mini-card.mat-theme-moonlit_shrine{background:linear-gradient(145deg,#17143b,#312e81)!important;border-color:#c4b5fd!important;color:#faf5ff!important}

@@ -1,5 +1,70 @@
 const MAT_RELEASES = [
   {
+    version: "v6.6.1",
+    date: "July 2026",
+    isAnnouncement: false,
+    groups: {
+      FIXED: [
+        "Darkened the Tropical Paradise mini profile card background so its white text is easy to read."
+      ]
+    }
+  },
+  {
+    version: "v6.6.0",
+    date: "July 2026",
+    isAnnouncement: true,
+    announcementTitle: "The RP Shop now has twelve full profile themes",
+    announcement: "Nine new profile themes are now available, all themes cost 15,000 RP, and individual cosmetics now start at 100 RP.",
+    groups: {
+      NEW: [
+        "Added Galaxy, Cyberpunk, Toxic, Abyss, Inferno, Royal Gold, Haunted Manor, Tropical Paradise, and Moonlit Shrine themes.",
+        "Each new theme changes the background, avatar decoration, Top 5 panel, recommendation panel, and mini profile card while keeping the selected avatar."
+      ],
+      IMPROVED: [
+        "Removed Blood Bath from the theme catalog.",
+        "Set every profile theme to a fixed 15,000 RP price with no price progression.",
+        "Avatar, Avatar Decoration, Background, Top 5 Panel, Recommendation Panel, and Mini Profile Card purchases now start at 100 RP and double independently within each category."
+      ]
+    }
+  },
+  {
+    version: "v6.6.0",
+    date: "July 2026",
+    isAnnouncement: true,
+    announcementTitle: "Four full profile themes are now available",
+    announcement: "Scarlet, Blood Bath, Sakura Dreams, and Astral Flux are now available in the RP Shop.",
+    groups: {
+      NEW: [
+        "Added Blood Bath, a deliberately gory horror theme with heavy splatter, handprints, smears, thick drips, and blood-soaked panels.",
+        "Added Sakura Dreams, a soft floral theme with cherry blossoms, petals, blush tones, and frosted panels.",
+        "Added Astral Flux, an original character-free psychedelic theme with warped neon rings, cosmic shapes, and trippy color movement."
+      ],
+      IMPROVED: [
+        "Renamed the original Blood Bath theme to Scarlet so its clean crimson styling matches its name.",
+        "Theme pricing now starts at 10,000 RP and doubles after each theme purchase.",
+        "All themes override Avatar Decoration, Background, Top 5 Panel, Recommendation Panel, and Mini Profile Card while leaving the selected avatar unchanged."
+      ]
+    }
+  },
+  {
+    version: "v6.4.0",
+    date: "July 2026",
+    isAnnouncement: true,
+    announcementTitle: "Blood Bath theme is now available",
+    announcement: "The RP Shop now includes its first full profile theme: Blood Bath.",
+    groups: {
+      NEW: [
+        "Added the premium Blood Bath theme to the RP Shop for 25,000 RP.",
+        "Blood Bath applies a coordinated blood-drip style to Avatar Decoration, Background, Recommendation Panel, Top 5 Panel, and Mini Profile Card.",
+        "Added a separate theme ownership and equipping system so future themes can be added without replacing individual cosmetics."
+      ],
+      IMPROVED: [
+        "Equipped themes temporarily override supported individual cosmetic choices while preserving those choices underneath.",
+        "Selecting Default Theme restores the user's individually equipped cosmetics."
+      ]
+    }
+  },
+  {
     version: "v6.3.3",
     date: "July 2026",
     isAnnouncement: false,

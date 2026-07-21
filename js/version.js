@@ -1,4 +1,4 @@
-window.MAT_VERSION = "v6.3.3";
+window.MAT_VERSION = "v6.6.1";
 
 (function initMatEmergencyBanner() {
   if (typeof document === "undefined" || typeof supabaseClient === "undefined") return;

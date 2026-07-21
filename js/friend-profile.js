@@ -7,6 +7,7 @@ let friendProfileTopFive = [];
 let friendProfileFriendCount = 0;
 let friendActiveRecommendation = null;
 let friendProfileCustomizations = { avatar_glow: "default", profile_background: "default", top_five_glow: "default", recommendation_glow: "default" };
+let friendProfileTheme = "default";
 let friendProfileViewer = null;
 let friendProfileFollowStatus = "";
 
@@ -319,7 +320,7 @@ async function renderFriendProfileShell(profile) {
 
   root.innerHTML = `
     <a class="friend-profile-back standalone-back" href="friends.html">← Following</a>
-    <section class="public-profile-card friend-public-profile mat-profile-customized ${matCustomizationClass("mat-profile-bg", friendProfileCustomizations.profile_background)}">
+    <section class="public-profile-card friend-public-profile mat-profile-customized ${matCustomizationClass("mat-profile-bg", friendProfileCustomizations.profile_background)} mat-theme-${friendProfileTheme}">
       <button class="profile-rp-corner" type="button" onclick="matOpenRpModal()"><img src="assets/icons/rp-gem.png" alt="RP"><strong>${Math.round(Number(profile.recommendation_points)||0).toLocaleString()} RP</strong></button>
       <img class="profile-main-avatar ${matCustomizationClass("mat-avatar-glow", friendProfileCustomizations.avatar_glow)}" src="${profileAvatarPath(profile.avatar_id || 1)}" alt="${fpEscape(profile.username)} avatar" />
       <div class="profile-name-code-row"><h2>${fpEscape(profile.username || "Anime Fan")}</h2></div>
@@ -435,14 +436,15 @@ async function initFriendProfile(user) {
   }
 
   try {
-    const [profile, anime, franchises, topFive, friendCount, recommendation, customizations] = await Promise.all([
+    const [profile, anime, franchises, topFive, friendCount, recommendation, customizations, theme] = await Promise.all([
       fetchFriendProfile(activeFriendUserId),
       fetchFriendAnime(activeFriendUserId),
       fetchFriendFranchises(activeFriendUserId),
       fetchFriendTopFive(activeFriendUserId),
       supabaseClient.rpc("get_follower_count", { p_user_id: activeFriendUserId }).then(({data,error}) => error ? 0 : Number(data) || 0),
       supabaseClient.from("recommendations").select("*").eq("recommender_id",activeFriendUserId).eq("active",true).maybeSingle().then(({data,error})=>error?null:data),
-      matLoadProfileCustomizations(activeFriendUserId)
+      matLoadProfileCustomizations(activeFriendUserId),
+      matLoadProfileTheme(activeFriendUserId)
     ]);
 
     friendProfileFranchises = franchises;
@@ -450,6 +452,7 @@ async function initFriendProfile(user) {
     friendProfileFriendCount = friendCount;
     friendActiveRecommendation = recommendation;
     friendProfileCustomizations = customizations;
+    friendProfileTheme = theme;
     friendProfileAnime = anime;
     friendProfileFollowStatus = await fpResolveFollowStatus(profile);
     await renderFriendProfileShell(profile);
