@@ -76,7 +76,7 @@ async function dashboardAniListRequest(query, variables = {}) {
 async function loadDashboardAnime() {
   const { data, error } = await supabaseClient
     .from("anime")
-    .select("id, anilist_id, title, status, story, characters, animation, sound, world, pacing, emotion, originality, rewatch_value, enjoyment, created_at")
+    .select("id, anilist_id, title, status, notify_new_releases, story, characters, animation, sound, world, pacing, emotion, originality, rewatch_value, enjoyment, created_at")
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -93,21 +93,16 @@ function renderWaitingUpdates(anime) {
   container.innerHTML=waiting.length?`<div class="dashboard-waiting-list">${waiting.slice(0,6).map(item=>`<a href="anime.html?id=${encodeURIComponent(item.id)}"><span>🔔</span><strong>${dashboardEscapeHtml(item.title)}</strong><small>${dashboardEscapeHtml(item.status||"Queued")}</small></a>`).join("")}</div>`:'<span class="dashboard-waiting-icon">✓</span><div><strong>No anime waiting for updates</strong><p>Turn on “Notify me about new releases” from an anime or franchise status menu.</p></div>';
 }
 function renderDashboardStats(anime) {
-  document.getElementById("totalAnime").textContent = anime.length;
+  const setCount = (id, value) => {
+    const element = document.getElementById(id);
+    if (element) element.textContent = value;
+  };
 
-  document.getElementById("completedAnime").textContent = anime.filter(
-    (item) => dashboardNormalize(item.status) === "completed"
-  ).length;
-
-  document.getElementById("inProgressAnime").textContent = anime.filter(
-    (item) => dashboardNormalize(item.status) === "in progress"
-  ).length;
-
-  document.getElementById("waitingAnime").textContent = anime.filter((item) => item.notify_new_releases).length;
-
-  document.getElementById("droppedAnime").textContent = anime.filter(
-    (item) => dashboardNormalize(item.status) === "dropped"
-  ).length;
+  setCount("totalAnime", anime.length);
+  setCount("completedAnime", anime.filter((item) => dashboardNormalize(item.status) === "completed").length);
+  setCount("inProgressAnime", anime.filter((item) => dashboardNormalize(item.status) === "in progress").length);
+  setCount("waitingAnime", anime.filter((item) => Boolean(item.notify_new_releases)).length);
+  setCount("droppedAnime", anime.filter((item) => dashboardNormalize(item.status) === "dropped").length);
 }
 
 function renderTopRated(anime) {

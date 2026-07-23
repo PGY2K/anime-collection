@@ -1,4 +1,4 @@
-const CACHE_NAME = "mat-v6.7.0";
+const CACHE_NAME = "mat-v6.7.1";
 const OFFLINE_ASSETS = [
   "./offline.html",
   "./assets/icons/icon-192.png",

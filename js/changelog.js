@@ -1,5 +1,17 @@
 const MAT_RELEASES = [
   {
+    version: "v6.7.1",
+    date: "July 2026",
+    isAnnouncement: false,
+    groups: {
+      FIXED: [
+        "Fixed the dashboard initialization error that prevented Trending and followed-user recommendations from loading.",
+        "Fixed recommendation saving when both integer and bigint versions of the database function existed.",
+        "Included the new-release notification field when loading dashboard collection data."
+      ]
+    }
+  },
+  {
     version: "v6.7.0",
     date: "July 2026",
     isAnnouncement: true,
